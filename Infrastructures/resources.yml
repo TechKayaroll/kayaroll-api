@@ -1,0 +1,73 @@
+# deployment section
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kayaroll
+spec:
+  selector:
+    matchLabels:
+      app: kayaroll
+  template:
+    metadata:
+      labels:
+        app: kayaroll
+    spec:
+      containers:
+        - name: kayaroll-api-staging
+          image: gcr.io/GOOGLE_PROJECT/kayaroll-api-staging:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7070
+          env:
+            - name: NODE_ENV
+              value: ENV_PROJECT
+
+---
+
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: be-test
+spec:
+  healthCheck:
+    timeoutSec: 1
+    type: HTTP
+    requestPath: /users/user/healthz
+    port: 7070
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kayaroll
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    beta.cloud.google.com/backend-config: '{"default": "be-test"}'
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 7070
+  selector:
+    app: kayaroll
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kayaroll
+  annotations:
+    kubernetes.io/ingress.ClassName: gce
+spec:
+  rules:
+    - http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: kayaroll
+                port:
+                  number: 80
