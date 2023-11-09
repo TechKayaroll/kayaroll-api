@@ -1,9 +1,10 @@
 const ChildRouter = require('express').Router();
 const multer = require('multer');
+const os = require('os');
 const CONTROLLER = require('./controller');
 const { authMiddleware } = require('../../Middleware/middlewareAuth');
-const os = require("os");
-const upload = multer({dest: os.tmpdir()});
+
+const upload = multer({ dest: os.tmpdir() });
 const validate = require('../../Middleware/middlewareValidation');
 const schema = require('./validation');
 
