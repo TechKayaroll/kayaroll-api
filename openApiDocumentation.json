@@ -119,9 +119,590 @@
             "content": {
               "application/json": {
                 "example": {
-                  "message": "Company Name Is Exists",
+                  "message": "parameter or object validation failed",
                   "data": {},
                   "code": 400
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/check-in": {
+      "post": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Attendance Checkin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/General Response Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/check-out": {
+      "post": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Attendance CheckOut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/General Response Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/list": {
+      "get": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "value for status",
+            "style": "form",
+            "explode": true,
+            "schema":{
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "default": "Pending"
+              }
+            }
+          },
+          {
+            "name": "attendanceType",
+            "in": "query",
+            "description": "value for Attendance Type",
+            "style": "form",
+            "explode": true,
+            "schema":{
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "default": "In"
+              }
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "value for filter from date range format YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "value for filter to date range format YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "value for filter sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "value for limit data showing in page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "value for current page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response Attendance List User"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/Attendance List User Return Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/admin/dashboard": {
+      "get": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "value for status",
+            "style": "form",
+            "explode": true,
+            "schema":{
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "default": "Pending"
+              }
+            }
+          },
+          {
+            "name": "attendanceType",
+            "in": "query",
+            "description": "value for Attendance Type",
+            "style": "form",
+            "explode": true,
+            "schema":{
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "default": "In"
+              }
+            }
+          },
+          {
+            "name": "employeeId",
+            "in": "query",
+            "description": "value for Employee Id",
+            "style": "form",
+            "explode": true,
+            "schema":{
+              "uniqueItems": true,
+              "type": "array"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "value for filter from date range format YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "value for filter to date range format YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "value for filter sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "value for limit data showing in page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "value for current page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response Attendance List Admin Dashboard"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/Attendance List Admin Dashboard Return Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/admin/approval": {
+      "post": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Attendance Approval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/General Response Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Internal Server Error",
+                  "data": {},
+                  "code": 500
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendances/attendance/admin/update": {
+      "put": {
+        "tags": ["attendance"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Attendance Update"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "data": {
+                    "$ref": "#/components/examples/General Response Example"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "parameter or object validation failed",
+                  "data": {},
+                  "code": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "UNAUTHORIZED",
+                  "data": {},
+                  "code": 401
                 }
               }
             }
@@ -144,17 +725,36 @@
   },
 
   "components": {
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      },
+      "BasicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+
     "examples":{
       "User Registration Return Example": {
         "summary": "Sample Return User Register",
         "value": {
           "message": "OK",
           "data": {
-            "userId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-            "fullname": "Roy Kane",
-            "organization": "PT. Company",
+            "userId": "6549aea51c610c325a7d8718",
+            "fullname": "Cado",
+            "email": "cado@gmail.com",
+            "organization": "RCTI",
             "role": "employee",
-            "profilePict": "https://link_pict.com/iouytret"
+            "profilePict": "https://lh3.googleusercontent.com/a/ACg8ocKlH1T6j6APJKVFrFZvyt5FfEAvr9cLYQzvJOMNuBvFXZiq=s96-c",
+            "invitationCode": "RIC-AMA-071123",
+            "token": "f7NZ85z5eOVJESstVc0OAZIAcCF3ofhA3E2MkTlt3sk="
           },
           "code": 200
         }
@@ -165,12 +765,71 @@
           "message": "OK",
           "data": {
             "userId": "ewJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ3",
-            "fullname": "",
+            "email": "email@email.com",
             "organization": "PT. Company",
             "role": "admin",
-            "profilePict": "",
             "invitationCode": "KYL-IUO-1010"
           },
+          "code": 200
+        }
+      },
+      "Attendance List User Return Example": {
+        "summary": "Attendance List User Return",
+        "value": {
+          "message": "OK",
+          "data": {
+            "list": [
+              {
+                "attendanceId": "65449b2f29c2dfae3a3ac4cd",
+                "attendanceType": "In",
+                "attendanceImage": "https://storage.googleapis.com/kaya-storage-bucket/checkInAuth/65449b2329c2dfae3a3ac493_031123140301.png",
+                "datetime": "2023-10-31T07:03:01.000Z",
+                "lat": -6.2326101,
+                "long": 106.6905141,
+                "status": "Approved",
+                "createdDate": "2023-11-03T07:03:11.483Z"
+              }
+            ],
+            "pagination": {
+              "totalPage": 1,
+              "currentPage": 1
+            }
+          },
+          "code": 200
+        }
+      },
+      "Attendance List Admin Dashboard Return Example": {
+        "summary": "Attendance List User Return",
+        "value": {
+          "message": "OK",
+          "data": {
+            "list": [
+              {
+                "attendanceId": "65449b2f29c2dfae3a3ac4cd",
+                "attendanceType": "In",
+                "attendanceImage": "https://storage.googleapis.com/kaya-storage-bucket/checkInAuth/65449b2329c2dfae3a3ac493_031123140301.png",
+                "employeeId": "65449b2329c2dfae3a3ac493",
+                "employeeName": "Ricardo Tan",
+                "datetime": "2023-10-31T07:03:01.000Z",
+                "lat": -6.2326101,
+                "long": 106.6905141,
+                "status": "Approved",
+                "createdDate": "2023-11-03T07:03:11.483Z"
+              }
+            ],
+            "pagination": {
+              "totalPage": 1,
+              "currentPage": 1
+            }
+          },
+          "code": 200
+        }
+      },
+      "General Response Example": {
+        "summary": "Sample Return General",
+        "value": {
+          "message": "OK",
+          "data": {},
           "code": 200
         }
       }
@@ -204,6 +863,82 @@
           }
         }
       },
+      "Attendance Checkin": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "format": "int32",
+            "description": "Coordinate Latitude",
+            "example": "094857",
+            "required": true
+          },
+          "long": {
+            "type": "number",
+            "format": "int32",
+            "description": "Coordinate Longitude",
+            "example": "-094857",
+            "required": true
+          },
+          "imageFile": {
+            "type": "string",
+            "format": "binary",
+            "description": "Image for Checkin",
+            "required": true
+          }
+        }
+      },
+      "Attendance CheckOut": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "format": "int32",
+            "description": "Coordinate Latitude",
+            "example": "094857",
+            "required": true
+          },
+          "long": {
+            "type": "number",
+            "format": "int32",
+            "description": "Coordinate Longitude",
+            "example": "-094857",
+            "required": true
+          },
+          "imageFile": {
+            "type": "string",
+            "format": "binary",
+            "description": "Image for Checkin",
+            "required": true
+          }
+        }
+      },
+      "Attendance Approval": {
+        "type": "object",
+        "properties": {
+          "attendanceId": {
+            "type": "string",
+            "example": "654471574aa298b49639c831"
+          },
+          "status": {
+            "type": "string",
+            "example": "Approved"
+          }
+        }
+      },
+      "Attendance Update": {
+        "type": "object",
+        "properties": {
+          "attendanceId": {
+            "type": "string",
+            "example": "654471574aa298b49639c831"
+          },
+          "datetime": {
+            "type": "string",
+            "example": "2023-10-24T10:51:23.728Z"
+          }
+        }
+      },
 
       "Response Register User": {
         "type": "object",
@@ -217,6 +952,9 @@
               "fullname": {
                 "type": "string"
               },
+              "email": {
+                "type": "string"
+              },
               "organization": {
                 "type": "string"
               },
@@ -224,6 +962,12 @@
                 "type": "string"
               },
               "profilePict": {
+                "type": "string"
+              },
+              "invitationCode": {
+                "type": "string"
+              },
+              "token": {
                 "type": "string"
               }
             }
@@ -239,7 +983,7 @@
               "user_id": {
                 "type": "string"
               },
-              "fullname": {
+              "email": {
                 "type": "string"
               },
               "organization": {
@@ -248,11 +992,130 @@
               "role": {
                 "type": "string"
               },
-              "profilePict": {
-                "type": "string"
-              },
               "invitationCode": {
                 "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Response Attendance List User": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attendanceId": {
+                      "type": "string"
+                    },
+                    "attendanceType": {
+                      "type": "string"
+                    },
+                    "attendanceImage": {
+                      "type": "string"
+                    },
+                    "datetime": {
+                      "type": "string"
+                    },
+                    "lat": {
+                      "type": "number",
+                      "format": "int32"
+                    },
+                    "long": {
+                      "type": "number",
+                      "format": "int32"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "cratedDate": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Response Attendance List Admin Dashboard": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attendanceId": {
+                      "type": "string"
+                    },
+                    "attendanceType": {
+                      "type": "string"
+                    },
+                    "attendanceImage": {
+                      "type": "string"
+                    },
+                    "employeeId": {
+                      "type": "string"
+                    },
+                    "employeeName": {
+                      "type": "string"
+                    },
+                    "datetime": {
+                      "type": "string"
+                    },
+                    "lat": {
+                      "type": "number",
+                      "format": "int32"
+                    },
+                    "long": {
+                      "type": "number",
+                      "format": "int32"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "cratedDate": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "Response Attendance List": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "totalPage": {
+                    "type": "integer"
+                  },
+                  "currentPage": {
+                    "type": "integer"
+                  }
+                }
               }
             }
           }

@@ -42,13 +42,16 @@
         }
     }
 
-    const options = {
-        swaggerOptions: {
-            plugins: [
-                DisableTryItOutPlugin
-            ]
-        }
-    };
+    let options = {}
+    if (process.env.NODE_ENV === "prod") {
+        options = {
+            swaggerOptions: {
+                plugins: [
+                    DisableTryItOutPlugin
+                ]
+            }
+        };
+    }
 
     //Collected All Routing API
     app.use('/api-docs', basicAuth({
