@@ -64,6 +64,8 @@ connectMongo.connectMongo().then((mongoConnection) => {
     users: { 'kayaroll-api-docs': process.env.SWAGGER_PASSWORD },
     challenge: true,
   }), swaggerUi.serve, swaggerUi.setup(openApiDocumentation, options));
+
+  // API Collections
   app.use('/users', UserRoutes);
   app.use('/attendances', AttendanceRoutes);
 
