@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const { ResponseError } = require('../../../Helpers/response');
@@ -10,7 +10,7 @@ exports.attandanceUser = async (param) => {
   try {
     return await attendance.save();
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
@@ -56,7 +56,7 @@ exports.attandanceList = async (param, userId, organizationId) => {
       .where(whereParam).exec();
     return { list, pagination };
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
@@ -113,7 +113,7 @@ exports.attandanceListAdmin = async (param, organizationId) => {
       .where(whereParam).exec();
     return { list, pagination };
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
@@ -126,7 +126,7 @@ exports.checkExitsAttendanceId = async (organizationId, attendanceId) => {
     });
     return exists.length === 1;
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
@@ -135,7 +135,7 @@ exports.attandanceApproval = async (attendanceId, status) => {
   try {
     return await attendances.findOneAndUpdate({ $and: [{ _id: attendanceId, status: 'Pending' }] }, { status });
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
@@ -177,6 +177,6 @@ exports.attandanceUpdate = async (req, organizationId) => {
   } catch (e) {
     await session.abortTransaction();
     await session.endSession();
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };

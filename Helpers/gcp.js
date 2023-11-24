@@ -1,6 +1,6 @@
 const Cloud = require('@google-cloud/storage');
 const path = require('path');
-const httpStatus = require('http-status');
+const { StatusCodes } = require('http-status-codes');
 const { ResponseError } = require('./response');
 
 const serviceKey = path.join(__dirname, `./${process.env.GCP_API_KEYS_FILENAME}.json`);
@@ -27,6 +27,6 @@ module.exports.UploadFile = async (file) => {
 
     return await bucket.upload(uploadFilePath, options);
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e.message);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e.message);
   }
 };

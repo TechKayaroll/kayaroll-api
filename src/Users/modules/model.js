@@ -1,10 +1,11 @@
-const httpStatus = require('http-status');
+const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const userModel = require('./mapping');
 const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
+const { generateCompanyCode } = require('../../../Helpers/randomString');
 
-exports.insertDataUser = async (payload, payloadOrg) => {
+const insertDataUser = async (payload, payloadOrg) => {
   const user = new userModel.User(payload);
   const organization = new userModel.Organization(payloadOrg);
   const userOrganization = new userModel.UserOrganization();
@@ -32,30 +33,30 @@ exports.insertDataUser = async (payload, payloadOrg) => {
   } catch (e) {
     await session.abortTransaction();
     await session.endSession();
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, 'Error Insert to DB for user');
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error Insert to DB for user');
   }
 };
 
-exports.checkOrganizationExists = async (companyName) => {
+const getOrganization = async (companyName) => {
   const organization = userModel.Organization;
   try {
-    const org = await organization.findOne({ name: companyName });
+    const org = await organization.findOne({ name: companyName.toUpperCase() });
     return org;
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.getDataRole = async (req) => {
+const getDataRole = async (req) => {
   const organization = userModel.Role;
   try {
     return await organization.findOne({ name: req });
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.getUserAdminExists = async (email, companyName) => {
+const getUserAdminExists = async (email, companyName) => {
   const userOrganizations = userModel.UserOrganization;
   const res = {
     flag: false, _id: '', email: '', roleId: { name: '' }, organizationId: '',
@@ -82,11 +83,11 @@ exports.getUserAdminExists = async (email, companyName) => {
     });
     return res;
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.getDataUser = async (req) => {
+const getDataUser = async (req) => {
   const userOrganization = userModel.UserOrganization;
   try {
     const usrRes = await userOrganization.findOne({ userId: new mongoose.Types.ObjectId(req._id) })
@@ -106,26 +107,23 @@ exports.getDataUser = async (req) => {
       usrRes.userId,
     );
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.checkInvitationCodeExists = async (req) => {
+const checkInvitationCodeExists = async (req) => {
   const organization = userModel.Organization;
   try {
     return await organization.findOne({ invitationCode: req.companyId });
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.getUserExists = async (req, companyId) => {
+const getUserExists = async (email, companyId) => {
   const userOrganization = userModel.UserOrganization;
-  const res = {
-    flag: false, _id: '', email: '', roleId: { name: '' }, organizationId: '',
-  };
   try {
-    const usr = await userOrganization.find()
+    const users = await userOrganization.find()
       .populate({
         path: 'userId',
         populate: {
@@ -135,26 +133,20 @@ exports.getUserExists = async (req, companyId) => {
       })
       .populate({ path: 'organizationId' })
       .exec();
-
-    usr.forEach((eachUser) => {
-      if (eachUser.userId.email === req && eachUser.organizationId.invitationCode === companyId) {
-        res._id = eachUser.userId._id;
-        res.email = eachUser.userId.email;
-        res.roleId.name = eachUser.userId.roleId.name;
-        res.organizationId = eachUser.organizationId._id;
-        res.flag = true;
-      }
+    const userExist = users.find((eachUser) => {
+      const { userId, organizationId } = eachUser;
+      return userId.email === email && organizationId.invitationCode === companyId;
     });
-    return res;
+    return userExist;
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.getDataUserMiddleware = async (req) => {
+const getDataUserMiddleware = async (userId) => {
   const userOrganization = userModel.UserOrganization;
   try {
-    return await userOrganization.findOne({ userId: new mongoose.Types.ObjectId(req) })
+    return await userOrganization.findOne({ userId: new mongoose.Types.ObjectId(userId) })
       .populate({
         path: 'userId',
         populate: {
@@ -165,15 +157,40 @@ exports.getDataUserMiddleware = async (req) => {
       .populate({ path: 'organizationId' })
       .exec();
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.updateDataUserAdmin = async (req, payload) => {
+const updateDataUserAdmin = async (req, payload) => {
   const user = userModel.User;
   try {
     return await user.findByIdAndUpdate(req._id, payload, { upsert: true });
   } catch (e) {
-    throw new ResponseError(httpStatus.INTERNAL_SERVER_ERROR, e);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
+};
+
+const insertOrganization = async (companyName) => {
+  try {
+    const newOrganization = new userModel.Organization({
+      companyName,
+      invitationCode: generateCompanyCode(),
+    });
+    return await newOrganization.save();
+  } catch (e) {
+    throw new Response(StatusCodes.INTERNAL_SERVER_ERROR, e);
+  }
+};
+
+module.exports = {
+  insertDataUser,
+  getOrganization,
+  getDataRole,
+  getUserAdminExists,
+  getDataUser,
+  checkInvitationCodeExists,
+  getUserExists,
+  getDataUserMiddleware,
+  updateDataUserAdmin,
+  insertOrganization,
 };

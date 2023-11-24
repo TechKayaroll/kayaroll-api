@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
 const model = require('./model');
@@ -19,7 +19,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
 
     await model.attandanceUser(paramReq);
     fs.unlinkSync(req.file.path);
-    res.status(200).json({ message: 'OK', data: {}, code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({ message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK });
   } catch (e) {
     fs.unlinkSync(req.file.path);
     next(e);
@@ -39,7 +39,7 @@ exports.attendanceCheckOut = async (req, res, next) => {
 
     await model.attandanceUser(paramReqOut);
     fs.unlinkSync(req.file.path);
-    res.status(200).json({ message: 'OK', data: {}, code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({ message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK });
   } catch (e) {
     fs.unlinkSync(req.file.path);
     next(e);
@@ -59,7 +59,11 @@ exports.attendanceList = async (req, res, next) => {
       req.query.limit,
       list.pagination,
     );
-    res.status(200).json({ message: 'OK', data: list, code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: list,
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }
@@ -78,7 +82,11 @@ exports.attendanceListAdmin = async (req, res, next) => {
       req.query.limit,
       list.pagination,
     );
-    res.status(200).json({ message: 'OK', data: list, code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: list,
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }
@@ -91,15 +99,19 @@ exports.attendanceApproval = async (req, res, next) => {
       req.body.attendanceId,
     );
     if (!validationAttendanceId) {
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'Attendance ID Invalid');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
     const update = await model.attandanceApproval(req.body.attendanceId, req.body.status);
     if (update === null) {
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'The final status is not Pending, so it cannot to be changed');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'The final status is not Pending, so it cannot to be changed');
     }
 
-    res.status(200).json({ message: 'OK', data: httpStatus['200_NAME'], code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: ReasonPhrases.OK,
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }
@@ -112,15 +124,19 @@ exports.attendanceUpdate = async (req, res, next) => {
       req.body.attendanceId,
     );
     if (!validationAttendanceId) {
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'Attendance ID Invalid');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
     const update = await model.attandanceUpdate(req.body, req.user.organizationId);
     if (update === undefined) {
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'The final status is not in [Pending, Approved, Rejected] so it cannot to be changes');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'The final status is not in [Pending, Approved, Rejected] so it cannot to be changes');
     }
 
-    res.status(200).json({ message: 'OK', data: httpStatus['200_NAME'], code: httpStatus.OK });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {},
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }

@@ -1,4 +1,4 @@
-const httpStatus = require('http-status');
+const { StatusCodes } = require('http-status-codes');
 const fs = require('fs');
 const { ResponseError } = require('../../Helpers/response');
 
@@ -7,12 +7,12 @@ exports.validate = (schemaBody = null, schemaQuery = null) => (req, res, next) =
   if (req.file !== undefined) {
     if ((req.file.size / 1000000).toFixed(1) > 4.0) {
       fs.unlinkSync(req.file.path);
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'Invalid Image Size');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Invalid Image Size');
     }
 
     if (req.file.mimetype !== 'image/png' && req.file.mimetype !== 'image/jpeg') {
       fs.unlinkSync(req.file.path);
-      throw new ResponseError(httpStatus.BAD_REQUEST, 'File Type must be (jpeg or png)');
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'File Type must be (jpeg or png)');
     }
   }
 
@@ -31,10 +31,10 @@ exports.validate = (schemaBody = null, schemaQuery = null) => (req, res, next) =
   }
 
   if (result.error) {
-    res.status(httpStatus.BAD_REQUEST).json({
+    res.status(StatusCodes.BAD_REQUEST).json({
       message: result.error.message,
       data: {},
-      code: httpStatus.BAD_REQUEST,
+      code: StatusCodes.BAD_REQUEST,
     }).end();
   } else {
     if (schemaBody) {

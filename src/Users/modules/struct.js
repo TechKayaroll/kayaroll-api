@@ -1,15 +1,16 @@
-const UserRegistration = (req, decode) => ({
-  fullname: decode.name,
-  profilePict: decode.picture,
-  email: decode.email,
-  companyId: req,
+const UserRegistration = (companyId, payload) => ({
+  fullname: payload.name,
+  profilePict: payload.picture,
+  email: payload.email,
+  companyId,
   roleId: '',
+  password: payload.password || undefined,
 });
 
 const Organization = (req) => ({
   organizationId: req._id,
   name: req.companyName || req.name,
-  invitationCode: '',
+  invitationCode: req.invitationCode || '',
 });
 
 const UserRegistrationResponse = (res, org, role) => ({
