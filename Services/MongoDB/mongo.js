@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 module.exports.connectMongo = () => new Promise((resolve) => {
   try {
-    const connectionURI = `${process.env.MONGO_HOST}${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER_NAME}.l7kdbcx.mongodb.net/${process.env.MONGO_DATABASE_NAME}?retryWrites=true&w=majority`;
+    const connectionURI = `${process.env.MONGO_HOST}${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER_NAME}.mongodb.net/${process.env.MONGO_DATABASE_NAME}?retryWrites=true&w=majority`;
     global.$mongo = mongoose.connect(
       connectionURI,
       {
