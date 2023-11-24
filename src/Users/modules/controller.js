@@ -3,12 +3,17 @@ const dayjs = require('dayjs');
 const jwt = require('../../../Helpers/jwt');
 const struct = require('./struct');
 const model = require('./model');
-const { ResponseError } = require('../../../Helpers/response');
+const {ResponseError} = require('../../../Helpers/response');
 const rndString = require('../../../Helpers/randomString');
 const cipher = require('../../../Helpers/encrypt');
 
 exports.ping = async (req, res) => {
-  res.status(200).send({ message: 'OK', env_setting: process.env.NODE_ENV, code: httpStatus.OK });
+  res.status(200).send({
+    message: 'OK',
+    env_setting: process.env.NODE_ENV,
+    code: httpStatus.OK,
+    clusterName: process.env.MONGO_CLUSTER_NAME,
+  });
 };
 
 exports.registerUser = async (req, res, next) => {
@@ -38,7 +43,7 @@ exports.registerUser = async (req, res, next) => {
     const usrRes = await model.getDataUser(userExists);
     usrRes.token = await cipher.EncryptToken(usrRes.userId);
 
-    res.status(200).json({ message: 'OK', data: usrRes, code: httpStatus.OK });
+    res.status(200).json({message: 'OK', data: usrRes, code: httpStatus.OK});
   } catch (e) {
     next(e);
   }
@@ -67,7 +72,7 @@ exports.registerAdmin = async (req, res, next) => {
     }
 
     const usrRes = await model.getDataUser(userAdmin);
-    res.status(200).json({ message: 'OK', data: usrRes, code: httpStatus.OK });
+    res.status(200).json({message: 'OK', data: usrRes, code: httpStatus.OK});
   } catch (e) {
     next(e);
   }
