@@ -9,6 +9,7 @@
     "start": "export NODE_ENV=local&&node --max-old-space-size=4096 server.js",
     "staging": "export NODE_ENV=staging&&node --max-old-space-size=4096 server.js",
     "prod": "export NODE_ENV=prod&&node --max-old-space-size=4096 server.js",
+    "run:scripts": "node runScripts.js",
     "lint": "eslint \"src/**\" --fix"
   },
   "keywords": [],
