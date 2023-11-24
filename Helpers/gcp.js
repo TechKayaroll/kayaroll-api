@@ -3,7 +3,7 @@ const path = require('path');
 const httpStatus = require('http-status');
 const { ResponseError } = require('./response');
 
-const serviceKey = path.join(__dirname, './keys.json');
+const serviceKey = path.join(__dirname, `./${process.env.GCP_API_KEYS_FILENAME}.json`);
 
 const { Storage } = Cloud;
 const storage = new Storage({
