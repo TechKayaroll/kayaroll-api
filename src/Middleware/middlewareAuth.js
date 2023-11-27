@@ -1,7 +1,7 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const model = require('../Users/modules/model');
 const cipher = require('../../Helpers/encrypt');
-const { decode } = require('../../Helpers/jwt');
+const { decodeToken } = require('../../Helpers/jwt');
 const struct = require('../Users/modules/struct');
 
 module.exports.authMiddleware = async (req, res, next) => {
@@ -31,23 +31,30 @@ module.exports.authMiddleware = async (req, res, next) => {
 
 // JWT Authentication
 module.exports.authentication = async (req, res, next) => {
+  const headerToken = req.header('Authorization');
   try {
-    const token = req.header('Authorization');
-    if (token === undefined || !token.startsWith('Bearer ')) {
+    if (!headerToken) {
       res.status(StatusCodes.UNAUTHORIZED).json({
-        message: ReasonPhrases.UNAUTHORIZED,
+        message: 'Authorization header is missing',
         data: {},
         code: StatusCodes.UNAUTHORIZED,
       });
-    } else {
-      const decodedToken = decode(token);
-      const user = await model.getDataUserMiddleware(decodedToken);
-      req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
-      next();
     }
+    const [bearer, token] = headerToken.split(' ');
+    if (bearer !== 'Bearer') {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: 'Invalid Authorization header format',
+        data: {},
+        code: StatusCodes.UNAUTHORIZED,
+      });
+    }
+    const { userId } = decodeToken(token);
+    const user = await model.getDataUserMiddleware(userId);
+    req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
+    next();
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({
-      message: ReasonPhrases.UNAUTHORIZED,
+      message: error?.message,
       data: {},
       code: StatusCodes.UNAUTHORIZED,
     });

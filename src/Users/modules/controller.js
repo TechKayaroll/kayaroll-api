@@ -5,7 +5,7 @@ const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
 const { generateCompanyCode } = require('../../../Helpers/randomString');
 const cipher = require('../../../Helpers/encrypt');
-const { hash } = require('../../../Helpers/bcryptjs');
+const { hash, compare } = require('../../../Helpers/bcryptjs');
 
 exports.ping = async (req, res) => {
   res.status(StatusCodes.OK).send({
@@ -77,21 +77,33 @@ exports.registerAdmin = async (req, res, next) => {
 
 // TO BE DEVELOPED
 exports.login = async (req, res, next) => {
-  const {
-    companyId, token, email, password,
-  } = req.body;
-  let resData = { companyId };
-  if (!token) {
-    resData = { ...resData, email, password };
-  } else {
-    resData = { ...resData, token };
-  }
   try {
+    const {
+      companyId, token: googleToken, email, password,
+    } = req.body;
+    const isExistOrg = await model.checkInvitationCodeExists(req.body);
+    if (isExistOrg === null || isExistOrg.name === undefined) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
+
+    let userData = await model.getUserExists(email, companyId);
+    if (!googleToken) {
+      userData = await model.getUserExists(email, companyId);
+    } else {
+      const googlePayload = await jwt.decodeToken(googleToken);
+      userData = await model.getUserExists(googlePayload.email, companyId);
+    }
+    if (!userData) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');
+    if (!googleToken) {
+      const hashedPassword = userData.userId.password;
+      if (!hashedPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
+      const isValidPassword = compare(password, hashedPassword);
+      if (!isValidPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
+    }
+    const jwtToken = await jwt.generateJwtToken({ userId: userData.userId._id });
+
     res.status(StatusCodes.OK).json({
-      message: 'OK',
-      data: {
-        body: resData,
-      },
+      message: ReasonPhrases.OK,
+      data: jwtToken,
+      code: StatusCodes.OK,
     });
   } catch (e) {
     next(e);
@@ -102,38 +114,48 @@ exports.login = async (req, res, next) => {
 exports.register = async (req, res, next) => {
   try {
     const {
-      companyId, token, name, email, password,
+      companyId, role, token, name, email, password,
     } = req.body;
     const isExistOrg = await model.checkInvitationCodeExists(req.body);
     if (isExistOrg === null || isExistOrg.name === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
     }
-    const org = struct.Organization(isExistOrg);
-    const role = await model.getDataRole('employee');
 
+    let isRegisteredAccount = false;
+    let registeredUser;
+    const org = struct.Organization(isExistOrg);
+    const roleData = await model.getDataRole(role);
     if (!token) {
-      let registeredUser = await model.getUserExists(email, companyId);
+      registeredUser = await model.getUserExists(email, companyId);
       if (!registeredUser) {
         const user = struct.UserRegistration(companyId, {
           name,
           email,
           password: hash(password),
         });
-        user.roleId = role._id;
+        user.roleId = roleData._id;
         registeredUser = await model.insertDataUser(user, org);
+      } else {
+        isRegisteredAccount = true;
       }
     } else {
       const googlePayload = await jwt.decodeToken(req.body.token);
-      let registeredUser = await model.getUserExists(googlePayload.email, companyId);
+      registeredUser = await model.getUserExists(googlePayload.email, companyId);
       if (!registeredUser) {
         const user = struct.UserRegistration(companyId, googlePayload);
-        user.roleId = role._id;
+        user.roleId = roleData._id;
         registeredUser = await model.insertDataUser(user, org);
+      } else {
+        isRegisteredAccount = true;
       }
-      const userData = await model.getDataUser(registeredUser);
-      userData.token = await jwt.generateJwtToken(userData.userId);
-      res.status(StatusCodes.OK).json({ message: 'OK', data: userData, code: StatusCodes.OK });
     }
+    if (isRegisteredAccount) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
+    const userData = await model.getDataUser(registeredUser);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: userData,
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }
@@ -145,11 +167,10 @@ exports.registerCompany = async (req, res, next) => {
     let organization = struct.Organization(req.body);
     const isExistOrg = await model.getOrganization(companyName);
     if (isExistOrg) {
-      organization = struct.Organization(isExistOrg);
-      res.status(StatusCodes.CONFLICT).json({
-        message: ReasonPhrases.CONFLICT,
+      res.status(StatusCodes.OK).json({
+        message: ReasonPhrases.OK,
         data: organization,
-        code: StatusCodes.CONFLICT,
+        code: StatusCodes.OK,
       });
     } else {
       const newOrganization = await model.insertOrganization(companyName);

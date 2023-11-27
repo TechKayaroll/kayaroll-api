@@ -8,6 +8,7 @@ const usersRoutes = () => {
   ChildRouter.post('/register-user', validate.validate(schema.schemaRegisterUser), CONTROLLER.registerUser);
   ChildRouter.post('/register-admin', validate.validate(schema.schemaRegisterAdmin), CONTROLLER.registerAdmin);
   ChildRouter.post('/login', validate.validate(schema.schemaLogin), CONTROLLER.login);
+  ChildRouter.post('/register', validate.validate(schema.schemaRegister), CONTROLLER.register);
   ChildRouter.post('/register-company', validate.validate(schema.schemaRegisterCompany), CONTROLLER.registerCompany);
   return ChildRouter;
 };
