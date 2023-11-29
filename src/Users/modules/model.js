@@ -5,6 +5,35 @@ const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
 const { generateCompanyCode } = require('../../../Helpers/randomString');
 
+const createOrUpdateExistingUser = async (userPayload) => {
+  try {
+    const user = userModel.User.findOneAndUpdate(
+      { email: userPayload.email },
+      {
+        fullname: userPayload.name,
+        email: userPayload.email,
+        password: userPayload.password || undefined,
+        roleId: userPayload.roleId || '',
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+    return user;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create User');
+  }
+};
+const insertUserOrganization = async (user, org) => {
+  try {
+    const userOrganization = new userModel.UserOrganization();
+    userOrganization.userId = user._id;
+    userOrganization.organizationId = org._id;
+    const createdUserOrganization = await userOrganization.save();
+    return createdUserOrganization;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create UserOrganization');
+  }
+};
+
 const insertDataUser = async (payload, payloadOrg) => {
   const user = new userModel.User(payload);
   const organization = new userModel.Organization(payloadOrg);
@@ -111,10 +140,10 @@ const getDataUser = async (req) => {
   }
 };
 
-const checkInvitationCodeExists = async (req) => {
+const checkInvitationCodeExists = async (companyId) => {
   const organization = userModel.Organization;
   try {
-    return await organization.findOne({ invitationCode: req.companyId });
+    return await organization.findOne({ invitationCode: companyId });
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
@@ -122,38 +151,34 @@ const checkInvitationCodeExists = async (req) => {
 
 const findUserByCompanyAndRole = async (email, invitationCode, roleName) => {
   try {
+    const role = await userModel.Role.findOne({ name: roleName });
+    const organization = await userModel.Organization.findOne({
+      invitationCode,
+    });
+    if (!role || !organization) return null;
+
     const user = await userModel.User.findOne({
       email,
     })
       .populate({
         path: 'roleId',
-        match: { name: roleName },
-        select: '_id',
       })
-      .exec();
+      .where({ roleId: role._id });
 
-    if (user && user.roleId) {
-      const organization = await userModel.Organization.findOne({
-        invitationCode,
-      }).exec();
-
-      if (organization) {
-        const userOrganization = await userModel.UserOrganization.findOne({
-          userId: user._id,
-          organizationId: organization._id,
+    if (user) {
+      const userOrganization = await userModel.UserOrganization.findOne({
+        userId: user._id,
+        organizationId: organization._id,
+      })
+        .populate({
+          path: 'userId',
+          populate: {
+            path: 'roleId',
+            model: 'Role',
+          },
         })
-          .populate({
-            path: 'userId',
-            populate: {
-              path: 'roleId',
-              model: 'Role',
-            },
-          })
-          .populate({ path: 'organizationId' })
-          .exec();
-
-        return userOrganization;
-      }
+        .populate({ path: 'organizationId' });
+      return userOrganization;
     }
 
     return null;
@@ -185,10 +210,13 @@ const getUserExists = async (email, companyId) => {
   }
 };
 
-const getDataUserMiddleware = async (userId) => {
+const getDataUserMiddleware = async (userId, organizationId) => {
   const userOrganization = userModel.UserOrganization;
   try {
-    return await userOrganization.findOne({ userId: new mongoose.Types.ObjectId(userId) })
+    return await userOrganization.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      organizationId: new mongoose.Types.ObjectId(organizationId),
+    })
       .populate({
         path: 'userId',
         populate: {
@@ -226,6 +254,8 @@ const insertOrganization = async (companyName) => {
 
 module.exports = {
   insertDataUser,
+  createOrUpdateExistingUser,
+  insertUserOrganization,
   getOrganization,
   getDataRole,
   getUserAdminExists,

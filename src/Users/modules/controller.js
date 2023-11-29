@@ -3,8 +3,6 @@ const jwt = require('../../../Helpers/jwt');
 const struct = require('./struct');
 const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
-const { generateCompanyCode } = require('../../../Helpers/randomString');
-const cipher = require('../../../Helpers/encrypt');
 const { hash, compare } = require('../../../Helpers/bcryptjs');
 
 exports.ping = async (req, res) => {
@@ -15,72 +13,12 @@ exports.ping = async (req, res) => {
   });
 };
 
-exports.registerUser = async (req, res, next) => {
-  try {
-    const exists = await model.checkInvitationCodeExists(req.body);
-    if (exists === null || exists.name === undefined) {
-      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
-    }
-
-    const decode = await jwt.decodeToken(req.body.token);
-    let userExists = await model.getUserExists(decode.email, req.body.companyId);
-    if (!userExists.flag) {
-      const org = struct.Organization(exists);
-      const role = await model.getDataRole('employee');
-      const user = struct.UserRegistration(req.body.companyId, decode);
-      user.roleId = role._id;
-      userExists = await model.insertDataUser(user, org);
-    }
-
-    if (userExists.flag && userExists.roleId.name === 'admin') {
-      const role = await model.getDataRole('admin');
-      const user = struct.UserRegistration(req.body.companyId, decode);
-      user.roleId = role._id;
-      await model.updateDataUserAdmin(userExists, user);
-    }
-
-    const usrRes = await model.getDataUser(userExists);
-    usrRes.token = await cipher.EncryptToken(usrRes.userId);
-
-    res.status(StatusCodes.OK).json({ message: 'OK', data: usrRes, code: StatusCodes.OK });
-  } catch (e) {
-    next(e);
-  }
-};
-
-exports.registerAdmin = async (req, res, next) => {
-  try {
-    req.body.companyName = req.body.companyName.toUpperCase();
-    let userAdmin = await model.getUserAdminExists(req.body.email, req.body.companyName);
-    if (!userAdmin.email) {
-      const role = await model.getDataRole('admin');
-      const exists = await model.getOrganization(req.body.companyName);
-
-      let user = struct.UserRegistration(req.body.companyName, req.body);
-      let org = struct.Organization(req.body);
-      if (exists !== null) {
-        user = struct.UserRegistration(req.body.companyName, req.body);
-        org = struct.Organization(exists);
-      }
-
-      org.invitationCode = generateCompanyCode(org.name);
-      user.roleId = role._id;
-      userAdmin = await model.insertDataUser(user, org);
-    }
-
-    const usrRes = await model.getDataUser(userAdmin);
-    res.status(StatusCodes.OK).json({ message: 'OK', data: usrRes, code: StatusCodes.OK });
-  } catch (e) {
-    next(e);
-  }
-};
-
 exports.login = async (req, res, next) => {
   try {
     const {
       companyId, token: googleToken, email, password, role,
     } = req.body;
-    const isExistOrg = await model.checkInvitationCodeExists(req.body);
+    const isExistOrg = await model.checkInvitationCodeExists(companyId);
     if (isExistOrg === null || isExistOrg.name === undefined) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
 
     let userData;
@@ -92,13 +30,18 @@ exports.login = async (req, res, next) => {
       userData = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
     }
     if (!userData?.userId) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');
+
     if (!googleToken) {
       const hashedPassword = userData.userId.password;
       if (!hashedPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
       const isValidPassword = compare(password, hashedPassword);
       if (!isValidPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
     }
-    const jwtToken = await jwt.generateJwtToken({ userId: userData.userId._id });
+    const jwtToken = jwt.generateJwtToken({
+      userId: userData.userId._id,
+      organizationId: userData.organizationId,
+    });
+
     const user = struct.UserData(userData.userId, userData.organizationId);
     const responseData = {
       ...user,
@@ -119,14 +62,14 @@ exports.register = async (req, res, next) => {
     const {
       companyId, role, token, name, email, password,
     } = req.body;
-    const isExistOrg = await model.checkInvitationCodeExists(req.body);
-    if (isExistOrg === null || isExistOrg.name === undefined) {
+    const organization = await model.checkInvitationCodeExists(companyId);
+    if (organization === null || organization.name === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
     }
 
     let isRegisteredAccount = false;
     let registeredUser;
-    const org = struct.Organization(isExistOrg);
+
     const roleData = await model.getDataRole(role);
     if (!token) {
       registeredUser = await model.findUserByCompanyAndRole(email, companyId, role);
@@ -137,7 +80,13 @@ exports.register = async (req, res, next) => {
           password: hash(password),
         });
         user.roleId = roleData._id;
-        registeredUser = await model.insertDataUser(user, org);
+        const newUser = await model.createOrUpdateExistingUser(user);
+        await model.insertUserOrganization(newUser, organization);
+        registeredUser = await model.findUserByCompanyAndRole(
+          newUser.email,
+          companyId,
+          roleData.name,
+        );
       } else {
         isRegisteredAccount = true;
       }
@@ -145,9 +94,18 @@ exports.register = async (req, res, next) => {
       const googlePayload = await jwt.decodeToken(req.body.token);
       registeredUser = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
       if (!registeredUser) {
-        const user = struct.UserRegistration(companyId, googlePayload);
+        const user = struct.UserRegistration(companyId, {
+          name: googlePayload.name,
+          email: googlePayload.email,
+        });
         user.roleId = roleData._id;
-        registeredUser = await model.insertDataUser(user, org);
+        const existingOrNewUser = await model.createOrUpdateExistingUser(user);
+        await model.insertUserOrganization(existingOrNewUser, organization);
+        registeredUser = await model.findUserByCompanyAndRole(
+          existingOrNewUser.email,
+          companyId,
+          roleData.name,
+        );
       } else {
         isRegisteredAccount = true;
       }

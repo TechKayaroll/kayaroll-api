@@ -48,8 +48,8 @@ module.exports.authentication = async (req, res, next) => {
         code: StatusCodes.UNAUTHORIZED,
       });
     }
-    const { userId } = decodeToken(token);
-    const user = await model.getDataUserMiddleware(userId);
+    const { userId, organizationId } = decodeToken(token);
+    const user = await model.getDataUserMiddleware(userId, organizationId);
     req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
     next();
   } catch (error) {
