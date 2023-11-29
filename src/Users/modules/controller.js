@@ -128,7 +128,7 @@ exports.register = async (req, res, next) => {
     const org = struct.Organization(isExistOrg);
     const roleData = await model.getDataRole(role);
     if (!token) {
-      registeredUser = await model.getUserExists(email, companyId);
+      registeredUser = await model.findUserByCompanyAndRole(email, companyId, role);
       if (!registeredUser) {
         const user = struct.UserRegistration(companyId, {
           name,
@@ -142,7 +142,7 @@ exports.register = async (req, res, next) => {
       }
     } else {
       const googlePayload = await jwt.decodeToken(req.body.token);
-      registeredUser = await model.getUserExists(googlePayload.email, companyId);
+      registeredUser = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
       if (!registeredUser) {
         const user = struct.UserRegistration(companyId, googlePayload);
         user.roleId = roleData._id;
