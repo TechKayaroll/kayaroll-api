@@ -88,6 +88,7 @@ exports.login = async (req, res, next) => {
       userData = await model.findUserByCompanyAndRole(email, companyId, role);
     } else {
       const googlePayload = await jwt.decodeToken(googleToken);
+      if (!googlePayload?.email) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Token');
       userData = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
     }
     if (!userData?.userId) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');

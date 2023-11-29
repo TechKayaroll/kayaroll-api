@@ -39,7 +39,6 @@ const MiddlewareUserResponse = (res, org) => ({
   organization: org.name,
   role_id: res.roleId._id,
   role: res.roleId.name,
-  profilePict: res.profilePict,
   invitationCode: org.invitationCode,
 });
 
