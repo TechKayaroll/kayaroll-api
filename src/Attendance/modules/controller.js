@@ -1,8 +1,8 @@
-const { StatusCodes, ReasonPhrases } = require('http-status-codes');
+const {StatusCodes, ReasonPhrases} = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
 const model = require('./model');
-const { ResponseError } = require('../../../Helpers/response');
+const {ResponseError} = require('../../../Helpers/response');
 const struct = require('./struct');
 const uploadGcp = require('../../../Helpers/gcp');
 
@@ -19,7 +19,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
 
     await model.attandanceUser(paramReq);
     fs.unlinkSync(req.file.path);
-    res.status(StatusCodes.OK).json({ message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK });
+    res.status(StatusCodes.OK).json({message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK});
   } catch (e) {
     fs.unlinkSync(req.file.path);
     next(e);
@@ -39,7 +39,7 @@ exports.attendanceCheckOut = async (req, res, next) => {
 
     await model.attandanceUser(paramReqOut);
     fs.unlinkSync(req.file.path);
-    res.status(StatusCodes.OK).json({ message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK });
+    res.status(StatusCodes.OK).json({message: ReasonPhrases.OK, data: {}, code: StatusCodes.OK});
   } catch (e) {
     fs.unlinkSync(req.file.path);
     next(e);

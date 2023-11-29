@@ -29,11 +29,11 @@ const AttendanceListPagination = (page, limit, totalData) => ({
 });
 
 const AttendanceListAdmin = (val) => ({
-  attendanceId: val._id,
+  attendanceId: val._id.toString(),
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
-  employeeId: val.userId._id,
-  employeeName: val.userId.fullname,
+  employeeId: val.userId?._id || '-',
+  employeeName: val.userId?.fullname || 'unknown',
   datetime: val.attendanceDate,
   lat: val.lat,
   long: val.long,

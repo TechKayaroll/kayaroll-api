@@ -30,15 +30,15 @@ const UserRegistrationResponse = (res, org, role) => ({
   invitationCode: org.invitationCode,
 });
 
-const MiddlewareUserResponse = (res, org) => ({
-  userId: res._id.toString(),
-  fullname: res.fullname,
-  email: res.email,
-  organizationId: org._id,
-  organization: org.name,
-  role_id: res.roleId._id,
-  role: res.roleId.name,
+const MiddlewareUserResponse = (user, org) => ({
+  userId: user._id.toString(),
+  fullname: user.fullname,
+  email: user.email,
+  role_id: user.roleId._id.toString(),
+  role: user.roleId.name,
   invitationCode: org.invitationCode,
+  organizationId: org._id.toString(),
+  organization: org.name,
 });
 
 module.exports = {
