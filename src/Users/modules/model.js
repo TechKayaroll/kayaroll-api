@@ -101,7 +101,7 @@ const getDataUser = async (req) => {
       })
       .populate({ path: 'organizationId' })
       .exec();
-    return await struct.UserRegistrationResponse(
+    return struct.UserRegistrationResponse(
       usrRes.userId,
       usrRes.organizationId,
       usrRes.userId,

@@ -21,7 +21,6 @@ const UserRegistrationResponse = (res, org, role) => ({
   role: role.roleId.name,
   profilePict: res.profilePict,
   invitationCode: org.invitationCode,
-  token: '' || undefined,
 });
 
 const MiddlewareUserResponse = (res, org) => ({
