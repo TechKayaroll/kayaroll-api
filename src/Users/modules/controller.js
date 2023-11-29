@@ -39,7 +39,7 @@ exports.login = async (req, res, next) => {
     }
     const jwtToken = jwt.generateJwtToken({
       userId: userData.userId._id,
-      organizationId: userData.organizationId,
+      organizationId: userData.organizationId._id,
     });
 
     const user = struct.UserData(userData.userId, userData.organizationId);
