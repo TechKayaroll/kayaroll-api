@@ -75,7 +75,6 @@ exports.registerAdmin = async (req, res, next) => {
   }
 };
 
-// TO BE DEVELOPED
 exports.login = async (req, res, next) => {
   try {
     const {
@@ -84,7 +83,7 @@ exports.login = async (req, res, next) => {
     const isExistOrg = await model.checkInvitationCodeExists(req.body);
     if (isExistOrg === null || isExistOrg.name === undefined) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
 
-    let userData = await model.getUserExists(email, companyId);
+    let userData;
     if (!googleToken) {
       userData = await model.getUserExists(email, companyId);
     } else {
@@ -110,7 +109,6 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// NOT YET TESTED
 exports.register = async (req, res, next) => {
   try {
     const {
