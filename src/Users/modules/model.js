@@ -120,6 +120,48 @@ const checkInvitationCodeExists = async (req) => {
   }
 };
 
+const findUserByCompanyAndRole = async (email, invitationCode, roleName) => {
+  try {
+    const user = await userModel.User.findOne({
+      email,
+    })
+      .populate({
+        path: 'roleId',
+        match: { name: roleName },
+        select: '_id',
+      })
+      .exec();
+
+    if (user && user.roleId) {
+      const organization = await userModel.Organization.findOne({
+        invitationCode,
+      }).exec();
+
+      if (organization) {
+        const userOrganization = await userModel.UserOrganization.findOne({
+          userId: user._id,
+          organizationId: organization._id,
+        })
+          .populate({
+            path: 'userId',
+            populate: {
+              path: 'roleId',
+              model: 'Role',
+            },
+          })
+          .populate({ path: 'organizationId' })
+          .exec();
+
+        return userOrganization;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const getUserExists = async (email, companyId) => {
   const userOrganization = userModel.UserOrganization;
   try {
@@ -190,6 +232,7 @@ module.exports = {
   getDataUser,
   checkInvitationCodeExists,
   getUserExists,
+  findUserByCompanyAndRole,
   getDataUserMiddleware,
   updateDataUserAdmin,
   insertOrganization,

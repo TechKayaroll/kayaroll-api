@@ -12,6 +12,9 @@ exports.schemaRegisterAdmin = Joi.object({
 
 exports.schemaLogin = Joi.object({
   companyId: Joi.string().required(),
+  role: Joi.string()
+    .valid('employee', 'admin')
+    .required(),
   email: Joi.string().email(),
   password: Joi.string().when('email', {
     is: Joi.exist(),

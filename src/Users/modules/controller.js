@@ -78,19 +78,19 @@ exports.registerAdmin = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const {
-      companyId, token: googleToken, email, password,
+      companyId, token: googleToken, email, password, role,
     } = req.body;
     const isExistOrg = await model.checkInvitationCodeExists(req.body);
     if (isExistOrg === null || isExistOrg.name === undefined) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
 
     let userData;
     if (!googleToken) {
-      userData = await model.getUserExists(email, companyId);
+      userData = await model.findUserByCompanyAndRole(email, companyId, role);
     } else {
       const googlePayload = await jwt.decodeToken(googleToken);
-      userData = await model.getUserExists(googlePayload.email, companyId);
+      userData = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
     }
-    if (!userData) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');
+    if (!userData?.userId) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');
     if (!googleToken) {
       const hashedPassword = userData.userId.password;
       if (!hashedPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
