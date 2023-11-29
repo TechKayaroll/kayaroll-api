@@ -7,6 +7,14 @@ const UserRegistration = (companyId, payload) => ({
   password: payload.password || undefined,
 });
 
+const UserData = (user, organization) => ({
+  fullname: user.fullname,
+  email: user.email,
+  role: user.roleId.name,
+  companyId: organization.invitationCode,
+  companyName: organization.name,
+});
+
 const Organization = (req) => ({
   organizationId: req._id,
   name: req.companyName || req.name,
@@ -40,4 +48,5 @@ module.exports = {
   Organization,
   UserRegistrationResponse,
   MiddlewareUserResponse,
+  UserData,
 };

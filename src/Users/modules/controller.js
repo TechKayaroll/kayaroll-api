@@ -98,10 +98,14 @@ exports.login = async (req, res, next) => {
       if (!isValidPassword) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Email/Password');
     }
     const jwtToken = await jwt.generateJwtToken({ userId: userData.userId._id });
-
+    const user = struct.UserData(userData.userId, userData.organizationId);
+    const responseData = {
+      ...user,
+      token: jwtToken,
+    };
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: jwtToken,
+      data: responseData,
       code: StatusCodes.OK,
     });
   } catch (e) {
