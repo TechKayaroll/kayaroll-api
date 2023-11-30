@@ -20,13 +20,12 @@ const Organization = (req) => ({
   invitationCode: req.invitationCode || '',
 });
 
-const UserRegistrationResponse = (res, org, role) => ({
-  userId: res._id.toString(),
-  fullname: res.fullname,
-  email: res.email,
+const UserRegistrationResponse = (user, org, role) => ({
+  userId: user._id.toString(),
+  fullname: user.fullname,
+  email: user.email,
+  role: role.name,
   organization: org.name,
-  role: role.roleId.name,
-  profilePict: res.profilePict,
   invitationCode: org.invitationCode,
 });
 

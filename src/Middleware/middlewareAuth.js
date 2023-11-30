@@ -49,7 +49,7 @@ module.exports.authentication = async (req, res, next) => {
       });
     }
     const { userId, organizationId } = decodeToken(token);
-    const user = await model.getDataUserMiddleware(userId, organizationId);
+    const user = await model.getDataUser(userId, organizationId);
     req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
     next();
   } catch (error) {

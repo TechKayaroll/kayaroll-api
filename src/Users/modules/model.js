@@ -7,15 +7,17 @@ const { generateCompanyCode } = require('../../../Helpers/randomString');
 
 const createOrUpdateExistingUser = async (userPayload) => {
   try {
+    const findByQuery = { email: userPayload.email };
+    const opts = { upsert: true, new: true, setDefaultsOnInsert: true };
     const user = userModel.User.findOneAndUpdate(
-      { email: userPayload.email },
+      findByQuery,
       {
-        fullname: userPayload.name,
+        fullname: userPayload.fullname,
         email: userPayload.email,
         password: userPayload.password || undefined,
         roleId: userPayload.roleId || '',
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      opts,
     );
     return user;
   } catch (error) {
@@ -116,30 +118,6 @@ const getUserAdminExists = async (email, companyName) => {
   }
 };
 
-const getDataUser = async (req) => {
-  const userOrganization = userModel.UserOrganization;
-  try {
-    const usrRes = await userOrganization.findOne({ userId: new mongoose.Types.ObjectId(req._id) })
-      .populate({
-        path: 'userId',
-        match: { email: { $eq: req.email } },
-        populate: {
-          path: 'roleId',
-          model: 'Role',
-        },
-      })
-      .populate({ path: 'organizationId' })
-      .exec();
-    return struct.UserRegistrationResponse(
-      usrRes.userId,
-      usrRes.organizationId,
-      usrRes.userId,
-    );
-  } catch (e) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
-  }
-};
-
 const checkInvitationCodeExists = async (companyId) => {
   const organization = userModel.Organization;
   try {
@@ -210,7 +188,7 @@ const getUserExists = async (email, companyId) => {
   }
 };
 
-const getDataUserMiddleware = async (userId, organizationId) => {
+const getDataUser = async (userId, organizationId) => {
   const userOrganization = userModel.UserOrganization;
   try {
     return await userOrganization.findOne({
@@ -263,7 +241,6 @@ module.exports = {
   checkInvitationCodeExists,
   getUserExists,
   findUserByCompanyAndRole,
-  getDataUserMiddleware,
   updateDataUserAdmin,
   insertOrganization,
 };
