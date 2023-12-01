@@ -99,7 +99,7 @@ exports.attandanceListAdmin = async (param, organizationId) => {
     })
       .populate({ path: 'userId' })
       .where(whereParam)
-      .sort({ createdDate: sortBy })
+      .sort({ attendanceDate: sortBy })
       .limit(param.limit)
       .skip(offset * param.limit);
 
