@@ -78,6 +78,26 @@ const getOrganization = async (companyName) => {
   }
 };
 
+const getAllUserOnOrganization = async (organizationId) => {
+  const userOrganization = userModel.UserOrganization;
+  try {
+    const listOfUsers = await userOrganization
+      .find({
+        organizationId: new mongoose.Types.ObjectId(organizationId),
+      })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      })
+      .populate({ path: 'organizationId' });
+    return listOfUsers;
+  } catch (e) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
+  }
+};
+
 const getDataRole = async (req) => {
   const organization = userModel.Role;
   try {
@@ -243,4 +263,5 @@ module.exports = {
   findUserByCompanyAndRole,
   updateDataUserAdmin,
   insertOrganization,
+  getAllUserOnOrganization,
 };

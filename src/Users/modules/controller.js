@@ -156,3 +156,23 @@ exports.registerCompany = async (req, res, next) => {
     next(e);
   }
 };
+
+exports.employeeList = async (req, res, next) => {
+  try {
+    const { organizationId } = req.user;
+    const allUsers = await model.getAllUserOnOrganization(organizationId);
+    const allEmployee = allUsers.filter((eachUser) => eachUser.userId.roleId.name === 'employee');
+    const userList = allEmployee.map((user) => struct.UserRegistrationResponse(
+      user.userId,
+      user.organizationId,
+      user.userId.roleId,
+    ));
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: userList,
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

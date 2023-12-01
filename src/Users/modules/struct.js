@@ -22,7 +22,7 @@ const Organization = (req) => ({
 
 const UserRegistrationResponse = (user, org, role) => ({
   userId: user._id.toString(),
-  fullname: user.fullname,
+  fullname: user.fullname || 'unknown',
   email: user.email,
   role: role.name,
   organization: org.name,
