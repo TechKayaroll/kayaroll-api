@@ -5,6 +5,7 @@ const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
 const uploadGcp = require('../../../Helpers/gcp');
+const { getTotalSecondsWithData, secondToString } = require('../../../Helpers/date');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
@@ -135,6 +136,55 @@ exports.attendanceUpdate = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {},
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.attendanceReport = async (req, res, next) => {
+  try {
+    req.query.from = dayjs(req.query.from, 'YYYY-MM-DD').startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to, 'YYYY-MM-DD').endOf('day').toISOString();
+    const { employeeIds } = req.query;
+    const uniqueEmployeeIds = new Set();
+    employeeIds.forEach((id) => uniqueEmployeeIds.add(id));
+    // const queryPayload = {
+    //   userId: employeeIds[0],
+    //   from: req.query.from,
+    //   to: req.query.to,
+    // };
+    // const employeeList = await model.attendanceReportListAdmin(queryPayload, req.user.organizationId);
+
+    const employeeListPromises = [];
+    uniqueEmployeeIds.forEach((employeeId) => {
+      const queryPayload = {
+        userId: employeeId,
+        from: req.query.from,
+        to: req.query.to,
+      };
+      employeeListPromises.push(model.attendanceReportListAdmin(
+        queryPayload,
+        req.user.organizationId,
+      ));
+    });
+    const employeeList = await Promise.all(employeeListPromises);
+    // const employeeList = await model.attendanceReportListAdmin({
+    //   userId: '656444acb640df42d2d295b1',
+    //   from: req.query.from,
+    //   to: req.query.to,
+    // }, req.user.organizationId);
+    // const reportList = await model.attendanceReportListAdmin({
+    //   userId: employeeId,
+    //   from: req.query.from,
+    //   to: req.query.to,
+    // }, req.user.organizationId);
+    // const { totalSeconds, data } = getTotalSecondsWithData(reportList);
+    // const responseData = struct.AttendanceReportsData(data, totalSeconds);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: employeeList,
       code: StatusCodes.OK,
     });
   } catch (e) {

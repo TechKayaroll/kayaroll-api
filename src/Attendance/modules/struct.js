@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
+const { secondsToDuration } = require('../../../Helpers/date');
 
 const Attendance = (req) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
@@ -53,10 +54,38 @@ const AttendanceDataResult = (val) => ({
   originId: '',
 });
 
+const AttendanceReportsData = (calculatedDatas, totalSeconds) => {
+  const eachReports = calculatedDatas.map((eachData) => {
+    const {
+      inTime,
+      outTime,
+      attendanceIn,
+      attendanceOut,
+      duration,
+    } = eachData;
+    return {
+      attendanceIn: {
+        time: dayjs(inTime).format('DD MMM YYYY, HH:mm:ss'),
+        detail: AttendanceListAdmin(attendanceIn),
+      },
+      attendanceOut: {
+        time: dayjs(outTime).format('DD MMM YYYY, HH:mm:ss'),
+        detail: AttendanceListAdmin(attendanceOut),
+      },
+      duration,
+    };
+  });
+  return {
+    result: eachReports,
+    totalDuration: secondsToDuration(totalSeconds),
+  };
+};
+
 module.exports = {
   Attendance,
   AttendanceList,
   AttendanceListPagination,
   AttendanceListAdmin,
   AttendanceDataResult,
+  AttendanceReportsData,
 };

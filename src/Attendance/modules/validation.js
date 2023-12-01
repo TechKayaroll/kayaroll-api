@@ -23,6 +23,19 @@ exports.schemaAttendanceList = Joi.object({
   attendanceType: Joi.array().items(Joi.string().valid('In', 'Out')).empty(Joi.array().length(0)).default(['In', 'Out']),
 });
 
+exports.schemaAttendanceReportAdmin = Joi.object({
+  from: Joi.date()
+    .format('YYYY-MM-DD')
+    .empty('')
+    .default('1970-01-01'),
+  to: Joi.date()
+    .format('YYYY-MM-DD')
+    .greater(Joi.ref('from'))
+    .empty('')
+    .default(dayjs(Date.now()).toISOString()),
+  employeeIds: Joi.array()
+    .items(Joi.string()).required(),
+});
 exports.schemaAttendanceListAdmin = Joi.object({
   from: Joi.date().format('YYYY-MM-DD').empty('').default('1970-01-01'),
   to: Joi.date().format('YYYY-MM-DD').greater(Joi.ref('from')).empty('')

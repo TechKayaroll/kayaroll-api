@@ -1,4 +1,4 @@
-const { StatusCodes } = require('http-status-codes');
+const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const model = require('../Users/modules/model');
 const { decodeToken } = require('../../Helpers/jwt');
 const struct = require('../Users/modules/struct');
@@ -27,7 +27,7 @@ module.exports.authentication = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({
-      message: error?.message,
+      message: ReasonPhrases.UNAUTHORIZED,
       data: {},
       code: StatusCodes.UNAUTHORIZED,
     });

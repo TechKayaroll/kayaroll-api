@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const { ResponseError } = require('../../../Helpers/response');
 const attendanceModel = require('./mapping');
+const userModel = require('../../Users/modules/mapping');
 const struct = require('./struct');
 
 exports.attandanceUser = async (param) => {
@@ -55,6 +56,37 @@ exports.attandanceList = async (param, userId, organizationId) => {
     })
       .where(whereParam).exec();
     return { list, pagination };
+  } catch (e) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
+  }
+};
+
+exports.attendanceReportListAdmin = async (query, organizationId) => {
+  try {
+    const attendances = attendanceModel.Attendance;
+    const user = await userModel.User.findById(query.userId).populate('roleId');
+    const isEmployee = user?.roleId ? user.roleId.name === 'employee' : false;
+    if (!isEmployee) return [];
+
+    const whereParam = {
+      attendanceType: ['In', 'Out'],
+      status: ['Approved'],
+      userId: new mongoose.Types.ObjectId(query.userId),
+    };
+    const sortBy = 1; // ASC
+
+    const list = await attendances.find({
+      organizationId,
+      attendanceDate: {
+        $gte: query.from,
+        $lte: query.to,
+      },
+    })
+      .populate({ path: 'userId' })
+      .where(whereParam)
+      .sort({ attendanceDate: sortBy });
+
+    return list;
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
