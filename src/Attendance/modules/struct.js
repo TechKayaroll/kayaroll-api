@@ -54,6 +54,17 @@ const AttendanceDataResult = (val) => ({
   originId: '',
 });
 
+const AttendanceReport = (attendance) => ({
+  userId: attendance.userId,
+  organizationId: attendance.organizationId,
+  attendanceImage: attendance.attendanceImage,
+  long: attendance.long,
+  lat: attendance.lat,
+  attendanceDate: attendance.attendanceDate,
+  attendanceType: attendance.attendanceType,
+  status: attendance.status,
+});
+
 const AttendanceReportsData = (calculatedDatas, totalSeconds) => {
   const eachReports = calculatedDatas.map((eachData) => {
     const {
@@ -88,4 +99,5 @@ module.exports = {
   AttendanceListAdmin,
   AttendanceDataResult,
   AttendanceReportsData,
+  AttendanceReport,
 };

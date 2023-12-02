@@ -5,6 +5,7 @@ const { ResponseError } = require('../../../Helpers/response');
 const attendanceModel = require('./mapping');
 const userModel = require('../../Users/modules/mapping');
 const struct = require('./struct');
+const { secondsToDuration } = require('../../../Helpers/date');
 
 exports.attandanceUser = async (param) => {
   const attendance = new attendanceModel.Attendance(param);
@@ -64,8 +65,17 @@ exports.attandanceList = async (param, userId, organizationId) => {
 exports.attendanceReportListAdmin = async (query, organizationId) => {
   try {
     const attendances = attendanceModel.Attendance;
-    const user = await userModel.User.findById(query.userId).populate('roleId');
-    const isEmployee = user?.roleId ? user.roleId.name === 'employee' : false;
+    const userOrg = await userModel.UserOrganization
+      .findOne({ userId: query.userId, organizationId })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+          model: 'Role',
+        },
+      })
+      .populate('organizationId');
+    const isEmployee = userOrg?.userId?.roleId ? userOrg?.userId?.roleId?.name === 'employee' : false;
     if (!isEmployee) return [];
 
     const whereParam = {
@@ -82,14 +92,59 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
         $lte: query.to,
       },
     })
-      .populate({ path: 'userId' })
       .where(whereParam)
       .sort({ attendanceDate: sortBy });
 
-    return list;
+    return { list, userOrg };
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
+};
+
+exports.attendanceReportAdminData = (attendances) => {
+  let totalSeconds = 0;
+  let inEntry = null;
+  const data = [];
+
+  attendances.forEach((eachAttendance) => {
+    const { attendanceType, attendanceDate } = eachAttendance;
+    if (attendanceType === 'In' && !inEntry) {
+      inEntry = {
+        time: dayjs(attendanceDate),
+        attendance: eachAttendance,
+        outTime: null,
+      };
+    } else if (attendanceType === 'Out' && inEntry) {
+      inEntry.outTime = {
+        time: dayjs(attendanceDate),
+        attendance: eachAttendance,
+      };
+
+      const inTime = {
+        time: inEntry.time,
+        attendance: inEntry.attendance,
+      };
+      const outTime = {
+        time: inEntry.outTime.time,
+        attendance: inEntry.outTime.attendance,
+      };
+
+      const duration = outTime.time.diff(inTime.time, 'second');
+      totalSeconds += duration;
+
+      data.push({
+        inTime: inTime.time.toISOString(),
+        outTime: outTime.time.toISOString(),
+        attendanceIn: struct.AttendanceReport(inTime.attendance),
+        attendanceOut: struct.AttendanceReport(outTime.attendance),
+        duration: secondsToDuration(duration),
+      });
+
+      inEntry = null;
+    }
+  });
+
+  return { totalDuration: secondsToDuration(totalSeconds), data };
 };
 
 exports.attandanceListAdmin = async (param, organizationId) => {

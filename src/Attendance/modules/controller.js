@@ -1,11 +1,12 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
+// const ExcelJS = require('exceljs');
 const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
+const userStruct = require('../../Users/modules/struct');
 const uploadGcp = require('../../../Helpers/gcp');
-const { getTotalSecondsWithData, secondToString } = require('../../../Helpers/date');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
@@ -150,12 +151,6 @@ exports.attendanceReport = async (req, res, next) => {
     const { employeeIds } = req.query;
     const uniqueEmployeeIds = new Set();
     employeeIds.forEach((id) => uniqueEmployeeIds.add(id));
-    // const queryPayload = {
-    //   userId: employeeIds[0],
-    //   from: req.query.from,
-    //   to: req.query.to,
-    // };
-    // const employeeList = await model.attendanceReportListAdmin(queryPayload, req.user.organizationId);
 
     const employeeListPromises = [];
     uniqueEmployeeIds.forEach((employeeId) => {
@@ -170,21 +165,25 @@ exports.attendanceReport = async (req, res, next) => {
       ));
     });
     const employeeList = await Promise.all(employeeListPromises);
-    // const employeeList = await model.attendanceReportListAdmin({
-    //   userId: '656444acb640df42d2d295b1',
-    //   from: req.query.from,
-    //   to: req.query.to,
-    // }, req.user.organizationId);
-    // const reportList = await model.attendanceReportListAdmin({
-    //   userId: employeeId,
-    //   from: req.query.from,
-    //   to: req.query.to,
-    // }, req.user.organizationId);
-    // const { totalSeconds, data } = getTotalSecondsWithData(reportList);
-    // const responseData = struct.AttendanceReportsData(data, totalSeconds);
+
+    const reports = [];
+    Array.from(uniqueEmployeeIds).forEach((_, index) => {
+      const { list, userOrg } = employeeList[index];
+      const { totalDuration, data } = model.attendanceReportAdminData(list);
+      reports.push({
+        user: userStruct.UserRegistrationResponse(
+          userOrg.userId,
+          userOrg.organizationId,
+          userOrg.userId.roleId,
+        ),
+        totalDuration,
+        report: data,
+      });
+    });
+
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: employeeList,
+      data: reports,
       code: StatusCodes.OK,
     });
   } catch (e) {
