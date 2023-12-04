@@ -16,7 +16,7 @@ const AttendanceRoutes = () => {
   ChildRouter.get('/admin/dashboard', validate.validate(null, schema.schemaAttendanceListAdmin), CONTROLLER.attendanceListAdmin);
   ChildRouter.post('/admin/approval', validate.validate(schema.schemaApproval), CONTROLLER.attendanceApproval);
   ChildRouter.put('/admin/update', validate.validate(schema.schemaAttendanceUpdate), CONTROLLER.attendanceUpdate);
-
+  ChildRouter.post('/admin/report', validate.validate(null, schema.schemaAttendanceReportAdmin), CONTROLLER.attendanceReport);
   return ChildRouter;
 };
 

@@ -1,10 +1,13 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
+// const ExcelJS = require('exceljs');
 const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
+const userStruct = require('../../Users/modules/struct');
 const uploadGcp = require('../../../Helpers/gcp');
+const { generateAttendanceReports } = require('../../../Helpers/generator');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
@@ -137,6 +140,57 @@ exports.attendanceUpdate = async (req, res, next) => {
       data: {},
       code: StatusCodes.OK,
     });
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.attendanceReport = async (req, res, next) => {
+  try {
+    req.query.from = dayjs(req.query.from, 'YYYY-MM-DD').startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to, 'YYYY-MM-DD').endOf('day').toISOString();
+    const { employeeIds } = req.query;
+    const uniqueEmployeeIds = new Set();
+    employeeIds.forEach((id) => uniqueEmployeeIds.add(id));
+
+    const employeeListPromises = [];
+    uniqueEmployeeIds.forEach((employeeId) => {
+      const queryPayload = {
+        userId: employeeId,
+        from: req.query.from,
+        to: req.query.to,
+      };
+      employeeListPromises.push(model.attendanceReportListAdmin(
+        queryPayload,
+        req.user.organizationId,
+      ));
+    });
+    const employeeList = await Promise.all(employeeListPromises);
+
+    const reports = [];
+    Array.from(uniqueEmployeeIds).forEach((_, index) => {
+      const { list, userOrg } = employeeList[index];
+      const { totalDuration, data } = model.attendanceReportAdminData(list);
+      reports.push({
+        user: userStruct.UserRegistrationResponse(
+          userOrg.userId,
+          userOrg.organizationId,
+          userOrg.userId.roleId,
+        ),
+        totalDuration,
+        report: data,
+      });
+    });
+
+    const file = generateAttendanceReports(reports);
+    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD/MMM/YYYY')}-${dayjs(req.query.to).format('DD/MMM/YYYY')}.xlsx`;
+    res.attachment(filename);
+    res.status(StatusCodes.OK).end(file);
+    // res.status(StatusCodes.OK).json({
+    //   message: ReasonPhrases.OK,
+    //   data: reports,
+    //   code: StatusCodes.OK,
+    // });
   } catch (e) {
     next(e);
   }
