@@ -7,6 +7,7 @@ const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
 const userStruct = require('../../Users/modules/struct');
 const uploadGcp = require('../../../Helpers/gcp');
+const { generateAttendanceReports } = require('../../../Helpers/generator');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
@@ -181,11 +182,15 @@ exports.attendanceReport = async (req, res, next) => {
       });
     });
 
-    res.status(StatusCodes.OK).json({
-      message: ReasonPhrases.OK,
-      data: reports,
-      code: StatusCodes.OK,
-    });
+    const file = generateAttendanceReports(reports);
+    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD/MMM/YYYY')}-${dayjs(req.query.to).format('DD/MMM/YYYY')}.xlsx`;
+    res.attachment(filename);
+    res.status(StatusCodes.OK).end(file);
+    // res.status(StatusCodes.OK).json({
+    //   message: ReasonPhrases.OK,
+    //   data: reports,
+    //   code: StatusCodes.OK,
+    // });
   } catch (e) {
     next(e);
   }
