@@ -16,24 +16,15 @@ const addDataToSheet = (workbook, sheetName, attendanceData) => {
     },
     report,
   } = attendanceData;
-  const userKeys = Object.keys(user);
-  userKeys.forEach((fieldName) => {
-    const fieldValue = user[fieldName];
-    XLSX.utils.sheet_add_aoa(worksheet, [[fieldName, fieldValue]], {
-      origin: -1,
-    });
-  });
+  const userDetails = Object.entries(user).map(([fieldName, fieldValue]) => [
+    fieldName, fieldValue,
+  ]);
+  XLSX.utils.sheet_add_aoa(worksheet, userDetails, { origin: -1 });
+
   XLSX.utils.sheet_add_aoa(
     worksheet,
-    [
-      [
-        'Total Duration',
-        `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`,
-      ],
-    ],
-    {
-      origin: -1,
-    },
+    [['Total Duration', `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`]],
+    { origin: -1 },
   );
   // Add Empty Row
   XLSX.utils.sheet_add_aoa(worksheet, [[]], { origin: -1 });
@@ -43,19 +34,10 @@ const addDataToSheet = (workbook, sheetName, attendanceData) => {
     const tableHeader = ['inTime', 'outTime', 'duration'];
     XLSX.utils.sheet_add_aoa(worksheet, [tableHeader], { origin: -1 });
     report.forEach((reportEntry) => {
-      const {
-        inTime,
-        outTime,
-        duration,
-      } = reportEntry;
+      const { inTime, outTime, duration } = reportEntry;
       const row = [
         inTime,
-        // reportEntry.attendanceIn.lat,
-        // reportEntry.attendanceIn.long,
-
         outTime,
-        // reportEntry.attendanceOut.lat,
-        // reportEntry.attendanceOut.long,
         `${duration.days} Days ${duration.hours} Hours ${duration.minutes} Minutes ${duration.seconds} Seconds`,
       ];
 
