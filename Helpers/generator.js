@@ -52,8 +52,7 @@ const generateAttendanceReports = (reports) => {
     addDataToSheet(workbook, user.fullname || 'Employee Name', reportEntry);
   });
 
-  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-  return buffer;
+  return workbook;
 };
 
 module.exports = {

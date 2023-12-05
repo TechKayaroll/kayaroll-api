@@ -1,6 +1,10 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
+const XLSX = require('xlsx');
 const dayjs = require('dayjs');
+const os = require('os');
+const path = require('path');
+
 // const ExcelJS = require('exceljs');
 const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
@@ -182,15 +186,23 @@ exports.attendanceReport = async (req, res, next) => {
       });
     });
 
-    const file = generateAttendanceReports(reports);
     const filename = `AttendanceReport_${dayjs(req.query.from).format('DD/MMM/YYYY')}-${dayjs(req.query.to).format('DD/MMM/YYYY')}.xlsx`;
-    res.attachment(filename);
-    res.status(StatusCodes.OK).end(file);
-    // res.status(StatusCodes.OK).json({
-    //   message: ReasonPhrases.OK,
-    //   data: reports,
-    //   code: StatusCodes.OK,
-    // });
+    const workbook = generateAttendanceReports(reports);
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    const filePath = path.join(os.tmpdir(), filename);
+
+    fs.writeFileSync(filePath, buffer);
+    res.download(filename, (err) => {
+      fs.unlinkSync(filename);
+      if (err) {
+        next(err);
+      }
+    });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: reports,
+      code: StatusCodes.OK,
+    });
   } catch (e) {
     next(e);
   }
