@@ -186,23 +186,24 @@ exports.attendanceReport = async (req, res, next) => {
       });
     });
 
-    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD/MMM/YYYY')}-${dayjs(req.query.to).format('DD/MMM/YYYY')}.xlsx`;
+    const fromDateString = dayjs(req.query.from).format('DDMMMYYYY');
+    const toDateString = dayjs(req.query.to).format('DDMMMYYYY');
+    const filename = `AttendanceReport_${fromDateString}_${toDateString}.xlsx`;
     const workbook = generateAttendanceReports(reports);
     const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
     const filePath = path.join(os.tmpdir(), filename);
-
     fs.writeFileSync(filePath, buffer);
-    res.download(filename, (err) => {
-      fs.unlinkSync(filename);
+    res.download(filePath, filename, (err) => {
+      fs.unlinkSync(filePath);
       if (err) {
         next(err);
       }
     });
-    res.status(StatusCodes.OK).json({
-      message: ReasonPhrases.OK,
-      data: reports,
-      code: StatusCodes.OK,
-    });
+    // res.status(StatusCodes.OK).json({
+    //   message: ReasonPhrases.OK,
+    //   data: reports,
+    //   code: StatusCodes.OK,
+    // });
   } catch (e) {
     next(e);
   }
