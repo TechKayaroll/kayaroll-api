@@ -185,17 +185,12 @@ exports.attendanceReport = async (req, res, next) => {
       });
     });
 
+    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD-MMM-YYYY')}_${dayjs(req.query.to).format('DD-MMM-YYYY')}.xlsx`;
     const workbook = generateAttendanceReports(reports);
     const buf = await workbook.xlsx.writeBuffer();
-    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD-MMM-YYYY')}_${dayjs(req.query.to).format('DD-MMM-YYYY')}.xlsx`;
-    const filePath = path.join(os.tmpdir(), filename);
-    fs.writeFileSync(filePath, buf);
-    res.download(filePath, filename, (err) => {
-      fs.unlinkSync(filePath);
-      if (err) {
-        next(err);
-      }
-    });
+    res.contentType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.send(buf);
   } catch (e) {
     next(e);
   }

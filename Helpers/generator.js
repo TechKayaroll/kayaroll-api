@@ -1,7 +1,6 @@
 /* eslint-disable no-param-reassign */
 const ExcelJS = require('exceljs');
 
-// Script: https://stackblitz.com/edit/react-cahvjj?file=src%2FApp.js
 const addDataToSheet = (worksheet, attendanceData) => {
   const {
     user,
