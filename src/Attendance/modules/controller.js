@@ -1,11 +1,10 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
-const XLSX = require('xlsx');
 const dayjs = require('dayjs');
-const os = require('os');
-const path = require('path');
 
 // const ExcelJS = require('exceljs');
+const path = require('path');
+const os = require('os');
 const model = require('./model');
 const { ResponseError } = require('../../../Helpers/response');
 const struct = require('./struct');
@@ -151,8 +150,8 @@ exports.attendanceUpdate = async (req, res, next) => {
 
 exports.attendanceReport = async (req, res, next) => {
   try {
-    req.query.from = dayjs(req.query.from, 'YYYY-MM-DD').startOf('day').toISOString();
-    req.query.to = dayjs(req.query.to, 'YYYY-MM-DD').endOf('day').toISOString();
+    req.query.from = dayjs(req.query.from).startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to).endOf('day').toISOString();
     const { employeeIds } = req.query;
     const uniqueEmployeeIds = new Set();
     employeeIds.forEach((id) => uniqueEmployeeIds.add(id));
@@ -186,24 +185,17 @@ exports.attendanceReport = async (req, res, next) => {
       });
     });
 
-    const fromDateString = dayjs(req.query.from).format('DDMMMYYYY');
-    const toDateString = dayjs(req.query.to).format('DDMMMYYYY');
-    const filename = `AttendanceReport_${fromDateString}_${toDateString}.xlsx`;
     const workbook = generateAttendanceReports(reports);
-    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    const buf = await workbook.xlsx.writeBuffer();
+    const filename = `AttendanceReport_${dayjs(req.query.from).format('DD-MMM-YYYY')}_${dayjs(req.query.to).format('DD-MMM-YYYY')}.xlsx`;
     const filePath = path.join(os.tmpdir(), filename);
-    fs.writeFileSync(filePath, buffer);
+    fs.writeFileSync(filePath, buf);
     res.download(filePath, filename, (err) => {
       fs.unlinkSync(filePath);
       if (err) {
         next(err);
       }
     });
-    // res.status(StatusCodes.OK).json({
-    //   message: ReasonPhrases.OK,
-    //   data: reports,
-    //   code: StatusCodes.OK,
-    // });
   } catch (e) {
     next(e);
   }
