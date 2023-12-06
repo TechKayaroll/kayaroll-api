@@ -16,6 +16,19 @@ exports.attandanceUser = async (param) => {
   }
 };
 
+exports.attendanceDetail = async (attendanceId) => {
+  try {
+    const attendance = attendanceModel.Attendance.findById(attendanceId).populate({
+      path: 'userId',
+      populate: {
+        path: 'roleId',
+      },
+    });
+    return attendance;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
 exports.attandanceList = async (param, userId, organizationId) => {
   const attendances = attendanceModel.Attendance;
   const whereParam = {};

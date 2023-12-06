@@ -190,3 +190,21 @@ exports.attendanceReport = async (req, res, next) => {
     next(e);
   }
 };
+
+exports.attendanceDetailById = async (req, res, next) => {
+  try {
+    const attendanceId = req.params.id;
+    const attendance = await model.attendanceDetail(attendanceId);
+    let data = null;
+    if (attendance) {
+      data = struct.AttendanceListAdmin(attendance);
+    }
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data,
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
