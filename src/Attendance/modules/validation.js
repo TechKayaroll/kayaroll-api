@@ -31,6 +31,7 @@ exports.schemaAttendanceReportAdmin = Joi.object({
   to: Joi.date()
     .format('YYYY-MM-DD')
     .greater(Joi.ref('from'))
+    .allow(Joi.ref('from'))
     .empty('')
     .default(dayjs(Date.now()).toISOString()),
   employeeIds: Joi.array()
