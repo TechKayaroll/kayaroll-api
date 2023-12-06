@@ -54,8 +54,8 @@ exports.attendanceCheckOut = async (req, res, next) => {
 
 exports.attendanceList = async (req, res, next) => {
   try {
-    req.query.from = dayjs(req.query.from, 'YYYY-MM-DD').startOf('day').toISOString();
-    req.query.to = dayjs(req.query.to, 'YYYY-MM-DD').endOf('day').toISOString();
+    req.query.from = dayjs(req.query.from).startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to).endOf('day').toISOString();
     const list = await model.attandanceList(req.query, req.user.userId, req.user.organizationId);
     const dataList = list.list.map((eachList) => struct.AttendanceList(eachList));
 
