@@ -5,7 +5,7 @@ const { ResponseError } = require('../../../Helpers/response');
 const attendanceModel = require('./mapping');
 const userModel = require('../../Users/modules/mapping');
 const struct = require('./struct');
-const { secondsToDuration } = require('../../../Helpers/date');
+const { secondsToDuration, secondsToHMS } = require('../../../Helpers/date');
 
 exports.attandanceUser = async (param) => {
   const attendance = new attendanceModel.Attendance(param);
@@ -127,7 +127,7 @@ exports.attendanceReportAdminData = (attendances) => {
         outTime: outTime.time.toISOString(),
         attendanceIn: struct.AttendanceReport(inTime.attendance),
         attendanceOut: struct.AttendanceReport(outTime.attendance),
-        duration: secondsToDuration(duration),
+        duration: secondsToHMS(duration),
       });
 
       inEntry = null;

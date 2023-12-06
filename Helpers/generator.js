@@ -33,7 +33,7 @@ const addDataToSheet = (worksheet, attendanceData) => {
       const row = [
         inTime,
         outTime,
-        `${duration.days} Days ${duration.hours} Hours ${duration.minutes} Minutes ${duration.seconds} Seconds`,
+        `${duration.hours} Hours ${duration.minutes} Minutes ${duration.seconds} Seconds`,
       ];
       worksheet.addRow(row);
     });
@@ -42,10 +42,10 @@ const addDataToSheet = (worksheet, attendanceData) => {
 
 const generateAttendanceReports = (reports) => {
   const workbook = new ExcelJS.Workbook();
-  reports.forEach((reportEntry) => {
+  reports.forEach((reportEntry, index) => {
     const { user } = reportEntry;
     const sheetName = user.fullname || 'Employee Name';
-    const worksheet = workbook.addWorksheet(sheetName);
+    const worksheet = workbook.addWorksheet(`${sheetName}_${index + 1}`);
     addDataToSheet(worksheet, reportEntry);
   });
   return workbook;
