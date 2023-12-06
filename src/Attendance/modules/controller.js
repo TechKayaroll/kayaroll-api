@@ -81,7 +81,7 @@ exports.attendanceListAdmin = async (req, res, next) => {
     req.query.to = dayjs(req.query.to).endOf('day').toISOString();
     const list = await model.attandanceListAdmin(req.query, req.user.organizationId);
     const dataList = list.list.map((eachList) => struct.AttendanceListAdmin(eachList));
-
+    console.log(list)
     list.list = dataList;
     list.pagination = struct.AttendanceListPagination(
       req.query.page,

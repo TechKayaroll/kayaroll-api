@@ -22,21 +22,11 @@ exports.attandanceList = async (param, userId, organizationId) => {
   const offset = param.page - 1;
   const sortBy = (param.sortBy === 'DESC') ? -1 : 1;
   if (param.attendanceType) {
-    const attendanceParam = 'attendanceType';
-    const parts = attendanceParam.split(':');
-    whereParam[parts[0]] = param.attendanceType;
+    whereParam.attendanceType = param.attendanceType;
   }
 
   if (param.status.length !== 0) {
-    const statusParam = 'status';
-    const pastsStatus = statusParam.split(':');
-    whereParam[pastsStatus[0]] = param.status;
-  }
-
-  if (param.attendanceType.length !== 0) {
-    const statusParam = 'attendanceType';
-    const partsStatus = statusParam.split(':');
-    whereParam[partsStatus[0]] = param.attendanceType;
+    whereParam.status = param.status;
   }
 
   try {
@@ -153,49 +143,33 @@ exports.attandanceListAdmin = async (param, organizationId) => {
   const offset = param.page - 1;
   const sortBy = (param.sortBy === 'DESC') ? -1 : 1;
   if (param.attendanceType) {
-    const attendanceParam = 'attendanceType';
-    const parts = attendanceParam.split(':');
-    whereParam[parts[0]] = param.attendanceType;
-  }
-
-  if (param.attendanceType.length !== 0) {
-    const statusParam = 'attendanceType';
-    const partsStatus = statusParam.split(':');
-    whereParam[partsStatus[0]] = param.attendanceType;
+    whereParam.attendanceType = param.attendanceType;
   }
 
   if (param.status.length !== 0) {
-    const statusParam = 'status';
-    const partsStatus = statusParam.split(':');
-    whereParam[partsStatus[0]] = param.status;
+    whereParam.status = param.status;
   }
 
   if (param.employeeIds.length !== 0) {
-    const employeeIdParam = 'userId';
-    const partsEmployee = employeeIdParam.split(':');
-    whereParam[partsEmployee[0]] = param.employeeIds;
+    whereParam.userId = param.employeeIds;
   }
-
   try {
+    const attendanceDateQuery = {
+      $gte: dayjs(param.from).toISOString(),
+      $lte: dayjs(param.to).toISOString(),
+    };
     const list = await attendances.find({
       organizationId,
-      attendanceDate: {
-        $gte: param.from,
-        $lte: param.to,
-      },
+      attendanceDate: attendanceDateQuery,
     })
       .populate({ path: 'userId' })
       .where(whereParam)
       .sort({ attendanceDate: sortBy })
       .limit(param.limit)
       .skip(offset * param.limit);
-
     const pagination = await attendances.countDocuments({
       organizationId,
-      attendanceDate: {
-        $gte: param.from,
-        $lte: param.to,
-      },
+      attendanceDate: attendanceDateQuery,
     })
       .where(whereParam).exec();
     return { list, pagination };
