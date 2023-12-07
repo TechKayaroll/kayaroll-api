@@ -135,17 +135,17 @@ exports.register = async (req, res, next) => {
 exports.registerCompany = async (req, res, next) => {
   try {
     const { companyName } = req.body;
-    let organization = struct.Organization(req.body);
     const isExistOrg = await model.getOrganization(companyName);
     if (isExistOrg) {
+      const existOrg = struct.Organization(isExistOrg);
       res.status(StatusCodes.OK).json({
         message: ReasonPhrases.OK,
-        data: organization,
+        data: existOrg,
         code: StatusCodes.OK,
       });
     } else {
       const newOrganization = await model.insertOrganization(companyName);
-      organization = struct.Organization(newOrganization);
+      const organization = struct.Organization(newOrganization);
       res.status(StatusCodes.OK).json({
         message: ReasonPhrases.OK,
         data: organization,

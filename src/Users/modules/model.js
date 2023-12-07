@@ -240,9 +240,10 @@ const updateDataUserAdmin = async (req, payload) => {
 
 const insertOrganization = async (companyName) => {
   try {
+    const invitationCode = generateCompanyCode(companyName);
     const newOrganization = new userModel.Organization({
-      companyName,
-      invitationCode: generateCompanyCode(),
+      name: companyName,
+      invitationCode,
     });
     return await newOrganization.save();
   } catch (e) {
