@@ -164,7 +164,6 @@ exports.attendanceReport = async (req, res, next) => {
       ));
     });
     const employeeList = await Promise.all(employeeListPromises);
-
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];

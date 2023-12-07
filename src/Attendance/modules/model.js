@@ -106,44 +106,53 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
 
 exports.attendanceReportAdminData = (attendances) => {
   let totalSeconds = 0;
-  let inEntry = null;
+  let currentInEntry = null;
   const data = [];
 
-  attendances.forEach((eachAttendance) => {
+  attendances.forEach((eachAttendance, index) => {
     const { attendanceType, attendanceDate } = eachAttendance;
-    if (attendanceType === 'In' && !inEntry) {
-      inEntry = {
-        time: dayjs(attendanceDate),
+
+    let currentIndex = index;
+
+    if (attendanceType === 'In') {
+      let nextIndex = currentIndex + 1;
+      while (nextIndex < attendances.length && attendances[nextIndex].attendanceType === 'In') {
+        nextIndex += 1;
+      }
+
+      currentInEntry = {
+        startTime: dayjs(eachAttendance.attendanceDate),
         attendance: eachAttendance,
-        outTime: null,
+        endTime: null,
       };
-    } else if (attendanceType === 'Out' && inEntry) {
-      inEntry.outTime = {
+      currentIndex = nextIndex - 1;
+    } else if (attendanceType === 'Out' && currentInEntry) {
+      currentInEntry.endTime = {
         time: dayjs(attendanceDate),
         attendance: eachAttendance,
       };
 
-      const inTime = {
-        time: inEntry.time,
-        attendance: inEntry.attendance,
+      const startTime = {
+        time: currentInEntry.startTime,
+        attendance: currentInEntry.attendance,
       };
-      const outTime = {
-        time: inEntry.outTime.time,
-        attendance: inEntry.outTime.attendance,
+      const endTime = {
+        time: currentInEntry.endTime.time,
+        attendance: currentInEntry.endTime.attendance,
       };
 
-      const duration = outTime.time.diff(inTime.time, 'second');
+      const duration = endTime.time.diff(startTime.time, 'second');
       totalSeconds += duration;
 
       data.push({
-        inTime: inTime.time.toISOString(),
-        outTime: outTime.time.toISOString(),
-        attendanceIn: struct.AttendanceReport(inTime.attendance),
-        attendanceOut: struct.AttendanceReport(outTime.attendance),
+        inTime: dayjs(startTime.time).format('MMM, DD YYYY hh:mm:ss'),
+        outTime: dayjs(endTime.time).format('MMM, DD YYYY hh:mm:ss'),
+        attendanceIn: struct.AttendanceReport(startTime.attendance),
+        attendanceOut: struct.AttendanceReport(endTime.attendance),
         duration: secondsToHMS(duration),
       });
 
-      inEntry = null;
+      currentInEntry = null; // Reset currentInEntry
     }
   });
 
