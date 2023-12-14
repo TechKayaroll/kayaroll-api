@@ -11,6 +11,7 @@ const basicAuth = require('express-basic-auth');
 let http = require('http');
 const swaggerUi = require('swagger-ui-express');
 const errorMiddleware = require('./src/Middleware/middlewareError');
+const useragent = require('express-useragent');
 
 const APIDocsJSON = require('./openApiDocumentation.json');
 const UserRoutes = require('./src/Users');
@@ -22,6 +23,7 @@ http = http.Server(app);
 app.enable('trust proxy');
 const connectMongo = require('./Services/MongoDB/mongo');
 
+app.use(useragent.express());
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
@@ -58,7 +60,6 @@ connectMongo.connectMongo().then((mongoConnection) => {
       },
     };
   }
-
   // Collected All Routing API
   app.use('/api-docs', basicAuth({
     users: { 'kayaroll-api-docs': process.env.SWAGGER_PASSWORD },
