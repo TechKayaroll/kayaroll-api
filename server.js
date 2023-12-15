@@ -10,8 +10,8 @@ const cors = require('cors');
 const basicAuth = require('express-basic-auth');
 let http = require('http');
 const swaggerUi = require('swagger-ui-express');
-const errorMiddleware = require('./src/Middleware/middlewareError');
 const useragent = require('express-useragent');
+const errorMiddleware = require('./src/Middleware/middlewareError');
 
 const APIDocsJSON = require('./openApiDocumentation.json');
 const UserRoutes = require('./src/Users');

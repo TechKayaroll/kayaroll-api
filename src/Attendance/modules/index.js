@@ -9,10 +9,6 @@ const validate = require('../../Middleware/middlewareValidation');
 const schema = require('./validation');
 
 const AttendanceRoutes = () => {
-  ChildRouter.get('/useragent', (req, res) => {
-    res.status(200).json({ ...req.useragent });
-  });
-
   ChildRouter.use(authentication);
 
   ChildRouter.post('/check-in', upload.single('imageFile'), validate.validate(schema.schemaAttendance), CONTROLLER.attendanceCheckIn);
