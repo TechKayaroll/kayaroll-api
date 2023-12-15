@@ -11,6 +11,9 @@ const Attendance = (req) => ({
   attendanceDate: dayjs(Date.now()).toISOString(),
   attendanceType: '',
   status: 'Pending',
+  browser: req?.useragent?.browser || '',
+  os: req?.useragent?.os || '',
+  platform: req?.useragent?.platform || '',
 });
 
 const AttendanceList = (val) => ({
