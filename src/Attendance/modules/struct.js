@@ -11,6 +11,9 @@ const Attendance = (req) => ({
   attendanceDate: dayjs(Date.now()).toISOString(),
   attendanceType: '',
   status: 'Pending',
+  browser: req?.useragent?.browser || '',
+  os: req?.useragent?.os || '',
+  platform: req?.useragent?.platform || '',
 });
 
 const AttendanceList = (val) => ({
@@ -40,6 +43,9 @@ const AttendanceListAdmin = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
+  browser: val?.browser || '',
+  os: val?.os || '',
+  platform: val?.platform || '',
 });
 
 const AttendanceDataResult = (val) => ({

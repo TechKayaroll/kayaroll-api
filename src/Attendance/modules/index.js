@@ -9,11 +9,12 @@ const validate = require('../../Middleware/middlewareValidation');
 const schema = require('./validation');
 
 const AttendanceRoutes = () => {
-  ChildRouter.get('/useragent', (req, res, next) => {
+  ChildRouter.get('/useragent', (req, res) => {
     res.status(200).json({ ...req.useragent });
   });
+
   ChildRouter.use(authentication);
- 
+
   ChildRouter.post('/check-in', upload.single('imageFile'), validate.validate(schema.schemaAttendance), CONTROLLER.attendanceCheckIn);
   ChildRouter.post('/check-out', upload.single('imageFile'), validate.validate(schema.schemaAttendance), CONTROLLER.attendanceCheckOut);
   ChildRouter.get('/list', validate.validate(null, schema.schemaAttendanceList), CONTROLLER.attendanceList);

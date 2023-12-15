@@ -26,6 +26,18 @@ const AttendanceSchema = new mongoose.Schema({
   status: {
     type: 'string',
   },
+  browser: {
+    type: 'string',
+    default: '',
+  },
+  os: {
+    type: 'string',
+    default: '',
+  },
+  platform: {
+    type: 'string',
+    default: '',
+  },
   originId: {
     type: mongoose.Types.ObjectId,
   },
