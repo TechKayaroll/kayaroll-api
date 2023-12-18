@@ -1,15 +1,14 @@
 const Cloud = require('@google-cloud/storage');
-const path = require('path');
 const { StatusCodes } = require('http-status-codes');
 const { ResponseError } = require('./response');
 
-const serviceKey = path.join(__dirname, `./${process.env.GCP_API_KEYS_FILENAME}.json`);
-
+const serviceKey = JSON.parse(process.env.GCP_API_KEYS);
 const { Storage } = Cloud;
 const storage = new Storage({
-  keyFilename: serviceKey,
+  credentials: serviceKey,
   projectId: process.env.GCP_PROJECT,
 });
+
 const bucket = storage.bucket(process.env.GCP_BUCKET_NAME);
 
 module.exports.UploadFile = async (file) => {
