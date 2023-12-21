@@ -1,10 +1,10 @@
 const ChildRouter = require('express').Router();
-const CONTROLLER = require('./controller');
-const validate = require('../../Middleware/middlewareValidation');
-const schema = require('./validation');
-const { authentication } = require('../../Middleware/middlewareAuth');
+const CONTROLLER = require('../../controllers/userController');
+const validate = require('../../middlewares/middlewareValidation');
+const schema = require('../../joiSchema/userSchema');
+const { authentication } = require('../../middlewares/middlewareAuth');
 
-const usersRoutes = () => {
+const userRoutes = () => {
   ChildRouter.get('/healthz', CONTROLLER.ping);
   ChildRouter.post('/login', validate.validate(schema.schemaLogin), CONTROLLER.login);
   ChildRouter.post('/register', validate.validate(schema.schemaRegister), CONTROLLER.register);
@@ -15,4 +15,4 @@ const usersRoutes = () => {
   return ChildRouter;
 };
 
-module.exports = usersRoutes();
+module.exports = userRoutes();

@@ -11,11 +11,13 @@ const basicAuth = require('express-basic-auth');
 let http = require('http');
 const swaggerUi = require('swagger-ui-express');
 const useragent = require('express-useragent');
-const errorMiddleware = require('./src/Middleware/middlewareError');
+const errorMiddleware = require('./src/middlewares/middlewareError');
 
 const APIDocsJSON = require('./openApiDocumentation.json');
-const UserRoutes = require('./src/Users');
-const AttendanceRoutes = require('./src/Attendance');
+const Routes = require('./src/routes');
+
+// const UserRoutes = require('./src/Users');
+// const AttendanceRoutes = require('./src/Attendance');
 
 const app = express();
 http = http.Server(app);
@@ -66,9 +68,7 @@ connectMongo.connectMongo().then((mongoConnection) => {
     challenge: true,
   }), swaggerUi.serve, swaggerUi.setup(openApiDocumentation, options));
 
-  // API Collections
-  app.use('/users', UserRoutes);
-  app.use('/attendances', AttendanceRoutes);
+  app.use('/', Routes);
 
   app.use(errorMiddleware);
 

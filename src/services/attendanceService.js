@@ -1,11 +1,12 @@
 const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
-const { ResponseError } = require('../../../Helpers/response');
-const attendanceModel = require('./mapping');
-const userModel = require('../../Users/modules/mapping');
-const struct = require('./struct');
-const { secondsToDuration, secondsToHMS } = require('../../../Helpers/date');
+const { ResponseError } = require('../helpers/response');
+const struct = require('../struct/attendanceStruct');
+const { secondsToDuration, secondsToHMS } = require('../helpers/date');
+const userModel = require('../models');
+
+const attendanceModel = userModel;
 
 exports.attandanceUser = async (param) => {
   const attendance = new attendanceModel.Attendance(param);
