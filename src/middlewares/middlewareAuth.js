@@ -1,7 +1,7 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
-const model = require('../Users/modules/model');
+const userService = require('../services/userService');
 const { decodeToken } = require('../../Helpers/jwt');
-const struct = require('../Users/modules/struct');
+const struct = require('../struct/userStruct');
 
 module.exports.authentication = async (req, res, next) => {
   const headerToken = req.header('Authorization');
@@ -22,7 +22,7 @@ module.exports.authentication = async (req, res, next) => {
       });
     }
     const { userId, organizationId } = decodeToken(token);
-    const user = await model.getDataUser(userId, organizationId);
+    const user = await userService.getDataUser(userId, organizationId);
     req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
     next();
   } catch (error) {

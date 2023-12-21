@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
-const { secondsToDuration } = require('../../../Helpers/date');
+const { secondsToDuration } = require('../helpers/date');
 
 const Attendance = (req) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),

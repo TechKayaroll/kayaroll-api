@@ -1,9 +1,9 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
-const jwt = require('../../../Helpers/jwt');
-const struct = require('./struct');
-const model = require('./model');
-const { ResponseError } = require('../../../Helpers/response');
-const { hash, compare } = require('../../../Helpers/bcryptjs');
+const jwt = require('../helpers/jwt');
+const struct = require('../struct/userStruct');
+const model = require('../services/userService');
+const { ResponseError } = require('../helpers/response');
+const { hash, compare } = require('../helpers/bcryptjs');
 
 exports.ping = async (req, res) => {
   res.status(StatusCodes.OK).send({

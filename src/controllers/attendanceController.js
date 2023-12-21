@@ -1,12 +1,12 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
-const model = require('./model');
-const { ResponseError } = require('../../../Helpers/response');
-const struct = require('./struct');
-const userStruct = require('../../Users/modules/struct');
-const uploadGcp = require('../../../Helpers/gcp');
-const { generateAttendanceReports } = require('../../../Helpers/generator');
+const model = require('../services/attendanceService');
+const struct = require('../struct/attendanceStruct');
+const userStruct = require('../struct/userStruct');
+const uploadGcp = require('../helpers/gcp');
+const { ResponseError } = require('../helpers/response');
+const { generateAttendanceReports } = require('../helpers/generator');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {

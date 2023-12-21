@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
-const User = require('../../Users/modules/mapping');
+const User = require('../User/User');
+const Organization = require('../Organization/Organization');
 
 const AttendanceSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Types.ObjectId, ref: User.User,
+    type: mongoose.Types.ObjectId, ref: User,
   },
   organizationId: {
-    type: mongoose.Types.ObjectId, ref: User.Organization,
+    type: mongoose.Types.ObjectId, ref: Organization,
   },
   attendanceImage: {
     type: 'string',
@@ -43,4 +44,6 @@ const AttendanceSchema = new mongoose.Schema({
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
-exports.Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');
+const Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');
+
+module.exports = Attendance;
