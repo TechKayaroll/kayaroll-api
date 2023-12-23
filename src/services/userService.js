@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Model = require('../models');
 const { ResponseError } = require('../helpers/response');
 const { generateCompanyCode } = require('../helpers/randomString');
+const { generateUserIdByNameAndIndex } = require('../utils/common');
 
 const createOrUpdateExistingUser = async (userPayload) => {
   try {
@@ -248,6 +249,17 @@ const insertOrganization = async (companyName) => {
   }
 };
 
+const generateUniqueUserOrgId = async (organizationId) => {
+  const organization = await Model.Organization.findById(organizationId);
+  if (!organization) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Organization not found.');
+  }
+
+  const userCountInOrg = await Model.UserOrganization.countDocuments({ organizationId });
+  const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg + 1);
+  return uniqueId;
+};
+
 module.exports = {
   insertDataUser,
   createOrUpdateExistingUser,
@@ -262,4 +274,5 @@ module.exports = {
   updateDataUserAdmin,
   insertOrganization,
   getAllUserOnOrganization,
+  generateUniqueUserOrgId,
 };

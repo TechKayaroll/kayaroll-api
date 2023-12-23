@@ -1,13 +1,21 @@
 const mongoose = require('mongoose');
 const User = require('../User/User');
 const Organization = require('../Organization/Organization');
+const UserOrganization = require('../Relationship/UserOrganization');
 
 const AttendanceSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Types.ObjectId, ref: User,
+    type: mongoose.Types.ObjectId,
+    ref: User,
   },
   organizationId: {
-    type: mongoose.Types.ObjectId, ref: Organization,
+    type: mongoose.Types.ObjectId,
+    ref: Organization,
+  },
+  userOrganizationId: {
+    type: mongoose.Types.ObjectId,
+    ref: UserOrganization,
+    required: true,
   },
   attendanceImage: {
     type: 'string',

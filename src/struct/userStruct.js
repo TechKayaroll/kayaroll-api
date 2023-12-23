@@ -6,12 +6,13 @@ const UserRegistration = (companyId, payload) => ({
   password: payload.password || undefined,
 });
 
-const UserData = (user, organization) => ({
+const UserData = (user, organization, uniqueUserId) => ({
   fullname: user.fullname,
   email: user.email,
   role: user.roleId.name,
   companyId: organization.invitationCode,
   companyName: organization.name,
+  userId: uniqueUserId,
 });
 
 const Organization = (req) => ({

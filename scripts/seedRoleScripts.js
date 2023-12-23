@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const mongoose = require('mongoose');
-const UserModel = require('../src/Users/modules/mapping');
+const UserModel = require('../src/models');
 
 const roleSeeds = async () => {
   const ROLE_SEEDS = ['admin', 'employee'];

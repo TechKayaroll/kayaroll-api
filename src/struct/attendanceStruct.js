@@ -2,14 +2,20 @@ const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const { secondsToDuration } = require('../helpers/date');
 
-const Attendance = (req) => ({
+const Attendance = (
+  req,
+  attendanceImageUrl,
+  attendanceType,
+  userOrganizationId,
+) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
-  attendanceImage: '',
+  userOrganizationId: new mongoose.Types.ObjectId(userOrganizationId),
+  attendanceType,
+  attendanceImage: attendanceImageUrl,
+  attendanceDate: dayjs().toISOString(),
   lat: req.body.lat,
   long: req.body.long,
-  attendanceDate: dayjs(Date.now()).toISOString(),
-  attendanceType: '',
   status: 'Pending',
   browser: req?.useragent?.browser || '',
   os: req?.useragent?.os || '',
@@ -20,6 +26,7 @@ const AttendanceList = (val) => ({
   attendanceId: val._id,
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
+  employeeId: val.userOrganizationId?.uniqueUserId || '-',
   datetime: val.attendanceDate,
   lat: val.lat,
   long: val.long,
@@ -36,7 +43,7 @@ const AttendanceListAdmin = (val) => ({
   attendanceId: val._id.toString(),
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
-  employeeId: val.userId?._id || '-',
+  employeeId: val.userOrganizationId?.uniqueUserId || '-',
   employeeName: val.userId?.fullname || 'unknown',
   datetime: val.attendanceDate,
   lat: val.lat,

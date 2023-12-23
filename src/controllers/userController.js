@@ -42,7 +42,7 @@ exports.login = async (req, res, next) => {
       organizationId: userData.organizationId._id,
     });
 
-    const user = struct.UserData(userData.userId, userData.organizationId);
+    const user = struct.UserData(userData.userId, userData.organizationId, userData.uniqueUserId);
     const responseData = {
       ...user,
       token: jwtToken,

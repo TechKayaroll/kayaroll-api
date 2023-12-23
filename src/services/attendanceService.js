@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
@@ -5,6 +6,7 @@ const { ResponseError } = require('../helpers/response');
 const struct = require('../struct/attendanceStruct');
 const { secondsToDuration, secondsToHMS } = require('../helpers/date');
 const userModel = require('../models');
+const uploadGcp = require('../helpers/gcp');
 
 const attendanceModel = userModel;
 
@@ -17,14 +19,61 @@ exports.attandanceUser = async (param) => {
   }
 };
 
+// attendanceType: In | Out
+exports.uploadAttendanceImage = async (req, attendanceType) => {
+  try {
+    const removeAfter = req.file.mimetype.substring(req.file.mimetype.indexOf('/') + 1, req.file.mimetype.length);
+    req.file.modifiedName = `${req.user.userId}_${dayjs(Date.now()).locale('id').format('DDMMYYHHmmss')}.${removeAfter}`;
+    req.file.attendanceType = attendanceType;
+
+    let imageUrl = '';
+    const imageBasePath = `${process.env.GCP_URL_PUBLIC}${process.env.GCP_BUCKET_NAME}`;
+    if (attendanceType === 'In') {
+      imageUrl = `${imageBasePath}/${process.env.GCP_FOLDER_ATTENDANCE_IN}/${req.file.modifiedName}`;
+    } else if (attendanceType === 'Out') {
+      imageUrl = `${imageBasePath}/${process.env.GCP_FOLDER_ATTENDANCE_OUT}/${req.file.modifiedName}`;
+    } else {
+      throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Invalid Attendance Type when uploading attendance image');
+    }
+    await uploadGcp.UploadFile(req.file);
+    fs.unlinkSync(req.file.path);
+    return imageUrl;
+  } catch (error) {
+    fs.unlinkSync(req.file.path);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+exports.createAttendance = async (req, attendanceImageUrl, attendanceType) => {
+  try {
+    const userOrganization = await userModel.UserOrganization.findOne({
+      organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
+      userId: new mongoose.Types.ObjectId(req.user.userId),
+    });
+    if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
+
+    const attendancePayload = struct.Attendance(
+      req,
+      attendanceImageUrl,
+      attendanceType,
+      userOrganization._id,
+    );
+    const attendance = new attendanceModel.Attendance(attendancePayload);
+    const savedAttendance = await attendance.save();
+    return savedAttendance;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
 exports.attendanceDetail = async (attendanceId) => {
   try {
-    const attendance = attendanceModel.Attendance.findById(attendanceId).populate({
-      path: 'userId',
-      populate: {
-        path: 'roleId',
-      },
-    });
+    const attendance = attendanceModel.Attendance.findById(attendanceId)
+      .populate({ path: 'userOrganizationId' })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      });
     return attendance;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
@@ -49,6 +98,7 @@ exports.attandanceList = async (param, userId, organizationId) => {
       organizationId,
       attendanceDate: { $gte: param.from, $lte: param.to },
     })
+      .populate({ path: 'userOrganizationId' })
       .where(whereParam)
       .sort({ createdDate: sortBy })
       .limit(param.limit)
@@ -186,6 +236,7 @@ exports.attandanceListAdmin = async (param, organizationId) => {
       attendanceDate: attendanceDateQuery,
     })
       .populate({ path: 'userId' })
+      .populate({ path: 'userOrganizationId' })
       .where(whereParam)
       .sort({ attendanceDate: sortBy })
       .limit(param.limit)

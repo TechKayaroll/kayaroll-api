@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const UserModel = require('../src/Users/modules/mapping');
+const UserModel = require('../src/models');
 
 const deleteEmptyUserOnOrg = async () => {
   try {

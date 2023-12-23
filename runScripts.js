@@ -3,11 +3,12 @@ const environments = require('custom-env').env();
 const mongoose = require('mongoose');
 const { connectMongo } = require('./Services/MongoDB/mongo');
 const seedRole = require('./scripts/seedRoleScripts');
-const deleteDuplicateUsers = require('./scripts/removeDuplicateUser');
-const deleteUsersWithoutOrganization = require('./scripts/removeEmptyOrganization');
-const deleteAttendanceWithoutEmployee = require('./scripts/removeAttendanceWithoutEmployee');
-const deleteEmptyUserOnOrg = require('./scripts/removeEmptyUserOnOrganization');
-
+const generateUniqueUserIdOnAttendance = require('./scripts/generateUniqueUserIdOnAttendance');
+// const deleteDuplicateUsers = require('./scripts/removeDuplicateUser');
+// const deleteUsersWithoutOrganization = require('./scripts/removeEmptyOrganization');
+// const deleteAttendanceWithoutEmployee = require('./scripts/removeAttendanceWithoutEmployee');
+// const deleteEmptyUserOnOrg = require('./scripts/removeEmptyUserOnOrganization');
+const generateEmptyUserOrgId = require('./scripts/generateEmptyUserOrgId');
 environments.env(process.env.NODE_ENV || 'local', 'Environments/');
 
 const scripts = async () => {
@@ -16,6 +17,10 @@ const scripts = async () => {
   // await deleteUsersWithoutOrganization();
   // await deleteAttendanceWithoutEmployee();
   // await deleteEmptyUserOnOrg();
+
+  // Start From here...
+  // await generateEmptyUserOrgId();
+  // await generateUniqueUserIdOnAttendance();
 };
 
 const runSeeder = async () => {
