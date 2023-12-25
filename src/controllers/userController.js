@@ -113,15 +113,11 @@ exports.register = async (req, res, next) => {
     if (isRegisteredAccount) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
     }
-    const userData = await model.getDataUser(
+    const userOrgData = await model.getDataUser(
       registeredUser.userId._id,
       registeredUser.organizationId._id,
     );
-    const userRes = struct.UserRegistrationResponse(
-      userData.userId,
-      userData.organizationId,
-      userData.userId.roleId,
-    );
+    const userRes = struct.UserRegistrationResponse(userOrgData);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: userRes,

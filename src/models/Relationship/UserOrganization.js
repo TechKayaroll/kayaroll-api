@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
-const UserService = require('../../services/userService');
+const Organization = require('../Organization/Organization');
+const { generateUserIdByNameAndIndex } = require('../../utils/common');
 
 const UserOrganizationSchema = new mongoose.Schema({
   organizationId: {
@@ -21,21 +22,20 @@ const UserOrganizationSchema = new mongoose.Schema({
 async function userOrgIdPreSaveHook(next) {
   try {
     if (!this.uniqueUserId) {
-      this.uniqueUserId = await UserService.generateUniqueUserOrgId(this.organizationId);
-      await this.constructor.create(this);
-    } else {
-      await this.constructor.create(this);
+      const organization = await Organization.findById(this.organizationId);
+      if (!organization) {
+        throw new Error('Organization not found.'); // Handle the error appropriately
+      }
+      const userCountInOrg = await this.constructor.countDocuments({
+        organizationId: this.organizationId,
+      });
+      const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg + 1);
+      this.uniqueUserId = uniqueId;
     }
     next();
   } catch (error) {
-    if (error.code === 11000 || error.code === 11001) {
-      // Handle duplicate key error (MongoDB error code for unique constraint violation)
-      this.uniqueUserId = await UserService.generateUniqueUserOrgId(this.organizationId);
-      return this.save(next); // Retry saving
-    }
     next(error);
   }
-  return Promise.resolve();
 }
 
 UserOrganizationSchema.pre('save', userOrgIdPreSaveHook);

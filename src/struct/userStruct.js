@@ -21,13 +21,14 @@ const Organization = (req) => ({
   invitationCode: req.invitationCode || '',
 });
 
-const UserRegistrationResponse = (user, org, role) => ({
-  userId: user._id.toString(),
-  fullname: user.fullname || 'unknown',
-  email: user.email,
-  role: role.name,
-  organization: org.name,
-  invitationCode: org.invitationCode,
+const UserRegistrationResponse = (userOrg) => ({
+  userId: userOrg.userId._id.toString(),
+  uniqueUserId: userOrg.uniqueUserId,
+  fullname: userOrg.userId.fullname || 'unknown',
+  email: userOrg.userId.email,
+  role: userOrg.userId.roleId.name,
+  organization: userOrg.organizationId.name,
+  invitationCode: userOrg.organizationId.invitationCode,
 });
 
 const MiddlewareUserResponse = (user, org) => ({

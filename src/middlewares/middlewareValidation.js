@@ -1,6 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
 const fs = require('fs');
-const { ResponseError } = require('../../Helpers/response');
+const { ResponseError } = require('../helpers/response');
 
 exports.validate = (schemaBody = null, schemaQuery = null) => (req, res, next) => {
   let result = {};

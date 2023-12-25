@@ -29,3 +29,23 @@ module.exports.UploadFile = async (file) => {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e.message);
   }
 };
+
+module.exports.DeleteFile = async (fileName, attendanceType) => {
+  try {
+    let filePath = process.env.GCP_FOLDER_ATTENDANCE_IN;
+    if (attendanceType === 'Out') {
+      filePath = process.env.GCP_FOLDER_ATTENDANCE_OUT;
+    }
+
+    const file = bucket.file(`${filePath}/${fileName}`);
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new ResponseError(StatusCodes.NOT_FOUND, 'File not found');
+    }
+    await file.delete();
+
+    return true;
+  } catch (e) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e.message);
+  }
+};

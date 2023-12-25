@@ -1,4 +1,5 @@
-const { ResponseError } = require('../../Helpers/response');
+const { StatusCodes } = require('http-status-codes');
+const { ResponseError } = require('../helpers/response');
 
 const ErrorMiddleware = async (err, req, res, next) => {
   if (!err) {
@@ -13,7 +14,7 @@ const ErrorMiddleware = async (err, req, res, next) => {
       code: err.code,
     });
   } else {
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: err.message,
       data: {},
       code: err.code,

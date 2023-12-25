@@ -1,6 +1,6 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const userService = require('../services/userService');
-const { decodeToken } = require('../../Helpers/jwt');
+const { decodeToken } = require('../helpers/jwt');
 const struct = require('../struct/userStruct');
 
 module.exports.authentication = async (req, res, next) => {

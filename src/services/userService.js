@@ -5,6 +5,17 @@ const { ResponseError } = require('../helpers/response');
 const { generateCompanyCode } = require('../helpers/randomString');
 const { generateUserIdByNameAndIndex } = require('../utils/common');
 
+const generateUniqueUserOrgId = async (organizationId) => {
+  const organization = await Model.Organization.findById(organizationId);
+  if (!organization) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Organization not found.');
+  }
+
+  const userCountInOrg = await Model.UserOrganization.countDocuments({ organizationId });
+  const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg + 1);
+  return uniqueId;
+};
+
 const createOrUpdateExistingUser = async (userPayload) => {
   try {
     const findByQuery = { email: userPayload.email };
@@ -26,9 +37,11 @@ const createOrUpdateExistingUser = async (userPayload) => {
 };
 const insertUserOrganization = async (user, org) => {
   try {
-    const userOrganization = new Model.UserOrganization();
-    userOrganization.userId = user._id;
-    userOrganization.organizationId = org._id;
+    const userOrgPayload = {
+      userId: user._id,
+      organizationId: org._id,
+    };
+    const userOrganization = new Model.UserOrganization(userOrgPayload);
     const createdUserOrganization = await userOrganization.save();
     return createdUserOrganization;
   } catch (error) {
@@ -247,17 +260,6 @@ const insertOrganization = async (companyName) => {
   } catch (e) {
     throw new Response(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
-};
-
-const generateUniqueUserOrgId = async (organizationId) => {
-  const organization = await Model.Organization.findById(organizationId);
-  if (!organization) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Organization not found.');
-  }
-
-  const userCountInOrg = await Model.UserOrganization.countDocuments({ organizationId });
-  const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg + 1);
-  return uniqueId;
 };
 
 module.exports = {
