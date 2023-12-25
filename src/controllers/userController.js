@@ -158,11 +158,7 @@ exports.employeeList = async (req, res, next) => {
     const { organizationId } = req.user;
     const allUsers = await model.getAllUserOnOrganization(organizationId);
     const allEmployee = allUsers.filter((eachUser) => eachUser.userId.roleId.name === 'employee');
-    const userList = allEmployee.map((user) => struct.UserRegistrationResponse(
-      user.userId,
-      user.organizationId,
-      user.userId.roleId,
-    ));
+    const userList = allEmployee.map((userOrg) => struct.UserRegistrationResponse(userOrg));
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: userList,
