@@ -31,6 +31,14 @@ const UserRegistrationResponse = (userOrg) => ({
   invitationCode: userOrg.organizationId.invitationCode,
 });
 
+const UserReportProfile = (userOrg) => ({
+  uniqueUserId: userOrg.uniqueUserId,
+  fullname: userOrg.userId.fullname || 'unknown',
+  email: userOrg.userId.email,
+  role: userOrg.userId.roleId.name,
+  organization: userOrg.organizationId.name,
+});
+
 const MiddlewareUserResponse = (user, org) => ({
   userId: user._id.toString(),
   fullname: user.fullname,
@@ -48,4 +56,5 @@ module.exports = {
   UserRegistrationResponse,
   MiddlewareUserResponse,
   UserData,
+  UserReportProfile,
 };

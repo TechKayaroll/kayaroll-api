@@ -159,7 +159,7 @@ exports.attendanceReport = async (req, res, next) => {
       const { list, userOrg } = employeeList[index];
       const { totalDuration, data } = model.attendanceReportAdminData(list);
       reports.push({
-        user: userStruct.UserRegistrationResponse(
+        user: userStruct.UserReportProfile(
           userOrg,
         ),
         totalDuration,
