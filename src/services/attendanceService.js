@@ -156,58 +156,58 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
 };
 
 exports.attendanceReportAdminData = (attendances) => {
-  let totalSeconds = 0;
-  let currentInEntry = null;
-  const data = [];
-
-  attendances.forEach((eachAttendance, index) => {
-    const { attendanceType, attendanceDate } = eachAttendance;
-
-    let currentIndex = index;
-
-    if (attendanceType === 'In') {
-      let nextIndex = currentIndex + 1;
-      while (nextIndex < attendances.length && attendances[nextIndex].attendanceType === 'In') {
-        nextIndex += 1;
-      }
-
-      currentInEntry = {
-        startTime: dayjs(eachAttendance.attendanceDate),
-        attendance: eachAttendance,
-        endTime: null,
-      };
-      currentIndex = nextIndex - 1;
-    } else if (attendanceType === 'Out' && currentInEntry) {
-      currentInEntry.endTime = {
-        time: dayjs(attendanceDate),
-        attendance: eachAttendance,
-      };
-
-      const startTime = {
-        time: currentInEntry.startTime,
-        attendance: currentInEntry.attendance,
-      };
-      const endTime = {
-        time: currentInEntry.endTime.time,
-        attendance: currentInEntry.endTime.attendance,
-      };
-
-      const duration = endTime.time.diff(startTime.time, 'second');
-      totalSeconds += duration;
-
-      data.push({
-        inTime: dayjs(startTime.time).format('MMM, DD YYYY hh:mm:ss'),
-        outTime: dayjs(endTime.time).format('MMM, DD YYYY hh:mm:ss'),
-        attendanceIn: struct.AttendanceReport(startTime.attendance),
-        attendanceOut: struct.AttendanceReport(endTime.attendance),
-        duration: secondsToHMS(duration),
-      });
-
-      currentInEntry = null; // Reset currentInEntry
+  const groupedAttendances = attendances.reduce((acc, attendance) => {
+    const date = dayjs(attendance.attendanceDate).format('YYYY-MM-DD');
+    if (!acc[date]) {
+      acc[date] = [];
     }
+    acc[date].push(attendance);
+    return acc;
+  }, {});
+
+  let totalDuration = 0;
+  const result = Object.keys(groupedAttendances).map((date) => {
+    const dayAttendances = groupedAttendances[date];
+    // Find the earliest In and latest Out attendance for each day
+    const inAttendance = dayAttendances.find(
+      (att) => att.attendanceType === 'In',
+    );
+    const outAttendance = dayAttendances.reduce((latestOut, att) => {
+      if (
+        att.attendanceType === 'Out'
+        && (!latestOut
+          || dayjs(att.attendanceDate).isAfter(dayjs(latestOut.attendanceDate)))
+      ) {
+        return att;
+      }
+      return latestOut;
+    }, null);
+    // Format In and Out times using dayjs
+    const inTime = inAttendance
+      ? dayjs(inAttendance.attendanceDate).format('DD MMM YYYY, HH:mm:ss')
+      : '';
+    const outTime = outAttendance
+      ? dayjs(outAttendance.attendanceDate).format('DD MMM YYYY, HH:mm:ss')
+      : '';
+
+    // Calculate totalTime in seconds
+    const totalTime = inAttendance && outAttendance
+      ? dayjs(outAttendance.attendanceDate).diff(
+        dayjs(inAttendance.attendanceDate),
+        'second',
+      )
+      : 0;
+    totalDuration += totalTime;
+    return {
+      inTime,
+      outTime,
+      attendanceIn: inAttendance ? struct.AttendanceReport(inAttendance) : null,
+      attendanceOut: outAttendance ? struct.AttendanceReport(outAttendance) : null,
+      duration: secondsToHMS(totalTime),
+    };
   });
 
-  return { totalDuration: secondsToDuration(totalSeconds), data };
+  return { totalDuration: secondsToDuration(totalDuration), data: result };
 };
 
 exports.attandanceListAdmin = async (param, organizationId) => {

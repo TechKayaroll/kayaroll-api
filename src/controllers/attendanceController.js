@@ -160,15 +160,17 @@ exports.attendanceReport = async (req, res, next) => {
       const { totalDuration, data } = model.attendanceReportAdminData(list);
       reports.push({
         user: userStruct.UserRegistrationResponse(
-          userOrg.userId,
-          userOrg.organizationId,
-          userOrg.userId.roleId,
+          userOrg,
         ),
         totalDuration,
         report: data,
       });
     });
-
+    // res.status(StatusCodes.OK).json({
+    //   message: ReasonPhrases.OK,
+    //   data: reports,
+    //   code: StatusCodes.OK,
+    // });
     const filename = `AttendanceReport_${dayjs(req.query.from).format('DD-MMM-YYYY')}_${dayjs(req.query.to).format('DD-MMM-YYYY')}.xlsx`;
     const workbook = generateAttendanceReports(reports);
     const buf = await workbook.xlsx.writeBuffer();
