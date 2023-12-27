@@ -7,7 +7,7 @@ const addDataToSheet = (worksheet, attendanceData) => {
     totalDuration: {
       days, hours, minutes, seconds,
     },
-    report,
+    reports,
   } = attendanceData;
 
   Object.entries(user).forEach((entry) => {
@@ -28,14 +28,14 @@ const addDataToSheet = (worksheet, attendanceData) => {
   worksheet.addRow([]);
 
   // Reports Data
-  if (report && report.length > 0) {
+  if (reports && reports.length > 0) {
     const tableHeader = ['inTime', 'outTime', 'duration'];
     worksheet.addRow(tableHeader);
 
     worksheet.getColumn(3).width = 30;
     worksheet.getColumn(3).alignment = { wrapText: true };
 
-    report.forEach((reportEntry) => {
+    reports.forEach((reportEntry) => {
       const { inTime, outTime, duration } = reportEntry;
       const row = [
         inTime,

@@ -163,7 +163,7 @@ exports.attendanceReport = async (req, res, next) => {
           userOrg,
         ),
         totalDuration,
-        report: data,
+        reports: data,
       });
     });
     // res.status(StatusCodes.OK).json({
@@ -212,7 +212,7 @@ exports.attendanceSummaryList = async (req, res, next) => {
           userOrg,
         ),
         totalDuration,
-        report: data,
+        reports: data,
       });
     });
     res.status(StatusCodes.OK).json({
