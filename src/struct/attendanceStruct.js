@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
-const { secondsToDuration } = require('../helpers/date');
+const {
+  secondsToDuration, secondsToHMS, formatDate, calculateTotalTime,
+} = require('../helpers/date');
 
 const Attendance = (
   req,
@@ -65,6 +67,7 @@ const AttendanceDataResult = (val) => ({
 });
 
 const AttendanceReport = (attendance) => ({
+  id: attendance._id.toString(),
   userId: attendance.userId,
   organizationId: attendance.organizationId,
   attendanceImage: attendance.attendanceImage,
@@ -75,6 +78,27 @@ const AttendanceReport = (attendance) => ({
   status: attendance.status,
 });
 
+const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
+  const inTime = formatDate(attendanceIn?.attendanceDate);
+  const outTime = formatDate(attendanceOut?.attendanceDate);
+  const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
+  let status = 'absent';
+  if (attendanceIn && attendanceOut) {
+    status = 'present';
+  } else if (attendanceIn || attendanceOut) {
+    status = 'incomplete';
+  }
+
+  const attendance = {
+    inTime,
+    outTime,
+    attendanceIn: attendanceIn ? AttendanceReport(attendanceIn) : null,
+    attendanceOut: attendanceOut ? AttendanceReport(attendanceOut) : null,
+    duration: secondsToHMS(totalTime),
+    status,
+  };
+  return attendance;
+};
 const AttendanceReportsData = (calculatedDatas, totalSeconds) => {
   const eachReports = calculatedDatas.map((eachData) => {
     const {
@@ -110,4 +134,5 @@ module.exports = {
   AttendanceDataResult,
   AttendanceReportsData,
   AttendanceReport,
+  AttendanceSummaryData,
 };

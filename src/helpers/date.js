@@ -1,3 +1,5 @@
+const dayjs = require('dayjs');
+
 const secondsToDuration = (totalSeconds) => {
   let seconds = parseInt(totalSeconds, 10);
 
@@ -29,7 +31,21 @@ const secondsToHMS = (totalSeconds) => {
   return { hours, minutes, seconds };
 };
 
+const isWeekend = (date) => {
+  const dayOfWeek = date.day();
+  return dayOfWeek === 0 || dayOfWeek === 6; // 0 is Sunday, 6 is Saturday
+};
+
+const formatDate = (date, format = 'DD MMM YYYY, HH:mm:ss') => (date ? dayjs(date).format(format) : '');
+
+const calculateTotalTime = (attendanceIn, attendanceOut) => (attendanceIn && attendanceOut
+  ? dayjs(attendanceOut.attendanceDate).diff(dayjs(attendanceIn.attendanceDate), 'second')
+  : 0);
+
 module.exports = {
   secondsToDuration,
   secondsToHMS,
+  isWeekend,
+  formatDate,
+  calculateTotalTime
 };

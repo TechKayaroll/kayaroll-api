@@ -4,7 +4,10 @@ const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const { ResponseError } = require('../helpers/response');
 const struct = require('../struct/attendanceStruct');
-const { secondsToDuration, secondsToHMS } = require('../helpers/date');
+const {
+  secondsToDuration, secondsToHMS, isWeekend, calculateTotalTime,
+} = require('../helpers/date');
+const { pairInAndOut } = require('../helpers/attendance');
 const userModel = require('../models');
 const uploadGcp = require('../helpers/gcp');
 
@@ -208,6 +211,54 @@ exports.attendanceReportAdminData = (attendances) => {
   });
 
   return { totalDuration: secondsToDuration(totalDuration), data: result };
+};
+
+exports.attendanceSummaryList = (attendances, dateRange) => {
+  const groupedAttFormat = 'dddd, DD MMM YYYY';
+  const groupedAttendances = attendances.reduce((acc, attendance) => {
+    const date = dayjs(attendance.attendanceDate).format(groupedAttFormat);
+    acc[date] = acc[date] || [];
+    acc[date].push(attendance);
+    return acc;
+  }, {});
+
+  let totalDuration = 0;
+  const reports = [];
+
+  const fromDate = dayjs(dateRange.from);
+  const toDate = dayjs(dateRange.to);
+  for (let currDate = fromDate; currDate.isBefore(toDate); currDate = currDate.add(1, 'days')) {
+    if (!isWeekend(currDate)) {
+      const currentDate = currDate.format(groupedAttFormat);
+      const dayAttendances = groupedAttendances[currentDate] || [];
+      const pairedAttendances = pairInAndOut(dayAttendances);
+      if (pairedAttendances.length === 0) {
+        reports.push({
+          date: currentDate,
+          attendanceLog: struct.AttendanceSummaryData(null, null),
+        });
+      } else {
+        for (let i = 0; i < pairedAttendances.length; i += 1) {
+          const pairedAttendance = pairedAttendances[i];
+          const { attendanceIn, attendanceOut } = pairedAttendance;
+          const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
+          totalDuration += totalTime;
+          const attendance = struct.AttendanceSummaryData(attendanceIn, attendanceOut);
+          reports.push({
+            date: currentDate,
+            attendanceLog: attendance,
+          });
+        }
+      }
+    }
+  }
+
+  const summaryReports = {
+    totalDuration: secondsToDuration(totalDuration),
+    data: reports,
+  };
+
+  return summaryReports;
 };
 
 exports.attandanceListAdmin = async (param, organizationId) => {

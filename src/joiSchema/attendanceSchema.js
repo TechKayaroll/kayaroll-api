@@ -37,6 +37,27 @@ exports.schemaAttendanceReportAdmin = Joi.object({
   employeeIds: Joi.array()
     .items(Joi.string()).required(),
 });
+exports.schemaAttendanceSummaryAdmin = Joi.object({
+  from: Joi.date()
+    .format('YYYY-MM-DD')
+    .empty('')
+    .default(dayjs().subtract('3', 'month').format('YYYY-MM-DD')),
+  to: Joi.date()
+    .format('YYYY-MM-DD')
+    .greater(Joi.ref('from'))
+    .allow(Joi.ref('from'))
+    .empty('')
+    .default(dayjs().format('YYYY-MM-DD')),
+  employeeIds: Joi.array()
+    .items(Joi.string()).empty(Joi.array().length(0)).default([]),
+  limit: Joi.number().integer().positive().min(1)
+    .max(100)
+    .empty(0)
+    .default(100),
+  page: Joi.number().integer().positive().min(1)
+    .empty(0)
+    .default(1),
+});
 exports.schemaAttendanceListAdmin = Joi.object({
   from: Joi.date().format('YYYY-MM-DD').empty('').default('1970-01-01'),
   to: Joi.date().format('YYYY-MM-DD').greater(Joi.ref('from')).empty('')

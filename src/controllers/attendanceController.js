@@ -206,15 +206,26 @@ exports.attendanceSummaryList = async (req, res, next) => {
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];
-      const { totalDuration, data } = model.attendanceReportAdminData(list);
+      const summaryReports = model.attendanceSummaryList(list, {
+        from: req.query.from,
+        to: req.query.to,
+      });
       reports.push({
         user: userStruct.UserReportProfile(
           userOrg,
         ),
-        totalDuration,
-        reports: data,
+        summaryReports,
       });
     });
+
+    // const currentPage = req.query.page || 1;
+    // const startSlice = (currentPage - 1) * (req.query.limit);
+    // const endSlice = currentPage * (req.query.limit);
+    // const paginatedReports = {
+    //   attendanceSummary: reports.slice(startSlice, endSlice),
+    //   pagination: struct.AttendanceListPagination(currentPage, req.query.limit, reports.length),
+    // };
+
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: reports,
