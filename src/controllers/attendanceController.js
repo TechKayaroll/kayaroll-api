@@ -182,6 +182,49 @@ exports.attendanceReport = async (req, res, next) => {
   }
 };
 
+exports.attendanceSummaryList = async (req, res, next) => {
+  try {
+    req.query.from = dayjs(req.query.from).startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to).endOf('day').toISOString();
+    const { employeeIds } = req.query;
+    const uniqueEmployeeIds = new Set();
+    employeeIds.forEach((id) => uniqueEmployeeIds.add(id));
+
+    const employeeListPromises = [];
+    uniqueEmployeeIds.forEach((employeeId) => {
+      const queryPayload = {
+        userId: employeeId,
+        from: req.query.from,
+        to: req.query.to,
+      };
+      employeeListPromises.push(model.attendanceReportListAdmin(
+        queryPayload,
+        req.user.organizationId,
+      ));
+    });
+    const employeeList = await Promise.all(employeeListPromises);
+    const reports = [];
+    Array.from(uniqueEmployeeIds).forEach((_, index) => {
+      const { list, userOrg } = employeeList[index];
+      const { totalDuration, data } = model.attendanceReportAdminData(list);
+      reports.push({
+        user: userStruct.UserReportProfile(
+          userOrg,
+        ),
+        totalDuration,
+        report: data,
+      });
+    });
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: reports,
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
 exports.attendanceDetailById = async (req, res, next) => {
   try {
     const attendanceId = req.params.id;

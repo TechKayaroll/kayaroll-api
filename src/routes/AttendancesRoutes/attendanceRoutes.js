@@ -19,7 +19,7 @@ const AttendanceRoutes = () => {
   ChildRouter.post('/admin/approval', validate.validate(schema.schemaApproval), CONTROLLER.attendanceApproval);
   ChildRouter.put('/admin/update', validate.validate(schema.schemaAttendanceUpdate), CONTROLLER.attendanceUpdate);
   ChildRouter.post('/admin/report', validate.validate(null, schema.schemaAttendanceReportAdmin), CONTROLLER.attendanceReport);
-
+  ChildRouter.get('/admin/report', validate.validate(null, schema.schemaAttendanceReportAdmin), CONTROLLER.attendanceSummaryList);
   ChildRouter.get('/:id', CONTROLLER.attendanceDetailById);
   return ChildRouter;
 };
