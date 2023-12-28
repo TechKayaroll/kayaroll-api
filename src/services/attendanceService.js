@@ -214,7 +214,7 @@ exports.attendanceReportAdminData = (attendances) => {
 };
 
 exports.attendanceSummaryList = (attendances, dateRange) => {
-  const groupedAttFormat = 'dddd, DD MMM YYYY';
+  const groupedAttFormat = 'MMM, DD YYYY';
   const groupedAttendances = attendances.reduce((acc, attendance) => {
     const date = dayjs(attendance.attendanceDate).format(groupedAttFormat);
     acc[date] = acc[date] || [];

@@ -79,8 +79,8 @@ const AttendanceReport = (attendance) => ({
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
-  const inTime = formatDate(attendanceIn?.attendanceDate);
-  const outTime = formatDate(attendanceOut?.attendanceDate);
+  const inTime = attendanceIn?.attendanceDate;
+  const outTime = attendanceOut?.attendanceDate;
   const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
   let status = 'absent';
   if (attendanceIn && attendanceOut) {
