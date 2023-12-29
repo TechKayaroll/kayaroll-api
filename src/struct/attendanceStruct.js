@@ -99,32 +99,6 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   };
   return attendance;
 };
-const AttendanceReportsData = (calculatedDatas, totalSeconds) => {
-  const eachReports = calculatedDatas.map((eachData) => {
-    const {
-      inTime,
-      outTime,
-      attendanceIn,
-      attendanceOut,
-      duration,
-    } = eachData;
-    return {
-      attendanceIn: {
-        time: dayjs(inTime).format('DD MMM YYYY, HH:mm:ss'),
-        detail: AttendanceListAdmin(attendanceIn),
-      },
-      attendanceOut: {
-        time: dayjs(outTime).format('DD MMM YYYY, HH:mm:ss'),
-        detail: AttendanceListAdmin(attendanceOut),
-      },
-      duration,
-    };
-  });
-  return {
-    result: eachReports,
-    totalDuration: secondsToDuration(totalSeconds),
-  };
-};
 
 module.exports = {
   Attendance,
@@ -132,7 +106,6 @@ module.exports = {
   AttendanceListPagination,
   AttendanceListAdmin,
   AttendanceDataResult,
-  AttendanceReportsData,
   AttendanceReport,
   AttendanceSummaryData,
 };

@@ -158,62 +158,7 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
   }
 };
 
-exports.attendanceReportAdminData = (attendances) => {
-  const groupedAttendances = attendances.reduce((acc, attendance) => {
-    const date = dayjs(attendance.attendanceDate).format('YYYY-MM-DD');
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(attendance);
-    return acc;
-  }, {});
-
-  let totalDuration = 0;
-  const result = Object.keys(groupedAttendances).map((date) => {
-    const dayAttendances = groupedAttendances[date];
-    // Find the earliest In and latest Out attendance for each day
-    const inAttendance = dayAttendances.find(
-      (att) => att.attendanceType === 'In',
-    );
-    const outAttendance = dayAttendances.reduce((latestOut, att) => {
-      if (
-        att.attendanceType === 'Out'
-        && (!latestOut
-          || dayjs(att.attendanceDate).isAfter(dayjs(latestOut.attendanceDate)))
-      ) {
-        return att;
-      }
-      return latestOut;
-    }, null);
-    // Format In and Out times using dayjs
-    const inTime = inAttendance
-      ? dayjs(inAttendance.attendanceDate).format('DD MMM YYYY, HH:mm:ss')
-      : '';
-    const outTime = outAttendance
-      ? dayjs(outAttendance.attendanceDate).format('DD MMM YYYY, HH:mm:ss')
-      : '';
-
-    // Calculate totalTime in seconds
-    const totalTime = inAttendance && outAttendance
-      ? dayjs(outAttendance.attendanceDate).diff(
-        dayjs(inAttendance.attendanceDate),
-        'second',
-      )
-      : 0;
-    totalDuration += totalTime;
-    return {
-      inTime,
-      outTime,
-      attendanceIn: inAttendance ? struct.AttendanceReport(inAttendance) : null,
-      attendanceOut: outAttendance ? struct.AttendanceReport(outAttendance) : null,
-      duration: secondsToHMS(totalTime),
-    };
-  });
-
-  return { totalDuration: secondsToDuration(totalDuration), data: result };
-};
-
-exports.attendanceSummaryList = (attendances, dateRange) => {
+exports.attendanceSummaryReports = (attendances, dateRange) => {
   const groupedAttFormat = 'MMM, DD YYYY';
   const groupedAttendances = attendances.reduce((acc, attendance) => {
     const date = dayjs(attendance.attendanceDate).format(groupedAttFormat);

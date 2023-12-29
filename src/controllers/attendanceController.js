@@ -157,13 +157,15 @@ exports.attendanceReport = async (req, res, next) => {
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];
-      const { totalDuration, data } = model.attendanceReportAdminData(list);
+      const summaryReports = model.attendanceSummaryReports(list, {
+        from: req.query.from,
+        to: req.query.to,
+      });
       reports.push({
         user: userStruct.UserReportProfile(
           userOrg,
         ),
-        totalDuration,
-        reports: data,
+        summaryReports,
       });
     });
     // res.status(StatusCodes.OK).json({
@@ -206,7 +208,7 @@ exports.attendanceSummaryList = async (req, res, next) => {
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];
-      const summaryReports = model.attendanceSummaryList(list, {
+      const summaryReports = model.attendanceSummaryReports(list, {
         from: req.query.from,
         to: req.query.to,
       });

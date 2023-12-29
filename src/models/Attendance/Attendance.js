@@ -50,6 +50,10 @@ const AttendanceSchema = new mongoose.Schema({
   originId: {
     type: mongoose.Types.ObjectId,
   },
+  // sourceBy: {
+  //   enum: ['Admin', 'User'],
+  //   default: 'User',
+  // },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');
