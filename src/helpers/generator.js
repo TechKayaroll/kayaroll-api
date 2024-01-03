@@ -62,7 +62,7 @@ const generateAttendanceReports = (reports) => {
   const workbook = new ExcelJS.Workbook();
   reports.forEach((reportEntry, index) => {
     const { user } = reportEntry;
-    const sheetName = `${user.fullname}-${user.uniqueUserId}` || `Employee Name-${index}`;
+    const sheetName = `${user.uniqueUserId}.${user.fullname}` || `${index + 1}.Employee Name`;
     const worksheet = workbook.addWorksheet(sheetName);
     addDataToSheet(worksheet, reportEntry);
   });
