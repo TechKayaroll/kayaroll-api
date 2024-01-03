@@ -60,9 +60,9 @@ const addDataToSheet = (worksheet, summaryReports) => {
 };
 const generateAttendanceReports = (reports) => {
   const workbook = new ExcelJS.Workbook();
-  reports.forEach((reportEntry) => {
+  reports.forEach((reportEntry, index) => {
     const { user } = reportEntry;
-    const sheetName = user.fullname || 'Employee Name';
+    const sheetName = `${user.fullname}-${user.uniqueUserId}` || `Employee Name-${index}`;
     const worksheet = workbook.addWorksheet(sheetName);
     addDataToSheet(worksheet, reportEntry);
   });
