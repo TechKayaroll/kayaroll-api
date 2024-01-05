@@ -1,3 +1,5 @@
+const { ATTENDANCE_TYPE } = require('../utils/constants');
+
 function pairInAndOut(dayAttendances) {
   const pairedAttendances = [];
   let inAttendance = null;
@@ -7,9 +9,9 @@ function pairInAndOut(dayAttendances) {
   dayAttendances.forEach((attendance, index) => {
     const isLastAttendance = index === dayAttendances.length - 1;
 
-    if (attendance.attendanceType === 'In' && !inAttendance) {
+    if (attendance.attendanceType === ATTENDANCE_TYPE.IN && !inAttendance) {
       inAttendance = attendance;
-    } else if (attendance.attendanceType === 'Out') {
+    } else if (attendance.attendanceType === ATTENDANCE_TYPE.OUT) {
       outAttendance = attendance;
     }
 

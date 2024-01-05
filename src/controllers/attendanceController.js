@@ -6,10 +6,11 @@ const struct = require('../struct/attendanceStruct');
 const userStruct = require('../struct/userStruct');
 const { ResponseError } = require('../helpers/response');
 const { generateAttendanceReports } = require('../helpers/generator');
+const { ATTENDANCE_TYPE } = require('../utils/constants');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
-    const attendanceType = 'In';
+    const attendanceType = ATTENDANCE_TYPE.IN;
     const attendanceImageUrl = await model.uploadAttendanceImage(req, attendanceType);
     await model.createAttendance(req, attendanceImageUrl, attendanceType);
     res.status(StatusCodes.OK).json({
@@ -24,7 +25,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
 
 exports.attendanceCheckOut = async (req, res, next) => {
   try {
-    const attendanceType = 'Out';
+    const attendanceType = ATTENDANCE_TYPE.OUT;
     const attendanceImageUrl = await model.uploadAttendanceImage(req, attendanceType);
     await model.createAttendance(req, attendanceImageUrl, attendanceType);
     res.status(StatusCodes.OK).json({
@@ -93,8 +94,12 @@ exports.attendanceApproval = async (req, res, next) => {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
-    const update = await model.attandanceApproval(req.body.attendanceId, req.body.status);
-    if (update === null) {
+    const updatedAttendance = await model.attandanceApproval(
+      req.body.attendanceId,
+      req.body.status,
+      req.user,
+    );
+    if (updatedAttendance === null) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'The final status is not Pending, so it cannot to be changed');
     }
 
@@ -118,7 +123,7 @@ exports.attendanceUpdate = async (req, res, next) => {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
-    const update = await model.attandanceUpdate(req.body, req.user.organizationId);
+    const update = await model.attendanceUpdate(req, req.user.organizationId);
     if (update === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'The final status is not in [Pending, Approved, Rejected] so it cannot to be changes');
     }
@@ -249,6 +254,34 @@ exports.attendanceDetailById = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data,
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
+  try {
+    const attendanceId = req.params.id;
+    const logs = await model.attendanceAuditLogList(attendanceId);
+    const auditLogs = logs.map((eachLog) => struct.AttendanceAuditLog(eachLog));
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: auditLogs,
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.createAttendance = async (req, res, next) => {
+  try {
+    const createdAttendances = await model.createBulkAttendance(req);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: createdAttendances,
       code: StatusCodes.OK,
     });
   } catch (e) {

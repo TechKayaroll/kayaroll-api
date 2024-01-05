@@ -5,25 +5,44 @@ const dayjs = require('dayjs');
 const { ResponseError } = require('../helpers/response');
 const struct = require('../struct/attendanceStruct');
 const {
-  secondsToDuration, secondsToHMS, isWeekend, calculateTotalTime,
+  secondsToDuration, isWeekend, calculateTotalTime,
 } = require('../helpers/date');
 const { pairInAndOut } = require('../helpers/attendance');
 const userModel = require('../models');
 const uploadGcp = require('../helpers/gcp');
+const {
+  ATTENDANCE_AUDIT_LOG, ATTENDANCE_STATUS, ATTENDANCE_TYPE, USER_ROLE,
+} = require('../utils/constants');
 
 const attendanceModel = userModel;
-
-exports.attandanceUser = async (param) => {
-  const attendance = new attendanceModel.Attendance(param);
+const logAttendance = async (reqUser, actionLogType, attendanceId) => {
   try {
-    return await attendance.save();
-  } catch (e) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
+    const populatedAttendance = await userModel.Attendance.findById(attendanceId)
+      .populate({ path: 'userOrganizationId' })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      })
+      .populate({ path: 'organizationId' });
+    const isValidActionType = Object.values(ATTENDANCE_AUDIT_LOG).includes(actionLogType);
+    if (!populatedAttendance || !isValidActionType) return null;
+    const attendanceAuditLogData = struct.AttendanceAuditLogData(
+      populatedAttendance,
+      actionLogType,
+      reqUser,
+    );
+    const attendanceLog = new attendanceModel.AttendanceAuditLog(attendanceAuditLogData);
+    const loggedAttendance = await attendanceLog.save();
+    return loggedAttendance;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 // attendanceType: In | Out
-exports.uploadAttendanceImage = async (req, attendanceType) => {
+const uploadAttendanceImage = async (req, attendanceType) => {
   try {
     const removeAfter = req.file.mimetype.substring(req.file.mimetype.indexOf('/') + 1, req.file.mimetype.length);
     req.file.modifiedName = `${req.user.userId}_${dayjs(Date.now()).locale('id').format('DDMMYYHHmmss')}.${removeAfter}`;
@@ -31,9 +50,9 @@ exports.uploadAttendanceImage = async (req, attendanceType) => {
 
     let imageUrl = '';
     const imageBasePath = `${process.env.GCP_URL_PUBLIC}${process.env.GCP_BUCKET_NAME}`;
-    if (attendanceType === 'In') {
+    if (attendanceType === ATTENDANCE_TYPE.IN) {
       imageUrl = `${imageBasePath}/${process.env.GCP_FOLDER_ATTENDANCE_IN}/${req.file.modifiedName}`;
-    } else if (attendanceType === 'Out') {
+    } else if (attendanceType === ATTENDANCE_TYPE.OUT) {
       imageUrl = `${imageBasePath}/${process.env.GCP_FOLDER_ATTENDANCE_OUT}/${req.file.modifiedName}`;
     } else {
       throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Invalid Attendance Type when uploading attendance image');
@@ -46,7 +65,7 @@ exports.uploadAttendanceImage = async (req, attendanceType) => {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
-exports.createAttendance = async (req, attendanceImageUrl, attendanceType) => {
+const createAttendance = async (req, attendanceImageUrl, attendanceType) => {
   try {
     const userOrganization = await userModel.UserOrganization.findOne({
       organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -62,12 +81,18 @@ exports.createAttendance = async (req, attendanceImageUrl, attendanceType) => {
     );
     const attendance = new attendanceModel.Attendance(attendancePayload);
     const savedAttendance = await attendance.save();
+
+    await logAttendance(
+      req.user,
+      ATTENDANCE_AUDIT_LOG.CREATE,
+      savedAttendance._id,
+    );
     return savedAttendance;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
-exports.attendanceDetail = async (attendanceId) => {
+const attendanceDetail = async (attendanceId) => {
   try {
     const attendance = attendanceModel.Attendance.findById(attendanceId)
       .populate({ path: 'userOrganizationId' })
@@ -82,7 +107,7 @@ exports.attendanceDetail = async (attendanceId) => {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
-exports.attandanceList = async (param, userId, organizationId) => {
+const attandanceList = async (param, userId, organizationId) => {
   const attendances = attendanceModel.Attendance;
   const whereParam = {};
   const offset = param.page - 1;
@@ -119,7 +144,7 @@ exports.attandanceList = async (param, userId, organizationId) => {
   }
 };
 
-exports.attendanceReportListAdmin = async (query, organizationId) => {
+const attendanceReportListAdmin = async (query, organizationId) => {
   try {
     const attendances = attendanceModel.Attendance;
     const userOrg = await userModel.UserOrganization
@@ -136,8 +161,8 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
     if (!isEmployee) return [];
 
     const whereParam = {
-      attendanceType: ['In', 'Out'],
-      status: ['Approved'],
+      attendanceType: [ATTENDANCE_TYPE.IN, ATTENDANCE_TYPE.OUT],
+      status: [ATTENDANCE_STATUS.APPROVED],
       userId: new mongoose.Types.ObjectId(query.userId),
     };
     const sortBy = 1; // ASC
@@ -158,7 +183,7 @@ exports.attendanceReportListAdmin = async (query, organizationId) => {
   }
 };
 
-exports.attendanceSummaryReports = (attendances, dateRange) => {
+const attendanceSummaryReports = (attendances, dateRange) => {
   const groupedAttFormat = 'MMM, DD YYYY';
   const groupedAttendances = attendances.reduce((acc, attendance) => {
     const date = dayjs(attendance.attendanceDate).format(groupedAttFormat);
@@ -206,7 +231,7 @@ exports.attendanceSummaryReports = (attendances, dateRange) => {
   return summaryReports;
 };
 
-exports.attandanceListAdmin = async (param, organizationId) => {
+const attandanceListAdmin = async (param, organizationId) => {
   const attendances = attendanceModel.Attendance;
   const whereParam = {};
   const offset = param.page - 1;
@@ -248,7 +273,7 @@ exports.attandanceListAdmin = async (param, organizationId) => {
   }
 };
 
-exports.checkExitsAttendanceId = async (organizationId, attendanceId) => {
+const checkExitsAttendanceId = async (organizationId, attendanceId) => {
   const attendances = attendanceModel.Attendance;
   try {
     const exists = await attendances.find({
@@ -261,53 +286,143 @@ exports.checkExitsAttendanceId = async (organizationId, attendanceId) => {
   }
 };
 
-exports.attandanceApproval = async (attendanceId, status) => {
+const attandanceApproval = async (attendanceId, status, reqUser) => {
   const attendances = attendanceModel.Attendance;
   try {
-    return await attendances.findOneAndUpdate({ $and: [{ _id: attendanceId, status: 'Pending' }] }, { status });
+    const updatedAttendance = await attendances.findOneAndUpdate(
+      { $and: [{ _id: attendanceId, status: ATTENDANCE_STATUS.PENDING }] },
+      { status },
+      { new: true },
+    );
+    const auditLogType = status === ATTENDANCE_STATUS.APPROVED
+      ? ATTENDANCE_AUDIT_LOG.APPROVE
+      : ATTENDANCE_AUDIT_LOG.REJECT;
+    await logAttendance(reqUser, auditLogType, updatedAttendance._id);
+    return updatedAttendance;
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-exports.attandanceUpdate = async (req, organizationId) => {
+const attendanceUpdate = async (req, organizationId) => {
   const attendances = attendanceModel.Attendance;
   const session = await mongoose.startSession();
+
+  let createdAttendance;
+  let discardedAttendance;
 
   try {
     session.startTransaction();
     const opts = { session };
-    const dataAttendance = await attendances.findOne({
+    const attendanceToBeDiscarded = await attendances.findOne({
       $and: [{
-        _id: new mongoose.Types.ObjectId(req.attendanceId),
+        _id: new mongoose.Types.ObjectId(req.body.attendanceId),
         organizationId,
         status: {
           $in: ['Pending', 'Approved', 'Rejected'],
         },
       }],
-    })
-      .session(session);
-    if (dataAttendance === null) {
+    }).session(session);
+
+    if (attendanceToBeDiscarded === null) {
       await session.commitTransaction();
       await session.endSession();
-      return undefined;
+      return createdAttendance;
     }
-
-    const dataInsert = await struct.AttendanceDataResult(dataAttendance);
-    dataInsert.attendanceDate = req.datetime.toISOString();
-    dataInsert.originId = dataAttendance._id;
+    const dataInsert = struct.AttendanceDataResult(attendanceToBeDiscarded, req);
+    dataInsert.attendanceDate = req.body.datetime.toISOString();
+    dataInsert.originId = attendanceToBeDiscarded._id;
     dataInsert.status = 'Approved';
-    await attendances.create([dataInsert], opts);
 
-    await attendances.findByIdAndUpdate({ _id: dataAttendance._id }, { status: 'Discarded', updatedDate: dayjs(Date.now()).toISOString() }, opts);
+    [createdAttendance] = await attendances.create([dataInsert], opts);
+    await logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id);
+
+    discardedAttendance = await attendances.findOneAndUpdate(
+      { _id: attendanceToBeDiscarded._id },
+      { $set: { status: 'Discarded', updatedDate: dayjs(Date.now()).toISOString() } },
+      { new: true, ...opts },
+    );
 
     await session.commitTransaction();
     await session.endSession();
 
-    return dataAttendance;
+    await Promise.all([
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.EDIT, discardedAttendance._id),
+    ]);
+
+    return createdAttendance;
   } catch (e) {
     await session.abortTransaction();
     await session.endSession();
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
+};
+
+const attendanceAuditLogList = async (attendanceId) => {
+  try {
+    const attendanceAuditLog = await attendanceModel.AttendanceAuditLog.find({
+      attendanceId,
+    })
+      .populate('userOrganizationId')
+      .populate('attendanceId');
+    return attendanceAuditLog;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const createBulkAttendance = async (req) => {
+  try {
+    const {
+      employeeIds,
+    } = req.body;
+    const adminOrganizationId = req.user.organizationId;
+    const employeesUserOrg = await Promise.all(
+      employeeIds.map((uniqueUserId) => userModel.UserOrganization.findOne({
+        uniqueUserId,
+        organizationId: adminOrganizationId,
+      }).populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      })),
+    );
+
+    const filteredUserOrg = employeesUserOrg
+      .filter((userOrgEmployee) => {
+        const isAdmin = userOrgEmployee?.userId?.roleId?.name === USER_ROLE.ADMIN;
+        return (userOrgEmployee && !isAdmin);
+      });
+
+    const createAndLogPromises = filteredUserOrg
+      .map(async (userOrgEmployee) => {
+        const attendancePayload = struct.AdminAttendance(req, userOrgEmployee, req.body);
+        const createdAttendance = await new userModel.Attendance(attendancePayload).save();
+        await logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id);
+        return createdAttendance;
+      });
+
+    const createdAttendances = await Promise.all(createAndLogPromises);
+    return createdAttendances;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+module.exports = {
+  logAttendance,
+  uploadAttendanceImage,
+  createAttendance,
+  attendanceDetail,
+  attandanceList,
+  attendanceReportListAdmin,
+  attendanceSummaryReports,
+  attandanceListAdmin,
+  checkExitsAttendanceId,
+  attandanceApproval,
+  attendanceUpdate,
+  attendanceAuditLogList,
+  createBulkAttendance,
 };

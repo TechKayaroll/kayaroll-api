@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { USER_ROLE } = require('../utils/constants');
 
 exports.schemaRegisterUser = Joi.object({
   companyId: Joi.string().required(),
@@ -13,7 +14,7 @@ exports.schemaRegisterAdmin = Joi.object({
 exports.schemaLogin = Joi.object({
   companyId: Joi.string().required(),
   role: Joi.string()
-    .valid('employee', 'admin')
+    .valid(USER_ROLE.EMPLOYEE, USER_ROLE.ADMIN)
     .required(),
   email: Joi.string().email(),
   password: Joi.string().when('email', {
@@ -29,7 +30,7 @@ exports.schemaLogin = Joi.object({
 exports.schemaRegister = Joi.object({
   companyId: Joi.string().required(),
   role: Joi.string()
-    .valid('employee', 'admin')
+    .valid(USER_ROLE.EMPLOYEE, USER_ROLE.ADMIN)
     .required(),
   email: Joi.string().email(),
   name: Joi.string().when('email', {

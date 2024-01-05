@@ -1,9 +1,10 @@
 /* eslint-disable no-console */
 const mongoose = require('mongoose');
 const UserModel = require('../src/models');
+const { USER_ROLE } = require('../src/utils/constants');
 
 const roleSeeds = async () => {
-  const ROLE_SEEDS = ['admin', 'employee'];
+  const ROLE_SEEDS = Object.values(USER_ROLE);
 
   const promises = ROLE_SEEDS.map(async (roleName) => {
     const existingRole = await UserModel.Role.findOne({ name: roleName });

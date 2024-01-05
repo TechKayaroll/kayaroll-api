@@ -39,15 +39,17 @@ const UserReportProfile = (userOrg) => ({
   organization: userOrg.organizationId.name,
 });
 
-const MiddlewareUserResponse = (user, org) => ({
-  userId: user._id.toString(),
-  fullname: user.fullname,
-  email: user.email,
-  role_id: user.roleId._id.toString(),
-  role: user.roleId.name,
-  invitationCode: org.invitationCode,
-  organizationId: org._id.toString(),
-  organization: org.name,
+const MiddlewareUserResponse = (userOrg) => ({
+  userId: userOrg.userId._id.toString(),
+  fullname: userOrg.userId.fullname,
+  email: userOrg.userId.email,
+  role_id: userOrg.userId.roleId._id.toString(),
+  role: userOrg.userId.roleId.name,
+  invitationCode: userOrg.organizationId.invitationCode,
+  organizationId: userOrg.organizationId._id.toString(),
+  organization: userOrg.organizationId.name,
+  uniqueUserId: userOrg.uniqueUserId,
+  userOrganizationId: userOrg._id,
 });
 
 module.exports = {

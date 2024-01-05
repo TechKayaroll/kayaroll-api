@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const {
-  secondsToDuration, secondsToHMS, formatDate, calculateTotalTime,
+  secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
+const { ATTENDANCE_STATUS } = require('../utils/constants');
 
 const Attendance = (
   req,
@@ -22,6 +23,29 @@ const Attendance = (
   browser: req?.useragent?.browser || '',
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
+  createdBy: new mongoose.Types.ObjectId(req.user.userId),
+});
+
+const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
+  actionType: actionLogType,
+  attendanceId: new mongoose.Types.ObjectId(attendance._id),
+  attendanceType: attendance?.attendanceType,
+  userOrganizationId: new mongoose.Types.ObjectId(reqUser?.userOrganizationId),
+  userFullname: reqUser?.fullname,
+  userEmail: reqUser?.email,
+  userOrganization: reqUser?.organization,
+  userRole: reqUser?.role,
+});
+
+const AttendanceAuditLog = (attendanceAuditLog) => ({
+  actionType: attendanceAuditLog.actionType,
+  attendanceId: attendanceAuditLog?.attendanceId._id,
+  userId: attendanceAuditLog?.userOrganizationId?.userId,
+  uniqueUserId: attendanceAuditLog?.userOrganizationId?.uniqueUserId,
+  fullname: attendanceAuditLog?.userFullname,
+  email: attendanceAuditLog?.userEmail,
+  organization: attendanceAuditLog?.userOrganization,
+  role: attendanceAuditLog?.userRole,
 });
 
 const AttendanceList = (val) => ({
@@ -54,9 +78,10 @@ const AttendanceListAdmin = (val) => ({
   createdDate: val.createdDate,
 });
 
-const AttendanceDataResult = (val) => ({
+const AttendanceDataResult = (val, req) => ({
   userId: new mongoose.Types.ObjectId(val.userId),
   organizationId: new mongoose.Types.ObjectId(val.organizationId),
+  userOrganizationId: new mongoose.Types.ObjectId(val.userOrganizationId),
   attendanceImage: val.attendanceImage,
   long: val.long,
   lat: val.lat,
@@ -64,6 +89,10 @@ const AttendanceDataResult = (val) => ({
   attendanceType: val.attendanceType,
   status: val.status,
   originId: '',
+  browser: req?.useragent?.browser || '',
+  os: req?.useragent?.os || '',
+  platform: req?.useragent?.platform || '',
+  createdBy: new mongoose.Types.ObjectId(req.user.userId),
 });
 
 const AttendanceReport = (attendance) => ({
@@ -100,6 +129,22 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   return attendance;
 };
 
+const AdminAttendance = (req, employeeUserOrg, requestBody) => ({
+  userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
+  organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
+  userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg.userOrganizationId),
+  attendanceType: requestBody.attendanceType,
+  attendanceImage: undefined,
+  attendanceDate: dayjs(requestBody.datetime).toISOString(),
+  lat: undefined,
+  long: undefined,
+  status: ATTENDANCE_STATUS.APPROVED,
+  browser: req?.useragent?.browser || '',
+  os: req?.useragent?.os || '',
+  platform: req?.useragent?.platform || '',
+  createdBy: new mongoose.Types.ObjectId(req.user.userId),
+});
+
 module.exports = {
   Attendance,
   AttendanceList,
@@ -108,4 +153,7 @@ module.exports = {
   AttendanceDataResult,
   AttendanceReport,
   AttendanceSummaryData,
+  AttendanceAuditLogData,
+  AttendanceAuditLog,
+  AdminAttendance,
 };

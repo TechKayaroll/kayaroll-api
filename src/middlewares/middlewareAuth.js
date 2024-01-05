@@ -23,7 +23,7 @@ module.exports.authentication = async (req, res, next) => {
     }
     const { userId, organizationId } = decodeToken(token);
     const user = await userService.getDataUser(userId, organizationId);
-    req.user = struct.MiddlewareUserResponse(user.userId, user.organizationId);
+    req.user = struct.MiddlewareUserResponse(user);
     next();
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({
