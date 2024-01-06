@@ -279,9 +279,12 @@ exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
 exports.createAttendance = async (req, res, next) => {
   try {
     const createdAttendances = await model.createBulkAttendance(req);
+    const dataResponse = createdAttendances.map(
+      (attendance) => struct.AttendanceListAdmin(attendance),
+    );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: createdAttendances,
+      data: dataResponse,
       code: StatusCodes.OK,
     });
   } catch (e) {

@@ -400,11 +400,20 @@ const createBulkAttendance = async (req) => {
       .map(async (userOrgEmployee) => {
         const attendancePayload = struct.AdminAttendance(req, userOrgEmployee, req.body);
         const createdAttendance = await new userModel.Attendance(attendancePayload).save();
+        const populatedAttendance = await userModel.Attendance.findById(createdAttendance._id)
+          .populate({ path: 'userOrganizationId' })
+          .populate({
+            path: 'userId',
+            populate: {
+              path: 'roleId',
+            },
+          });
         await logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id);
-        return createdAttendance;
+        return populatedAttendance;
       });
 
     const createdAttendances = await Promise.all(createAndLogPromises);
+
     return createdAttendances;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);

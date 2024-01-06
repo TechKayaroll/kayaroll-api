@@ -21,7 +21,7 @@ exports.schemaAdminCreateAttendance = Joi.object({
     .required(),
   datetime: Joi.date()
     .min(dayjs('1970-01-01').toISOString())
-    .max(dayjs().toISOString())
+    .max(dayjs().endOf('days').toISOString())
     .required(),
 });
 
