@@ -33,6 +33,7 @@ const logAttendance = async (reqUser, actionLogType, attendanceId) => {
       actionLogType,
       reqUser,
     );
+    console.log(attendanceAuditLogData);
     const attendanceLog = new attendanceModel.AttendanceAuditLog(attendanceAuditLogData);
     const loggedAttendance = await attendanceLog.save();
     return loggedAttendance;
@@ -335,8 +336,6 @@ const attendanceUpdate = async (req, organizationId) => {
     dataInsert.status = 'Approved';
 
     [createdAttendance] = await attendances.create([dataInsert], opts);
-    await logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id);
-
     discardedAttendance = await attendances.findOneAndUpdate(
       { _id: attendanceToBeDiscarded._id },
       { $set: { status: 'Discarded', updatedDate: dayjs(Date.now()).toISOString() } },
@@ -345,8 +344,8 @@ const attendanceUpdate = async (req, organizationId) => {
 
     await session.commitTransaction();
     await session.endSession();
-
     await Promise.all([
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
       logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
       logAttendance(req.user, ATTENDANCE_AUDIT_LOG.EDIT, discardedAttendance._id),
     ]);
@@ -408,7 +407,10 @@ const createBulkAttendance = async (req) => {
               path: 'roleId',
             },
           });
-        await logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id);
+        await Promise.all(
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id)
+        );
         return populatedAttendance;
       });
 

@@ -38,6 +38,7 @@ const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
 });
 
 const AttendanceAuditLog = (attendanceAuditLog) => ({
+  id: attendanceAuditLog._id,
   actionType: attendanceAuditLog.actionType,
   attendanceId: attendanceAuditLog?.attendanceId._id,
   userId: attendanceAuditLog?.userOrganizationId?.userId,
@@ -46,6 +47,7 @@ const AttendanceAuditLog = (attendanceAuditLog) => ({
   email: attendanceAuditLog?.userEmail,
   organization: attendanceAuditLog?.userOrganization,
   role: attendanceAuditLog?.userRole,
+  createdDate: attendanceAuditLog?.createdDate,
 });
 
 const AttendanceList = (val) => ({

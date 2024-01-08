@@ -264,6 +264,9 @@ exports.attendanceDetailById = async (req, res, next) => {
 exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
   try {
     const attendanceId = req.params.id;
+    if (!attendanceId) {
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'missing attendanceId as param');
+    }
     const logs = await model.attendanceAuditLogList(attendanceId);
     const auditLogs = logs.map((eachLog) => struct.AttendanceAuditLog(eachLog));
     res.status(StatusCodes.OK).json({
