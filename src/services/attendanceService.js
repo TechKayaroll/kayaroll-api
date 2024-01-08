@@ -33,7 +33,6 @@ const logAttendance = async (reqUser, actionLogType, attendanceId) => {
       actionLogType,
       reqUser,
     );
-    console.log(attendanceAuditLogData);
     const attendanceLog = new attendanceModel.AttendanceAuditLog(attendanceAuditLogData);
     const loggedAttendance = await attendanceLog.save();
     return loggedAttendance;
@@ -407,15 +406,14 @@ const createBulkAttendance = async (req) => {
               path: 'roleId',
             },
           });
-        await Promise.all(
+        await Promise.all([
           logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id)
-        );
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
+        ]);
         return populatedAttendance;
       });
 
     const createdAttendances = await Promise.all(createAndLogPromises);
-
     return createdAttendances;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
