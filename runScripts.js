@@ -12,13 +12,12 @@ const generateEmptyUserOrgId = require('./scripts/generateEmptyUserOrgId');
 environments.env(process.env.NODE_ENV || 'local', 'Environments/');
 
 const scripts = async () => {
-  await seedRole();
+  // await seedRole();
   // await deleteDuplicateUsers();
   // await deleteUsersWithoutOrganization();
   // await deleteAttendanceWithoutEmployee();
   // await deleteEmptyUserOnOrg();
 
-  // Start From here...
   // await generateEmptyUserOrgId();
   // await generateUniqueUserIdOnAttendance();
 };

@@ -16,6 +16,7 @@ const UserOrganizationSchema = new mongoose.Schema({
     type: 'string',
     unique: true,
     immutable: true,
+    required: true,
   },
 });
 
