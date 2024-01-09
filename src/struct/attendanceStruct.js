@@ -134,7 +134,7 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
 const AdminAttendance = (req, employeeUserOrg, requestBody) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
-  userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg.userOrganizationId),
+  userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg._id),
   attendanceType: requestBody.attendanceType,
   attendanceImage: undefined,
   attendanceDate: dayjs(requestBody.datetime).toISOString(),
