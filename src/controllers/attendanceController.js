@@ -1,18 +1,20 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const fs = require('fs');
 const dayjs = require('dayjs');
-const model = require('../services/attendanceService');
-const struct = require('../struct/attendanceStruct');
-const userStruct = require('../struct/userStruct');
 const { ResponseError } = require('../helpers/response');
 const { generateAttendanceReports } = require('../helpers/generator');
 const { ATTENDANCE_TYPE } = require('../utils/constants');
+const attendanceService = require('../services/attendanceService');
+const organizationService = require('../services/organizationService');
+const struct = require('../struct/attendanceStruct');
+const organizationStruct = require('../struct/organizationStruct');
+const userStruct = require('../struct/userStruct');
 
 exports.attendanceCheckIn = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.IN;
-    const attendanceImageUrl = await model.uploadAttendanceImage(req, attendanceType);
-    await model.createAttendance(req, attendanceImageUrl, attendanceType);
+    const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
+    await attendanceService.createAttendance(req, attendanceImageUrl, attendanceType);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {},
@@ -26,8 +28,8 @@ exports.attendanceCheckIn = async (req, res, next) => {
 exports.attendanceCheckOut = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.OUT;
-    const attendanceImageUrl = await model.uploadAttendanceImage(req, attendanceType);
-    await model.createAttendance(req, attendanceImageUrl, attendanceType);
+    const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
+    await attendanceService.createAttendance(req, attendanceImageUrl, attendanceType);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {},
@@ -43,7 +45,11 @@ exports.attendanceList = async (req, res, next) => {
   try {
     req.query.from = dayjs(req.query.from).startOf('day').toISOString();
     req.query.to = dayjs(req.query.to).endOf('day').toISOString();
-    const list = await model.attandanceList(req.query, req.user.userId, req.user.organizationId);
+    const list = await attendanceService.attandanceList(
+      req.query,
+      req.user.userId,
+      req.user.organizationId,
+    );
     const dataList = list.list.map((eachList) => struct.AttendanceList(eachList));
 
     list.list = dataList;
@@ -66,7 +72,10 @@ exports.attendanceListAdmin = async (req, res, next) => {
   try {
     req.query.from = dayjs(req.query.from).startOf('day').toISOString();
     req.query.to = dayjs(req.query.to).endOf('day').toISOString();
-    const attendanceList = await model.attandanceListAdmin(req.query, req.user.organizationId);
+    const attendanceList = await attendanceService.attandanceListAdmin(
+      req.query,
+      req.user.organizationId,
+    );
     const dataList = attendanceList.list.map((eachList) => struct.AttendanceListAdmin(eachList));
     attendanceList.list = dataList;
     attendanceList.pagination = struct.AttendanceListPagination(
@@ -86,7 +95,7 @@ exports.attendanceListAdmin = async (req, res, next) => {
 
 exports.attendanceApproval = async (req, res, next) => {
   try {
-    const validationAttendanceId = await model.checkExitsAttendanceId(
+    const validationAttendanceId = await attendanceService.checkExitsAttendanceId(
       req.user.organizationId,
       req.body.attendanceId,
     );
@@ -94,7 +103,7 @@ exports.attendanceApproval = async (req, res, next) => {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
-    const updatedAttendance = await model.attandanceApproval(
+    const updatedAttendance = await attendanceService.attandanceApproval(
       req.body.attendanceId,
       req.body.status,
       req.user,
@@ -115,7 +124,7 @@ exports.attendanceApproval = async (req, res, next) => {
 
 exports.attendanceUpdate = async (req, res, next) => {
   try {
-    const validationAttendanceId = await model.checkExitsAttendanceId(
+    const validationAttendanceId = await attendanceService.checkExitsAttendanceId(
       req.user.organizationId,
       req.body.attendanceId,
     );
@@ -123,7 +132,7 @@ exports.attendanceUpdate = async (req, res, next) => {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Attendance ID Invalid');
     }
 
-    const update = await model.attendanceUpdate(req, req.user.organizationId);
+    const update = await attendanceService.attendanceUpdate(req, req.user.organizationId);
     if (update === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'The final status is not in [Pending, Approved, Rejected] so it cannot to be changes');
     }
@@ -153,7 +162,7 @@ exports.attendanceReport = async (req, res, next) => {
         from: req.query.from,
         to: req.query.to,
       };
-      employeeListPromises.push(model.attendanceReportListAdmin(
+      employeeListPromises.push(attendanceService.attendanceReportListAdmin(
         queryPayload,
         req.user.organizationId,
       ));
@@ -162,7 +171,7 @@ exports.attendanceReport = async (req, res, next) => {
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];
-      const summaryReports = model.attendanceSummaryReports(list, {
+      const summaryReports = attendanceService.attendanceSummaryReports(list, {
         from: req.query.from,
         to: req.query.to,
       });
@@ -173,11 +182,6 @@ exports.attendanceReport = async (req, res, next) => {
         summaryReports,
       });
     });
-    // res.status(StatusCodes.OK).json({
-    //   message: ReasonPhrases.OK,
-    //   data: reports,
-    //   code: StatusCodes.OK,
-    // });
     const filename = `AttendanceReport_${dayjs(req.query.from).format('DD-MMM-YYYY')}_${dayjs(req.query.to).format('DD-MMM-YYYY')}.xlsx`;
     const workbook = generateAttendanceReports(reports);
     const buf = await workbook.xlsx.writeBuffer();
@@ -204,7 +208,7 @@ exports.attendanceSummaryList = async (req, res, next) => {
         from: req.query.from,
         to: req.query.to,
       };
-      employeeListPromises.push(model.attendanceReportListAdmin(
+      employeeListPromises.push(attendanceService.attendanceReportListAdmin(
         queryPayload,
         req.user.organizationId,
       ));
@@ -213,7 +217,7 @@ exports.attendanceSummaryList = async (req, res, next) => {
     const reports = [];
     Array.from(uniqueEmployeeIds).forEach((_, index) => {
       const { list, userOrg } = employeeList[index];
-      const summaryReports = model.attendanceSummaryReports(list, {
+      const summaryReports = attendanceService.attendanceSummaryReports(list, {
         from: req.query.from,
         to: req.query.to,
       });
@@ -243,10 +247,63 @@ exports.attendanceSummaryList = async (req, res, next) => {
   }
 };
 
+exports.reportByOrganizationIds = async (req, res, next) => {
+  try {
+    req.query.from = dayjs(req.query.from).startOf('day').toISOString();
+    req.query.to = dayjs(req.query.to).endOf('day').toISOString();
+
+    const { organizationIds } = req.query;
+    const uniqueOrganizationIdsSet = new Set(organizationIds);
+
+    const fetchOrganizationData = async (orgId) => {
+      const organizationDetail = await organizationService.getOrganizationDetail(orgId);
+      const userIds = await organizationService.getEmployeeInOrganization(orgId);
+      const list = await Promise.all(
+        userIds.map(async (eachUser) => {
+          const { list: attendances, userOrg } = await attendanceService.attendanceReportListAdmin(
+            {
+              userId: eachUser.userId._id,
+              from: req.query.from,
+              to: req.query.to,
+            },
+            orgId,
+          );
+
+          const summaryReports = attendanceService.attendanceSummaryReports(attendances, {
+            from: req.query.from,
+            to: req.query.to,
+          });
+
+          return {
+            user: userStruct.UserReportProfile(userOrg),
+            summaryReports,
+          };
+        }),
+      );
+
+      return {
+        organizationId: organizationStruct.OrganizationData(organizationDetail),
+        list,
+      };
+    };
+
+    const organizationDataPromises = Array.from(uniqueOrganizationIdsSet)
+      .map(fetchOrganizationData);
+    const organizationDataArray = await Promise.all(organizationDataPromises);
+
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: organizationDataArray,
+      code: StatusCodes.OK,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
 exports.attendanceDetailById = async (req, res, next) => {
   try {
     const attendanceId = req.params.id;
-    const attendance = await model.attendanceDetail(attendanceId);
+    const attendance = await attendanceService.attendanceDetail(attendanceId);
     let data = null;
     if (attendance) {
       data = struct.AttendanceListAdmin(attendance);
@@ -267,7 +324,7 @@ exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
     if (!attendanceId) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'missing attendanceId as param');
     }
-    const logs = await model.attendanceAuditLogList(attendanceId);
+    const logs = await attendanceService.attendanceAuditLogList(attendanceId);
     const auditLogs = logs.map((eachLog) => struct.AttendanceAuditLog(eachLog));
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
@@ -281,7 +338,7 @@ exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
 
 exports.createAttendance = async (req, res, next) => {
   try {
-    const createdAttendances = await model.createBulkAttendance(req);
+    const createdAttendances = await attendanceService.createBulkAttendance(req);
     const dataResponse = createdAttendances.map(
       (attendance) => struct.AttendanceListAdmin(attendance),
     );

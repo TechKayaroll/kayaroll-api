@@ -7,10 +7,12 @@ const UserOrganizationSchema = new mongoose.Schema({
   organizationId: {
     type: Schema.Types.ObjectId,
     ref: 'Organization',
+    required: true,
   },
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
+    required: true,
   },
   uniqueUserId: {
     type: 'string',

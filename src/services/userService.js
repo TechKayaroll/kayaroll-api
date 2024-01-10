@@ -44,7 +44,7 @@ const insertUserOrganization = async (user, org) => {
     const userOrganization = new Model.UserOrganization(userOrgPayload);
     const createdUserOrganization = await userOrganization.save();
     return createdUserOrganization;
-  } catch (error) {
+  } catch (error) {1
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create UserOrganization');
   }
 };

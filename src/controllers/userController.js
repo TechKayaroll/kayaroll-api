@@ -168,3 +168,12 @@ exports.employeeList = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.organizationList = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    // find organizations by userId
+  } catch (error) {
+    next(error);
+  }
+};

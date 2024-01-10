@@ -9,6 +9,8 @@ const generateUniqueUserIdOnAttendance = require('./scripts/generateUniqueUserId
 // const deleteAttendanceWithoutEmployee = require('./scripts/removeAttendanceWithoutEmployee');
 // const deleteEmptyUserOnOrg = require('./scripts/removeEmptyUserOnOrganization');
 const generateEmptyUserOrgId = require('./scripts/generateEmptyUserOrgId');
+const assignEmployeeRoleToUser = require('./scripts/assignEmployeeRoleToUser');
+
 environments.env(process.env.NODE_ENV || 'local', 'Environments/');
 
 const scripts = async () => {
@@ -20,6 +22,7 @@ const scripts = async () => {
 
   // await generateEmptyUserOrgId();
   // await generateUniqueUserIdOnAttendance();
+  // await assignEmployeeRoleToUser();
 };
 
 const runSeeder = async () => {

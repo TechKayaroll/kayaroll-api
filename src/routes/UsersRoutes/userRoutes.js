@@ -11,7 +11,7 @@ const userRoutes = () => {
   ChildRouter.post('/register-company', validate.validate(schema.schemaRegisterCompany), CONTROLLER.registerCompany);
   ChildRouter.use(authentication);
   ChildRouter.get('/admin/employee-list', CONTROLLER.employeeList);
-
+  ChildRouter.get('/organization', CONTROLLER.organizationList);
   return ChildRouter;
 };
 

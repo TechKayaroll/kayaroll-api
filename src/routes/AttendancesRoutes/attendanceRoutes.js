@@ -20,8 +20,10 @@ const AttendanceRoutes = () => {
   ChildRouter.put('/admin/update', validate.validate(schema.schemaAttendanceUpdate), CONTROLLER.attendanceUpdate);
   ChildRouter.post('/admin/report', validate.validate(null, schema.schemaAttendanceReportAdmin), CONTROLLER.attendanceReport);
   ChildRouter.get('/admin/report', validate.validate(null, schema.schemaAttendanceSummaryAdmin), CONTROLLER.attendanceSummaryList);
+  ChildRouter.get('/superadmin/report', validate.validate(null, schema.schemaGenerateReportByOrganizationIds), CONTROLLER.reportByOrganizationIds);
   ChildRouter.post('/admin/create', validate.validate(schema.schemaAdminCreateAttendance), CONTROLLER.createAttendance);
   ChildRouter.get('/admin/audit-log/:id', CONTROLLER.attendanceAuditLogByAttendanceId);
+  ChildRouter.get('//audit-log/:id', CONTROLLER.attendanceAuditLogByAttendanceId);
   ChildRouter.get('/:id', CONTROLLER.attendanceDetailById);
   return ChildRouter;
 };

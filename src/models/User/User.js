@@ -15,7 +15,11 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: 'string',
   },
-  roleId: { type: Schema.Types.ObjectId, ref: 'Role' },
+  roleId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Role',
+    required: true,
+  },
 });
 
 const User = mongoose.model('User', UserSchema, 'user');

@@ -176,7 +176,6 @@ const attendanceReportListAdmin = async (query, organizationId) => {
     })
       .where(whereParam)
       .sort({ attendanceDate: sortBy });
-
     return { list, userOrg };
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
@@ -185,7 +184,7 @@ const attendanceReportListAdmin = async (query, organizationId) => {
 
 const attendanceSummaryReports = (attendances, dateRange) => {
   const groupedAttFormat = 'MMM, DD YYYY';
-  const groupedAttendances = attendances.reduce((acc, attendance) => {
+  const groupedAttendances = (attendances || []).reduce((acc, attendance) => {
     const date = dayjs(attendance.attendanceDate).format(groupedAttFormat);
     acc[date] = acc[date] || [];
     acc[date].push(attendance);
