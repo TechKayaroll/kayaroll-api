@@ -163,11 +163,11 @@ const attendanceReportListAdmin = async (query, organizationId) => {
     const whereParam = {
       attendanceType: [ATTENDANCE_TYPE.IN, ATTENDANCE_TYPE.OUT],
       status: [ATTENDANCE_STATUS.APPROVED],
-      userId: new mongoose.Types.ObjectId(query.userId),
     };
     const sortBy = 1; // ASC
 
     const list = await attendances.find({
+      userId: new mongoose.Types.ObjectId(query.userId),
       organizationId,
       attendanceDate: {
         $gte: query.from,

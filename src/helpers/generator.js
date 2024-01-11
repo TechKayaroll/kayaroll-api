@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 const dayjs = require('dayjs');
 const ExcelJS = require('exceljs');
+const { capitalize } = require('./string');
 // https://stackblitz.com/edit/react-export-to-excel-dkeuou?file=src%2FApp.js
 
 const addDataToSheet = (worksheet, summaryReports) => {
@@ -16,7 +17,8 @@ const addDataToSheet = (worksheet, summaryReports) => {
 
   Object.entries(user).forEach((entry) => {
     const [fieldName, fieldValue] = entry;
-    worksheet.addRow([fieldName, fieldValue]);
+    const capitalizedFieldName = capitalize(fieldName);
+    worksheet.addRow([capitalizedFieldName, fieldValue]);
   });
 
   // Add total duration
