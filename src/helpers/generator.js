@@ -42,10 +42,10 @@ const addDataToSheet = (worksheet, summaryReports) => {
       } = attendanceLog;
       const attendanceDate = dayjs(date).format('MM/DD/YYYY');
       const inTime = attendanceIn
-        ? dayjs(attendanceIn.attendanceDate).format('hh:mm:ss')
+        ? dayjs(attendanceIn.attendanceDate).format('hh:mm:ss A')
         : '-';
       const outTime = attendanceOut
-        ? dayjs(attendanceOut.attendanceDate).format('hh:mm:ss')
+        ? dayjs(attendanceOut.attendanceDate).format('hh:mm:ss A')
         : '-';
       const row = [
         attendanceDate,
