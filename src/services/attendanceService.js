@@ -5,7 +5,7 @@ const dayjs = require('dayjs');
 const { ResponseError } = require('../helpers/response');
 const struct = require('../struct/attendanceStruct');
 const {
-  secondsToDuration, isWeekend, calculateTotalTime,
+  secondsToDuration, calculateTotalTime,
 } = require('../helpers/date');
 const { pairInAndOut } = require('../helpers/attendance');
 const userModel = require('../models');
@@ -197,7 +197,9 @@ const attendanceSummaryReports = (attendances, dateRange) => {
   const fromDate = dayjs(dateRange.from);
   const toDate = dayjs(dateRange.to);
   for (let currDate = fromDate; currDate.isBefore(toDate); currDate = currDate.add(1, 'days')) {
-    if (!isWeekend(currDate)) {
+    // const shouldRecord = !isWeekend(currDate);
+    const shouldRecord = true;
+    if (shouldRecord) {
       const currentDate = currDate.format(groupedAttFormat);
       const dayAttendances = groupedAttendances[currentDate] || [];
       const pairedAttendances = pairInAndOut(dayAttendances);
