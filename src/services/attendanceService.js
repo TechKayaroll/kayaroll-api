@@ -5,7 +5,7 @@ const dayjs = require('dayjs');
 const { ResponseError } = require('../helpers/response');
 const struct = require('../struct/attendanceStruct');
 const {
-  secondsToDuration, calculateTotalTime,
+  secondsToDuration, calculateTotalTime, isWeekend,
 } = require('../helpers/date');
 const { pairInAndOut } = require('../helpers/attendance');
 const userModel = require('../models');
@@ -197,29 +197,25 @@ const attendanceSummaryReports = (attendances, dateRange) => {
   const fromDate = dayjs(dateRange.from);
   const toDate = dayjs(dateRange.to);
   for (let currDate = fromDate; currDate.isBefore(toDate); currDate = currDate.add(1, 'days')) {
-    // const shouldRecord = !isWeekend(currDate);
-    const shouldRecord = true;
-    if (shouldRecord) {
-      const currentDate = currDate.format(groupedAttFormat);
-      const dayAttendances = groupedAttendances[currentDate] || [];
-      const pairedAttendances = pairInAndOut(dayAttendances);
-      if (pairedAttendances.length === 0) {
+    const currentDate = currDate.format(groupedAttFormat);
+    const dayAttendances = groupedAttendances[currentDate] || [];
+    const pairedAttendances = pairInAndOut(dayAttendances);
+    if (pairedAttendances.length === 0 && !isWeekend(currDate)) {
+      reports.push({
+        date: currentDate,
+        attendanceLog: struct.AttendanceSummaryData(null, null),
+      });
+    } else {
+      for (let i = 0; i < pairedAttendances.length; i += 1) {
+        const pairedAttendance = pairedAttendances[i];
+        const { attendanceIn, attendanceOut } = pairedAttendance;
+        const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
+        totalDuration += totalTime;
+        const attendance = struct.AttendanceSummaryData(attendanceIn, attendanceOut);
         reports.push({
           date: currentDate,
-          attendanceLog: struct.AttendanceSummaryData(null, null),
+          attendanceLog: attendance,
         });
-      } else {
-        for (let i = 0; i < pairedAttendances.length; i += 1) {
-          const pairedAttendance = pairedAttendances[i];
-          const { attendanceIn, attendanceOut } = pairedAttendance;
-          const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
-          totalDuration += totalTime;
-          const attendance = struct.AttendanceSummaryData(attendanceIn, attendanceOut);
-          reports.push({
-            date: currentDate,
-            attendanceLog: attendance,
-          });
-        }
       }
     }
   }

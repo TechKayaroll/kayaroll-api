@@ -1,29 +1,35 @@
 const dayjs = require('dayjs');
 
-const generateCodeByString = (length, string) => {
+const getRandomString = (length, upperCase = false, lowerCase = false) => {
+  let characters = '';
+  if (upperCase) characters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (lowerCase) characters += 'abcdefghijklmnopqrstuvwxyz';
+  if (!upperCase && !lowerCase) { characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; }
+
   let result = '';
-  let characters = string.replaceAll(/[`~!@#$%^&*()|+-=?;:'",.<>{}[]\/\s]/gi, '');
-  characters = characters.replaceAll(/\s/g, '');
   const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
+  let i = 0;
+  while (i < length) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
+    i += 1;
   }
-  return result.toUpperCase();
+  return result;
 };
 
-const getRandomString = (length) => {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
+const generateCodeByString = (length, string) => {
+  let results = string.replaceAll(
+    /[`~!@#$%^&*()|+-=?;:'",.<>{}[\]/\s]/gi,
+    '',
+  );
+  if (results.length < length) {
+    results += getRandomString(
+      Math.abs(length - results.length),
+      true,
+    );
   }
-  return result.toUpperCase();
+  return results.slice(0, length).toUpperCase();
 };
+
 const generateCompanyCode = (companyName) => {
   const companyCode = generateCodeByString(3, companyName);
   const rndStr = getRandomString(3);
