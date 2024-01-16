@@ -31,7 +31,7 @@ async function userOrgIdPreSaveHook(next) {
       const userCountInOrg = await this.constructor.countDocuments({
         organizationId: this.organizationId,
       });
-      const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg + 1);
+      const uniqueId = generateUserIdByNameAndIndex(organization.name, userCountInOrg);
       this.uniqueUserId = uniqueId;
     }
     next();
