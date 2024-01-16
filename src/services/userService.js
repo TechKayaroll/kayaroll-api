@@ -2,8 +2,7 @@ const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const Model = require('../models');
 const { ResponseError } = require('../helpers/response');
-const { generateCompanyCode } = require('../helpers/randomString');
-const { generateUserIdByNameAndIndex } = require('../utils/common');
+const { generateUserIdByNameAndIndex, generateCompanyCode } = require('../utils/common');
 
 const generateUniqueUserOrgId = async (organizationId) => {
   const organization = await Model.Organization.findById(organizationId);
@@ -44,7 +43,7 @@ const insertUserOrganization = async (user, org) => {
     const userOrganization = new Model.UserOrganization(userOrgPayload);
     const createdUserOrganization = await userOrganization.save();
     return createdUserOrganization;
-  } catch (error) {1
+  } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create UserOrganization');
   }
 };

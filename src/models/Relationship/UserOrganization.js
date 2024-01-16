@@ -19,7 +19,7 @@ const UserOrganizationSchema = new mongoose.Schema({
     unique: true,
     immutable: true,
   },
-});
+}, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 async function userOrgIdPreSaveHook(next) {
   try {

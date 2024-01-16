@@ -10,7 +10,7 @@ const OrganizationSchema = new mongoose.Schema({
     type: 'string',
     required: true,
   },
-});
+}, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Organization = mongoose.model('Organization', OrganizationSchema, 'organization');
 module.exports = Organization;

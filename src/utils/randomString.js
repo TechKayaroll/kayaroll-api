@@ -30,14 +30,32 @@ const generateCodeByString = (length, string) => {
   return results.slice(0, length).toUpperCase();
 };
 
-const generateCompanyCode = (companyName) => {
-  const companyCode = generateCodeByString(3, companyName);
-  const rndStr = getRandomString(3);
-  return `${companyCode}-${rndStr}-${dayjs(Date.now()).format('DDMMYY')}`;
+const generateRandomString = (length, type = 'alphanumeric') => {
+  let characters;
+
+  if (type === 'numeric') {
+    characters = '0123456789';
+  } else if (type === 'alphabetic') {
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  } else if (type === 'alphanumeric') {
+    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  } else {
+    throw new Error('Invalid character type specified.');
+  }
+
+  let result = '';
+  let i = 0;
+
+  while (i < length) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+    i += 1;
+  }
+
+  return result;
 };
 
 module.exports = {
   generateCodeByString,
   getRandomString,
-  generateCompanyCode,
+  generateRandomString,
 };

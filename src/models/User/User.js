@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema({
     ref: 'Role',
     required: true,
   },
-});
+}, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const User = mongoose.model('User', UserSchema, 'user');
 module.exports = User;

@@ -20,7 +20,7 @@ const scripts = async () => {
   // await deleteAttendanceWithoutEmployee();
   // await deleteEmptyUserOnOrg();
 
-  // await generateEmptyUserOrgId();
+  await generateEmptyUserOrgId();
   // await generateUniqueUserIdOnAttendance();
   // await assignEmployeeRoleToUser();
 };
