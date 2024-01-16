@@ -250,9 +250,10 @@ const updateDataUserAdmin = async (req, payload) => {
 
 const insertOrganization = async (companyName) => {
   try {
-    const invitationCode = generateCompanyCode(companyName);
+    const trimmedCompanyName = companyName.trim();
+    const invitationCode = generateCompanyCode(trimmedCompanyName);
     const newOrganization = new Model.Organization({
-      name: companyName,
+      name: trimmedCompanyName,
       invitationCode,
     });
     return await newOrganization.save();

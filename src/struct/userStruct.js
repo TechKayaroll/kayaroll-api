@@ -1,5 +1,5 @@
 const UserRegistration = (companyId, payload) => ({
-  fullname: payload.name,
+  fullname: payload.name.trim(),
   email: payload.email,
   companyId,
   roleId: '',
