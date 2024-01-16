@@ -14,7 +14,7 @@ const generateUserIdByNameAndIndex = (name, indexCount) => {
 const generateCompanyCode = (companyName) => {
   const companyCode = generateCodeByString(3, companyName);
   const rndStr = getRandomString(3);
-  return `${companyCode}-${rndStr}-${dayjs(Date.now()).format('DDMMYY')}`;
+  return `${companyCode}-${rndStr}-${dayjs(Date.now()).format('DDMMYY')}`.toUpperCase();
 };
 
 module.exports = {
