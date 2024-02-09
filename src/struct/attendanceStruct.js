@@ -3,7 +3,7 @@ const dayjs = require('dayjs');
 const {
   secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
-const { ATTENDANCE_STATUS } = require('../utils/constants');
+const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS } = require('../utils/constants');
 
 const Attendance = (
   req,
@@ -19,7 +19,7 @@ const Attendance = (
   attendanceDate: dayjs().toISOString(),
   lat: req.body.lat,
   long: req.body.long,
-  status: 'Pending',
+  status: ATTENDANCE_STATUS.PENDING,
   browser: req?.useragent?.browser || '',
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
@@ -113,11 +113,11 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   const inTime = attendanceIn?.attendanceDate;
   const outTime = attendanceOut?.attendanceDate;
   const totalTime = calculateTotalTime(attendanceIn, attendanceOut);
-  let status = 'absent';
+  let status = ATTENDANCE_REPORT_STATUS.ABSENT;
   if (attendanceIn && attendanceOut) {
-    status = 'present';
+    status = ATTENDANCE_REPORT_STATUS.PRESENT;
   } else if (attendanceIn || attendanceOut) {
-    status = 'incomplete';
+    status = ATTENDANCE_REPORT_STATUS.INCOMPLETE;
   }
 
   const attendance = {

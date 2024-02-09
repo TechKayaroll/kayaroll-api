@@ -18,6 +18,12 @@ const ATTENDANCE_STATUS = {
   DISCARDED: 'Discarded',
 };
 
+const ATTENDANCE_REPORT_STATUS = {
+  ABSENT: 'absent',
+  PRESENT: 'present',
+  INCOMPLETE: 'incomplete',
+};
+
 const USER_ROLE = {
   ADMIN: 'admin',
   EMPLOYEE: 'employee',
@@ -27,5 +33,6 @@ module.exports = {
   ATTENDANCE_AUDIT_LOG,
   ATTENDANCE_TYPE,
   ATTENDANCE_STATUS,
+  ATTENDANCE_REPORT_STATUS,
   USER_ROLE,
 };
