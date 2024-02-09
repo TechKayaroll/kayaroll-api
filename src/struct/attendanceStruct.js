@@ -19,7 +19,7 @@ const Attendance = (
   attendanceDate: dayjs().toISOString(),
   lat: req.body.lat,
   long: req.body.long,
-  status: ATTENDANCE_STATUS.PENDING,
+  status: ATTENDANCE_STATUS.APPROVED,
   browser: req?.useragent?.browser || '',
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
