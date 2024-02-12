@@ -4,6 +4,7 @@ const UserOrganization = require('./Relationship/UserOrganization');
 const Attendance = require('./Attendance/Attendance');
 const Role = require('./Role/Role');
 const AttendanceAuditLog = require('./AttendanceAuditLog/AttendanceAuditLog');
+const Location = require('./Location/Location');
 
 const Model = {
   Organization,
@@ -12,6 +13,7 @@ const Model = {
   Attendance,
   Role,
   AttendanceAuditLog,
+  Location,
 };
 
 module.exports = Model;

@@ -2,7 +2,8 @@ const { StatusCodes } = require('http-status-codes');
 const { ResponseError } = require('../helpers/response');
 
 const model = require('../models');
-const {USER_ROLE} = require('../utils/constants');
+const { USER_ROLE } = require('../utils/constants');
+const Model = require('../models');
 
 const getAllOrganization = async (param) => {
   try {
@@ -43,8 +44,25 @@ const getOrganizationDetail = async (organizationId) => {
   }
 };
 
+const updateOrganizationLocation = async (organizationId, locationIds, session) => {
+  try {
+    const userOrg = await model.Organization.findByIdAndUpdate(
+      organizationId,
+      { $addToSet: { locations: { $each: locationIds } } },
+      { new: true, session },
+    );
+    if (!userOrg) {
+      throw new Error(`User organization not found for ID ${organizationId}`);
+    }
+    return userOrg;
+  } catch (error) {
+    throw new Error(`Failed to update user organization location: ${error.message}`);
+  }
+};
+
 module.exports = {
   getAllOrganization,
   getEmployeeInOrganization,
   getOrganizationDetail,
+  updateOrganizationLocation,
 };

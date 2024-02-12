@@ -262,6 +262,22 @@ const insertOrganization = async (companyName) => {
   }
 };
 
+const updateUserOrganizationAttendanceLocation = async (id, locationId, session) => {
+  try {
+    const userOrg = await Model.UserOrganization.findById(id);
+    if (!userOrg) {
+      throw new Error(`UserOrganization not found for ID ${id}`);
+    }
+    userOrg.attendanceLocation = locationId;
+
+    await userOrg.save({ session });
+
+    return userOrg;
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
+  }
+};
+
 module.exports = {
   insertDataUser,
   createOrUpdateExistingUser,
@@ -277,4 +293,5 @@ module.exports = {
   insertOrganization,
   getAllUserOnOrganization,
   generateUniqueUserOrgId,
+  updateUserOrganizationAttendanceLocation,
 };

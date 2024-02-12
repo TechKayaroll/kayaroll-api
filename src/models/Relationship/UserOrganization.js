@@ -1,16 +1,17 @@
 const mongoose = require('mongoose');
-const { Schema } = require('mongoose');
 const Organization = require('../Organization/Organization');
+const Location = require('../Location/Location');
+
 const { generateUserIdByNameAndIndex } = require('../../utils/common');
 
 const UserOrganizationSchema = new mongoose.Schema({
   organizationId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: true,
   },
   userId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
@@ -18,6 +19,10 @@ const UserOrganizationSchema = new mongoose.Schema({
     type: 'string',
     unique: true,
     immutable: true,
+  },
+  attendanceLocation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Location,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
