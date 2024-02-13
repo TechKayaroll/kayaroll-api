@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Organization = require('../Organization/Organization');
-const Location = require('../Location/Location');
 
 const { generateUserIdByNameAndIndex } = require('../../utils/common');
 
@@ -19,10 +18,6 @@ const UserOrganizationSchema = new mongoose.Schema({
     type: 'string',
     unique: true,
     immutable: true,
-  },
-  attendanceLocation: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: Location,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 

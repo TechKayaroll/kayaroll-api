@@ -5,8 +5,7 @@ const schema = require('../../joiSchema/locationSchema');
 const validate = require('../../middlewares/middlewareValidation');
 
 const LocationRoutes = () => {
-  ChildRouter.use(authentication);
-
+  ChildRouter.get('/', (req,res,next) => { res.json({ ok: '200'})});
   return ChildRouter;
 };
 

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Organization = require('../Organization/Organization');
 
 const LocationSchema = new mongoose.Schema({
   name: {
@@ -15,6 +16,11 @@ const LocationSchema = new mongoose.Schema({
   },
   long: {
     type: Number,
+    required: true,
+  },
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: Organization,
     required: true,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });

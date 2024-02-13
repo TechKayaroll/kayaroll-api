@@ -3,6 +3,8 @@ const { ResponseError } = require('../helpers/response');
 
 const model = require('../models');
 const { USER_ROLE } = require('../utils/constants');
+const userStruct = require('../struct/userStruct');
+
 const Model = require('../models');
 
 const getAllOrganization = async (param) => {
@@ -44,19 +46,20 @@ const getOrganizationDetail = async (organizationId) => {
   }
 };
 
-const updateOrganizationLocation = async (organizationId, locationIds, session) => {
+const associateEmployeeWithLocation = async (payload, session) => {
   try {
-    const userOrg = await model.Organization.findByIdAndUpdate(
-      organizationId,
-      { $addToSet: { locations: { $each: locationIds } } },
-      { new: true, session },
-    );
-    if (!userOrg) {
-      throw new Error(`User organization not found for ID ${organizationId}`);
+    const userOrganizationLocationData = userStruct.UserOrganizationLocation(payload);
+    const existingRecord = await model.UserOrganizationLocation
+      .findOne(userOrganizationLocationData);
+
+    if (!existingRecord) {
+      const newUserOrgLocation = new model.UserOrganizationLocation(userOrganizationLocationData);
+      await newUserOrgLocation.save({ session });
+      return userStruct.UserOrganizationLocation(newUserOrgLocation);
     }
-    return userOrg;
+    return userStruct.UserOrganizationLocation(existingRecord);
   } catch (error) {
-    throw new Error(`Failed to update user organization location: ${error.message}`);
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
@@ -64,5 +67,5 @@ module.exports = {
   getAllOrganization,
   getEmployeeInOrganization,
   getOrganizationDetail,
-  updateOrganizationLocation,
+  associateEmployeeWithLocation,
 };

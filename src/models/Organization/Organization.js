@@ -10,11 +10,6 @@ const OrganizationSchema = new mongoose.Schema({
     type: 'string',
     required: true,
   },
-  locations: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Location',
-    default: [],
-  },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 async function removeDuplicateLocationsPreSaveHook(next) {
