@@ -4,9 +4,28 @@ const { authentication } = require('../../middlewares/middlewareAuth');
 const schema = require('../../joiSchema/locationSchema');
 const validate = require('../../middlewares/middlewareValidation');
 
-const LocationRoutes = () => {
-  ChildRouter.get('/', (req,res,next) => { res.json({ ok: '200'})});
+const AdminLocationRoutes = () => {
+  ChildRouter.use(authentication);
+
+  ChildRouter.post(
+    '/admin/profiles/create',
+    validate.validate(schema.schemaCreateLocationProfile),
+    CONTROLLER.createLocationProfile,
+  );
+  ChildRouter.post(
+    '/admin/profiles/delete',
+    validate.validate(schema.schemaDeleteLocationProfile),
+    CONTROLLER.removeLocationProfiles,
+  );
+  ChildRouter.post(
+    '/admin/profiles/update',
+    validate.validate(schema.schemaUpdateLocationProfile),
+    CONTROLLER.updateLocationProfile,
+  );
+
+  ChildRouter.get('/admin/profiles', CONTROLLER.getLocationProfile);
+
   return ChildRouter;
 };
 
-module.exports = LocationRoutes();
+module.exports = AdminLocationRoutes();
