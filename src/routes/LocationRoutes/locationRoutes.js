@@ -10,14 +10,12 @@ const AdminLocationRoutes = () => {
 
   ChildRouter.get(
     '/search-address',
-    authorizationByRole([USER_ROLE.ADMIN]),
     validate.validate(null, schema.schemaSearchLocation),
     CONTROLLER.queryLocationByName,
   );
 
   ChildRouter.get(
     '/search',
-    authorizationByRole([USER_ROLE.ADMIN]),
     validate.validate(null, schema.schemaSearchLocationByCoordinateOrPlaceId),
     CONTROLLER.searchLocationByCoordinateOrPlaceId,
   );
