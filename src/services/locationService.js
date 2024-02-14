@@ -1,16 +1,20 @@
-const { default: mongoose, model } = require('mongoose');
+const { default: mongoose } = require('mongoose');
 const { StatusCodes } = require('http-status-codes');
+const axios = require('axios');
+
 const Model = require('../models');
+
 const struct = require('../struct/locationStruct');
-const organizationService = require('./organizationService');
-const userService = require('./userService');
-const { USER_ROLE } = require('../utils/constants');
+const userStruct = require('../struct/userStruct');
+
+
+const { GOOGLE_MAP_API_BASE_URL } = require('../utils/constants');
 const { ResponseError } = require('../helpers/response');
 
 const createLocationProfile = async (organizationId, reqBody, session) => {
   const { employeeIds, ...locationPayload } = reqBody;
   const adminOrganizationId = new mongoose.Types.ObjectId(organizationId);
-  const location = struct.locationData(locationPayload, adminOrganizationId);
+  const location = struct.locationQuery(locationPayload, adminOrganizationId);
   const locationExist = await Model.Location.findOne({
     name: location.name,
     organizationId: location.organizationId,
@@ -23,23 +27,10 @@ const createLocationProfile = async (organizationId, reqBody, session) => {
   }
   const newLocationProfile = new Model.Location(location);
   newLocationProfile.save({ session });
-
-  const associateUserOrgWithLocationPromises = employeeIds
-    .map((userId) => organizationService.associateEmployeeWithLocation({
-      userId,
-      organizationId: adminOrganizationId,
-      locationId: newLocationProfile._id,
-    }, session));
-
-  const userOrgLocations = await Promise.all(associateUserOrgWithLocationPromises);
-  await session.commitTransaction();
-  return {
-    location: newLocationProfile,
-    users: userOrgLocations,
-  };
+  return newLocationProfile;
 };
 
-const getUserLocationProfile = async (userId) => {
+const getUserLocationProfile = async () => {
 
 };
 
@@ -50,13 +41,22 @@ const getLocationProfileList = async (orgId) => {
 
   const promisesUserByLocation = orgLocation.map((eachLocation) => {
     const { _id, organizationId } = eachLocation;
-    return Model.UserOrganizationLocation.find({ locationId: _id, organizationId });
+    return Model.UserOrganizationLocation.find({ locationId: _id, organizationId })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      })
+      .populate({ path: 'organizationId' })
+      .populate({
+        path: 'userOrganizationId',
+      });
   });
   const userByLocations = await Promise.all(promisesUserByLocation);
-
   return orgLocation.map((eachLocation, index) => ({
-    location: eachLocation,
-    users: userByLocations[index],
+    location: struct.locationOrganizationData(eachLocation),
+    users: userByLocations[index]?.map(userStruct.UserOrganizationLocationDetail),
   }));
 };
 
@@ -129,6 +129,51 @@ const deleteUserOrgnizationLocations = async (organizationId, locationId, sessio
   return deleted;
 };
 
+const searchLocation = async (coordinate = null, placeId = null) => {
+  let results = [];
+  let url = GOOGLE_MAP_API_BASE_URL;
+  const queryParams = [];
+
+  if (coordinate?.lat && coordinate?.long) {
+    queryParams.push(`latlng=${coordinate.lat},${coordinate.long}`);
+  } else if (placeId) {
+    queryParams.push(`place_id=${placeId}`);
+  } else {
+    return results;
+  }
+
+  queryParams.push(`key=${process.env.GOOGLE_MAP_API_KEY}`);
+  url += `?${queryParams.join('&')}`;
+
+  try {
+    const response = await axios.get(url);
+    if (response.data.status === 'OK') {
+      results = response.data.results.map(struct.geocodeResults);
+    } else {
+      throw new Error(response.data.error_message || 'Google API error');
+    }
+  } catch (error) {
+    throw new Error(`Internal server error: ${error.message}`);
+  }
+
+  return results;
+};
+
+const searchLocationByName = async (locationName) => {
+  try {
+    const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+      params: {
+        input: locationName,
+        key: process.env.GOOGLE_MAP_API_KEY,
+      },
+    });
+    const locations = response.data.predictions.map(struct.locationPrediction);
+    return locations;
+  } catch (error) {
+    throw new Error('Failed to search location by name');
+  }
+};
+
 module.exports = {
   getLocationProfileList,
   getUserLocationProfile,
@@ -137,4 +182,6 @@ module.exports = {
   getLocationDetail,
   updateLocation,
   deleteUserOrgnizationLocations,
+  searchLocation,
+  searchLocationByName,
 };

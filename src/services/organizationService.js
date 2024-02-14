@@ -46,18 +46,34 @@ const getOrganizationDetail = async (organizationId) => {
   }
 };
 
-const associateEmployeeWithLocation = async (payload, session) => {
+const associateEmployeeWithLocation = async ({
+  userId,
+  organizationId,
+  locationId,
+}, session) => {
   try {
-    const userOrganizationLocationData = userStruct.UserOrganizationLocation(payload);
+    const userOrganization = await model.UserOrganization.findOne({
+      userId,
+      organizationId,
+    });
+    if (!userOrganization) {
+      throw new Error(`User with id: ${userId}, is not exist in organization with id: ${organizationId}`);
+    }
+    const userOrganizationLocationData = userStruct.UserOrganizationLocationPayload({
+      userId,
+      organizationId,
+      userOrganizationId: userOrganization._id,
+      locationId,
+    });
     const existingRecord = await model.UserOrganizationLocation
       .findOne(userOrganizationLocationData);
 
     if (!existingRecord) {
       const newUserOrgLocation = new model.UserOrganizationLocation(userOrganizationLocationData);
       await newUserOrgLocation.save({ session });
-      return userStruct.UserOrganizationLocation(newUserOrgLocation);
+      return newUserOrgLocation;
     }
-    return userStruct.UserOrganizationLocation(existingRecord);
+    return existingRecord;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }

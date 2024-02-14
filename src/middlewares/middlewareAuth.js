@@ -2,8 +2,9 @@ const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const userService = require('../services/userService');
 const { decodeToken } = require('../helpers/jwt');
 const struct = require('../struct/userStruct');
+const { USER_ROLE } = require('../utils/constants');
 
-module.exports.authentication = async (req, res, next) => {
+exports.authentication = async (req, res, next) => {
   const headerToken = req.header('Authorization');
   try {
     if (!headerToken) {
@@ -32,5 +33,23 @@ module.exports.authentication = async (req, res, next) => {
       data: {},
       code: StatusCodes.UNAUTHORIZED,
     });
+  }
+};
+
+exports.authorizationByRole = (
+  roles = [USER_ROLE.ADMIN, USER_ROLE.EMPLOYEE],
+) => async (req, res, next) => {
+  try {
+    if (roles.includes(req?.user?.role)) {
+      next();
+    } else {
+      res.status(StatusCodes.FORBIDDEN).json({
+        message: ReasonPhrases.FORBIDDEN,
+        data: {},
+        code: StatusCodes.FORBIDDEN,
+      });
+    }
+  } catch (error) {
+    next(error);
   }
 };

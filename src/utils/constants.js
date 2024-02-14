@@ -29,10 +29,13 @@ const USER_ROLE = {
   EMPLOYEE: 'employee',
 };
 
+const GOOGLE_MAP_API_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
+
 module.exports = {
   ATTENDANCE_AUDIT_LOG,
   ATTENDANCE_TYPE,
   ATTENDANCE_STATUS,
   ATTENDANCE_REPORT_STATUS,
   USER_ROLE,
+  GOOGLE_MAP_API_BASE_URL,
 };

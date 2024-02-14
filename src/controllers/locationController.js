@@ -4,18 +4,36 @@ const { default: mongoose } = require('mongoose');
 const locationServices = require('../services/locationService');
 const organizationService = require('../services/organizationService');
 
+const struct = require('../struct/locationStruct');
+const userStruct = require('../struct/userStruct');
+
 const createLocationProfile = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const data = await locationServices.createLocationProfile(
+    const { employeeIds } = req.body;
+    const adminOrganizationId = new mongoose.Types.ObjectId(req.user.organizationId);
+    const newLocationProfile = await locationServices.createLocationProfile(
       req.user.organizationId,
       req.body,
       session,
     );
+    const associateUserOrgWithLocationPromises = employeeIds
+      .map((userId) => organizationService.associateEmployeeWithLocation({
+        userId,
+        organizationId: adminOrganizationId,
+        locationId: newLocationProfile._id,
+      }, session));
+
+    const userOrgLocations = await Promise.all(associateUserOrgWithLocationPromises);
+    await session.commitTransaction();
+
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data,
+      data: {
+        location: struct.locationData(newLocationProfile),
+        users: userOrgLocations.map(userStruct.UserOrganizationLocation),
+      },
       code: StatusCodes.OK,
     });
   } catch (e) {
@@ -40,34 +58,23 @@ const getLocationProfile = async (req, res, next) => {
   }
 };
 
-const getUserLocationProfile = async (req, res, next) => {
-  try {
-    const { userId, organizationId } = req.user;
-    const data = await locationServices.getUserLocationProfile(userId, organizationId);
-    res.status(StatusCodes.OK).json({
-      message: ReasonPhrases.OK,
-      data,
-      code: StatusCodes.OK,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 const removeLocationProfiles = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const { organizationId } = req.user;
     const { locationIds } = req.body;
-    const data = await locationServices.removeBulkLocationProfile(
+    const { deletedLocations } = await locationServices.removeBulkLocationProfile(
       organizationId,
       locationIds,
       session,
     );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data,
+      data: {
+        deletedLocationCount: deletedLocations.length,
+        deletedLocationIds: deletedLocations.map((location) => location._id),
+      },
       code: StatusCodes.OK,
     });
   } catch (error) {
@@ -106,8 +113,8 @@ const updateLocationProfile = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {
-        location: updatedLocationProfile,
-        users: userOrgLocations,
+        location: struct.locationOrganizationData(updatedLocationProfile),
+        users: userOrgLocations.map(userStruct.UserOrganizationLocation),
       },
       code: StatusCodes.OK,
     });
@@ -115,10 +122,49 @@ const updateLocationProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+const queryLocationByName = async (req, res, next) => {
+  try {
+    const {
+      name,
+    } = req.query;
+    const locations = await locationServices.searchLocationByName(name);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {
+        locations,
+      },
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const searchLocationByCoordinateOrPlaceId = async (req, res, next) => {
+  try {
+    const {
+      lat, long, placeId,
+    } = req.query;
+    const locations = await locationServices.searchLocation({ lat, long }, placeId);
+
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {
+        locations,
+      },
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createLocationProfile,
   getLocationProfile,
-  getUserLocationProfile,
   removeLocationProfiles,
   updateLocationProfile,
+  queryLocationByName,
+  searchLocationByCoordinateOrPlaceId,
 };

@@ -1,4 +1,4 @@
-const {default: mongoose} = require("mongoose");
+const { default: mongoose } = require('mongoose');
 
 const UserRegistration = (companyId, payload) => ({
   fullname: payload.name.trim(),
@@ -9,12 +9,12 @@ const UserRegistration = (companyId, payload) => ({
 });
 
 const UserData = (user, organization, uniqueUserId) => ({
+  userId: uniqueUserId,
   fullname: user.fullname,
   email: user.email,
   role: user.roleId.name,
   companyId: organization.invitationCode,
   companyName: organization.name,
-  userId: uniqueUserId,
 });
 
 const Organization = (req) => ({
@@ -54,11 +54,31 @@ const MiddlewareUserResponse = (userOrg) => ({
   userOrganizationId: userOrg._id,
 });
 
-const UserOrganizationLocation = (payload) => ({
-  userOrganizationLocationId: payload._id,
+const UserOrganizationLocationPayload = (payload) => ({
   userId: new mongoose.Types.ObjectId(payload.userId),
   organizationId: new mongoose.Types.ObjectId(payload.organizationId),
+  userOrganizationId: payload.userOrganizationId,
   locationId: payload.locationId,
+});
+const UserOrganizationLocation = (payload) => ({
+  userOrganizationLocationId: payload._id,
+  userId: payload.userId,
+  organizationId: payload.organizationId,
+  userOrganizationId: payload.userOrganizationId,
+  locationId: payload.locationId,
+});
+
+const UserOrganizationLocationDetail = (userOrgLocation) => ({
+  userId: userOrgLocation.userId._id,
+  name: userOrgLocation.userId.fullname,
+  email: userOrgLocation.userId.email,
+  roleId: userOrgLocation.userId.roleId._id,
+  role: userOrgLocation.userId.roleId.name,
+  uniqueUserId: userOrgLocation.userOrganizationId.uniqueUserId,
+  locationId: userOrgLocation.locationId,
+  organizationId: userOrgLocation.organizationId._id,
+  organizationName: userOrgLocation.organizationId.name,
+  invitationCode: userOrgLocation.organizationId.invitationCode,
 });
 
 module.exports = {
@@ -69,4 +89,6 @@ module.exports = {
   UserData,
   UserReportProfile,
   UserOrganizationLocation,
+  UserOrganizationLocationPayload,
+  UserOrganizationLocationDetail,
 };

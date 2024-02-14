@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const User = require('../User/User');
 const Location = require('../Location/Location');
 const Organization = require('../Organization/Organization');
+const UserOrganization = require('./UserOrganization');
 
 const UserOrganizationLocationSchema = new mongoose.Schema({
   userId: {
@@ -13,6 +14,11 @@ const UserOrganizationLocationSchema = new mongoose.Schema({
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: Organization,
+    required: true,
+  },
+  userOrganizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: UserOrganization,
     required: true,
   },
   locationId: {
