@@ -115,10 +115,50 @@ const updateLocationProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+const queryLocationByName = async (req, res, next) => {
+  try {
+    const {
+      name,
+    } = req.query;
+    const locations = await locationServices.searchLocationByName(name);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {
+        locations,
+      },
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const searchLocationByCoordinateOrPlaceId = async (req, res, next) => {
+  try {
+    const {
+      lat, long, placeId
+    } = req.query;
+    const locations = await locationServices.searchLocation({ lat, long }, placeId);
+
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {
+        locations,
+      },
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createLocationProfile,
   getLocationProfile,
   getUserLocationProfile,
   removeLocationProfiles,
   updateLocationProfile,
+  queryLocationByName,
+  searchLocationByCoordinateOrPlaceId,
 };

@@ -31,11 +31,7 @@ exports.validate = (schemaBody = null, schemaQuery = null) => (req, res, next) =
   }
 
   if (result.error) {
-    res.status(StatusCodes.BAD_REQUEST).json({
-      message: result.error.message,
-      data: {},
-      code: StatusCodes.BAD_REQUEST,
-    }).end();
+    next(new ResponseError(StatusCodes.BAD_REQUEST, result.error.message));
   } else {
     if (schemaBody) {
       req.body = result.value;

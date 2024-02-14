@@ -19,3 +19,19 @@ exports.schemaUpdateLocationProfile = Joi.object({
 exports.schemaDeleteLocationProfile = Joi.object({
   locationIds: Joi.array().items(Joi.string()).empty(Joi.array().length(0)).default([]),
 });
+
+exports.schemaSearchLocation = Joi.object().keys({
+  name: Joi.string().required(),
+});
+
+exports.schemaSearchLocationByCoordinateOrPlaceId = Joi.object().keys({
+  lat: Joi.number(),
+  long: Joi.number(),
+  placeId: Joi.string(),
+})
+  .or('lat', 'placeId')
+  .and('lat', 'long')
+  .messages({
+    'object.missing': 'Please provide either (lat, long) or (placeId)',
+    'object.and': '(lat, long) must be provided together',
+  });

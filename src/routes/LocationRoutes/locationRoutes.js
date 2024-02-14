@@ -7,6 +7,18 @@ const validate = require('../../middlewares/middlewareValidation');
 const AdminLocationRoutes = () => {
   ChildRouter.use(authentication);
 
+  ChildRouter.get(
+    '/search-address',
+    validate.validate(null, schema.schemaSearchLocation),
+    CONTROLLER.queryLocationByName,
+  );
+
+  ChildRouter.get(
+    '/search',
+    validate.validate(null, schema.schemaSearchLocationByCoordinateOrPlaceId),
+    CONTROLLER.searchLocationByCoordinateOrPlaceId,
+  );
+
   ChildRouter.post(
     '/admin/profiles/create',
     validate.validate(schema.schemaCreateLocationProfile),
