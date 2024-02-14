@@ -12,6 +12,7 @@ module.exports.authentication = async (req, res, next) => {
         data: {},
         code: StatusCodes.UNAUTHORIZED,
       });
+      return;
     }
     const [bearer, token] = headerToken.split(' ');
     if (bearer !== 'Bearer') {

@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
-const { Schema } = require('mongoose');
 const Organization = require('../Organization/Organization');
+
 const { generateUserIdByNameAndIndex } = require('../../utils/common');
 
 const UserOrganizationSchema = new mongoose.Schema({
   organizationId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: true,
   },
   userId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },

@@ -1,3 +1,5 @@
+const {default: mongoose} = require("mongoose");
+
 const UserRegistration = (companyId, payload) => ({
   fullname: payload.name.trim(),
   email: payload.email,
@@ -52,6 +54,13 @@ const MiddlewareUserResponse = (userOrg) => ({
   userOrganizationId: userOrg._id,
 });
 
+const UserOrganizationLocation = (payload) => ({
+  userOrganizationLocationId: payload._id,
+  userId: new mongoose.Types.ObjectId(payload.userId),
+  organizationId: new mongoose.Types.ObjectId(payload.organizationId),
+  locationId: payload.locationId,
+});
+
 module.exports = {
   UserRegistration,
   Organization,
@@ -59,4 +68,5 @@ module.exports = {
   MiddlewareUserResponse,
   UserData,
   UserReportProfile,
+  UserOrganizationLocation,
 };

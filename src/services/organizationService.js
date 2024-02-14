@@ -2,7 +2,10 @@ const { StatusCodes } = require('http-status-codes');
 const { ResponseError } = require('../helpers/response');
 
 const model = require('../models');
-const {USER_ROLE} = require('../utils/constants');
+const { USER_ROLE } = require('../utils/constants');
+const userStruct = require('../struct/userStruct');
+
+const Model = require('../models');
 
 const getAllOrganization = async (param) => {
   try {
@@ -43,8 +46,26 @@ const getOrganizationDetail = async (organizationId) => {
   }
 };
 
+const associateEmployeeWithLocation = async (payload, session) => {
+  try {
+    const userOrganizationLocationData = userStruct.UserOrganizationLocation(payload);
+    const existingRecord = await model.UserOrganizationLocation
+      .findOne(userOrganizationLocationData);
+
+    if (!existingRecord) {
+      const newUserOrgLocation = new model.UserOrganizationLocation(userOrganizationLocationData);
+      await newUserOrgLocation.save({ session });
+      return userStruct.UserOrganizationLocation(newUserOrgLocation);
+    }
+    return userStruct.UserOrganizationLocation(existingRecord);
+  } catch (error) {
+    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 module.exports = {
   getAllOrganization,
   getEmployeeInOrganization,
   getOrganizationDetail,
+  associateEmployeeWithLocation,
 };
