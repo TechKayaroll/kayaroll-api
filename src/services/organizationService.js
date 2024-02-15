@@ -5,8 +5,6 @@ const model = require('../models');
 const { USER_ROLE } = require('../utils/constants');
 const userStruct = require('../struct/userStruct');
 
-const Model = require('../models');
-
 const getAllOrganization = async (param) => {
   try {
     const offset = param.page - 1;
@@ -51,32 +49,20 @@ const associateEmployeeWithLocation = async ({
   organizationId,
   locationId,
 }, session) => {
-  try {
-    const userOrganization = await model.UserOrganization.findOne({
-      userId,
-      organizationId,
-    });
-    if (!userOrganization) {
-      throw new Error(`User with id: ${userId}, is not exist in organization with id: ${organizationId}`);
-    }
-    const userOrganizationLocationData = userStruct.UserOrganizationLocationPayload({
-      userId,
-      organizationId,
-      userOrganizationId: userOrganization._id,
-      locationId,
-    });
-    const existingRecord = await model.UserOrganizationLocation
-      .findOne(userOrganizationLocationData);
-
-    if (!existingRecord) {
-      const newUserOrgLocation = new model.UserOrganizationLocation(userOrganizationLocationData);
-      await newUserOrgLocation.save({ session });
-      return newUserOrgLocation;
-    }
-    return existingRecord;
-  } catch (error) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  const userQuery = userStruct.UserByUserOrg(userId, organizationId);
+  const userOrganization = await model.UserOrganization.findOne(userQuery);
+  if (!userOrganization) {
+    throw new Error(`User with id: ${userId}, is not exist in organization with id: ${organizationId}`);
   }
+  const userOrganizationLocationData = userStruct.UserOrganizationLocationPayload({
+    userId: userQuery.userId,
+    organizationId: userQuery.organizationId,
+    userOrganizationId: userOrganization._id,
+    locationId,
+  });
+  const newUserOrgLocation = new model.UserOrganizationLocation(userOrganizationLocationData);
+  await newUserOrgLocation.save({ session });
+  return newUserOrgLocation;
 };
 
 module.exports = {

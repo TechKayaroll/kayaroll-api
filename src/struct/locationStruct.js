@@ -1,18 +1,20 @@
-exports.locationQuery = (reqBody, organizationId) => ({
-  name: reqBody.locationName || undefined,
-  placeId: reqBody.placeId || undefined,
-  lat: reqBody.lat || undefined,
-  long: reqBody.long || undefined,
-  organizationId,
-});
-
 exports.locationData = (location) => ({
   id: location._id,
   name: location.name,
   placeId: location.placeId,
   lat: location.lat,
   long: location.long,
+  radius: location.radius,
   organizationId: location.organizationId,
+});
+
+exports.createLocationData = (reqBody, organizationId) => ({
+  name: reqBody.locationName,
+  placeId: reqBody.placeId,
+  lat: reqBody.lat,
+  long: reqBody.long,
+  radius: reqBody.radius,
+  organizationId,
 });
 
 exports.locationOrganizationData = (locationOrg) => ({
@@ -21,21 +23,18 @@ exports.locationOrganizationData = (locationOrg) => ({
   placeId: locationOrg.placeId,
   lat: locationOrg.lat,
   long: locationOrg.long,
+  radius: locationOrg.radius,
   organizationId: locationOrg.organizationId._id,
   organizationName: locationOrg.organizationId.name,
   invitationCode: locationOrg.organizationId.invitationCode,
 });
 
-exports.locationProfile = (location, employeeIds) => ({
-  id: location._id,
-  locationName: location.name,
-  employeeIds,
-});
 exports.updateLocationData = (locationPayload) => ({
   name: locationPayload?.locationName,
   placeId: locationPayload?.placeId,
   lat: locationPayload?.lat,
   long: locationPayload?.long,
+  radius: locationPayload?.radius,
 });
 
 exports.geocodeResults = (result) => ({

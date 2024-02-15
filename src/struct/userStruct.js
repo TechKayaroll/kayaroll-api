@@ -51,12 +51,12 @@ const MiddlewareUserResponse = (userOrg) => ({
   organizationId: userOrg.organizationId._id.toString(),
   organization: userOrg.organizationId.name,
   uniqueUserId: userOrg.uniqueUserId,
-  userOrganizationId: userOrg._id,
+  userOrganizationId: userOrg._id.toString(),
 });
 
 const UserOrganizationLocationPayload = (payload) => ({
-  userId: new mongoose.Types.ObjectId(payload.userId),
-  organizationId: new mongoose.Types.ObjectId(payload.organizationId),
+  userId: payload.userId,
+  organizationId: payload.organizationId,
   userOrganizationId: payload.userOrganizationId,
   locationId: payload.locationId,
 });
@@ -81,6 +81,11 @@ const UserOrganizationLocationDetail = (userOrgLocation) => ({
   invitationCode: userOrgLocation.organizationId.invitationCode,
 });
 
+const UserByUserOrg = (userId, orgId) => ({
+  userId: new mongoose.Types.ObjectId(userId),
+  organizationId: new mongoose.Types.ObjectId(orgId),
+});
+
 module.exports = {
   UserRegistration,
   Organization,
@@ -91,4 +96,5 @@ module.exports = {
   UserOrganizationLocation,
   UserOrganizationLocationPayload,
   UserOrganizationLocationDetail,
+  UserByUserOrg,
 };

@@ -69,6 +69,7 @@ const removeLocationProfiles = async (req, res, next) => {
       locationIds,
       session,
     );
+    await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {
@@ -86,9 +87,9 @@ const removeLocationProfiles = async (req, res, next) => {
 };
 
 const updateLocationProfile = async (req, res, next) => {
+  const session = await mongoose.startSession();
   try {
     const { organizationId } = req.user;
-    const session = await mongoose.startSession();
     session.startTransaction();
     const { locationId, employeeIds, ...updateLocationPayload } = req.body;
     const updatedLocationProfile = await locationServices.updateLocation(
@@ -97,10 +98,11 @@ const updateLocationProfile = async (req, res, next) => {
       session,
     );
     await locationServices.deleteUserOrgnizationLocations(
-      organizationId,
+      updatedLocationProfile.organizationId,
       updatedLocationProfile._id,
       session,
     );
+
     const associateUserOrgWithLocationPromises = employeeIds
       .map((userId) => organizationService.associateEmployeeWithLocation({
         userId,
@@ -119,7 +121,10 @@ const updateLocationProfile = async (req, res, next) => {
       code: StatusCodes.OK,
     });
   } catch (error) {
+    await session.abortTransaction();
     next(error);
+  } finally {
+    await session.endSession();
   }
 };
 

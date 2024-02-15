@@ -3,7 +3,6 @@ const { StatusCodes } = require('http-status-codes');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const { ResponseError } = require('../helpers/response');
-const struct = require('../struct/attendanceStruct');
 const {
   secondsToDuration, calculateTotalTime, isWeekend,
 } = require('../helpers/date');
@@ -14,8 +13,11 @@ const {
   ATTENDANCE_AUDIT_LOG, ATTENDANCE_STATUS, ATTENDANCE_TYPE, USER_ROLE,
 } = require('../utils/constants');
 
+const struct = require('../struct/attendanceStruct');
+const attendanceSettingsStruct = require('../struct/attendanceSettingsSnapshot');
+
 const attendanceModel = userModel;
-const logAttendance = async (reqUser, actionLogType, attendanceId) => {
+const logAttendance = async (reqUser, actionLogType, attendanceId, session) => {
   try {
     const populatedAttendance = await userModel.Attendance.findById(attendanceId)
       .populate({ path: 'userOrganizationId' })
@@ -34,7 +36,7 @@ const logAttendance = async (reqUser, actionLogType, attendanceId) => {
       reqUser,
     );
     const attendanceLog = new attendanceModel.AttendanceAuditLog(attendanceAuditLogData);
-    const loggedAttendance = await attendanceLog.save();
+    const loggedAttendance = await attendanceLog.save({ session });
     return loggedAttendance;
   } catch (error) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
@@ -65,32 +67,50 @@ const uploadAttendanceImage = async (req, attendanceType) => {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
-const createAttendance = async (req, attendanceImageUrl, attendanceType) => {
-  try {
-    const userOrganization = await userModel.UserOrganization.findOne({
-      organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
-      userId: new mongoose.Types.ObjectId(req.user.userId),
-    });
-    if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
 
-    const attendancePayload = struct.Attendance(
-      req,
-      attendanceImageUrl,
-      attendanceType,
-      userOrganization._id,
-    );
-    const attendance = new attendanceModel.Attendance(attendancePayload);
-    const savedAttendance = await attendance.save();
+const createAttendanceSnapshot = async (organizationId, session) => {
+  const location = await userModel.Location.findOne({
+    organizationId,
+  });
 
-    await logAttendance(
-      req.user,
-      ATTENDANCE_AUDIT_LOG.CREATE,
-      savedAttendance._id,
-    );
-    return savedAttendance;
-  } catch (error) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  let newAttSnapshot;
+  if (location) {
+    const attendanceSettingsSnapshotData = attendanceSettingsStruct
+      .AttendanceSnapshotData(location);
+    newAttSnapshot = new userModel
+      .AttendanceSettingsSnapshot(attendanceSettingsSnapshotData);
+    await newAttSnapshot.save({ session });
   }
+  return newAttSnapshot;
+};
+
+const createAttendance = async (req, attendanceImageUrl, attendanceType, session) => {
+  const userOrgQuery = {
+    organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
+    userId: new mongoose.Types.ObjectId(req.user.userId),
+  };
+  const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery);
+  if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
+
+  const newAttSnapshot = await createAttendanceSnapshot(userOrganization.organizationId, session);
+  const attendancePayload = struct.Attendance(
+    req,
+    attendanceImageUrl,
+    attendanceType,
+    userOrganization._id,
+    newAttSnapshot?._id,
+  );
+  const attendance = new attendanceModel.Attendance(attendancePayload);
+  const savedAttendance = await attendance.save({ session });
+
+  await logAttendance(
+    req.user,
+    ATTENDANCE_AUDIT_LOG.CREATE,
+    savedAttendance._id,
+    session,
+  );
+
+  return savedAttendance;
 };
 const attendanceDetail = async (attendanceId) => {
   try {
@@ -338,19 +358,19 @@ const attendanceUpdate = async (req, organizationId) => {
       { new: true, ...opts },
     );
 
-    await session.commitTransaction();
-    await session.endSession();
     await Promise.all([
-      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
-      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
-      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.EDIT, discardedAttendance._id),
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id, session),
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id, session),
+      logAttendance(req.user, ATTENDANCE_AUDIT_LOG.EDIT, discardedAttendance._id, session),
     ]);
+    await session.commitTransaction();
 
     return createdAttendance;
   } catch (e) {
     await session.abortTransaction();
-    await session.endSession();
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -368,21 +388,25 @@ const attendanceAuditLogList = async (attendanceId) => {
 };
 
 const createBulkAttendance = async (req) => {
+  const session = await mongoose.startSession();
   try {
     const {
       employeeIds,
     } = req.body;
+    session.startTransaction();
     const adminOrganizationId = req.user.organizationId;
     const employeesUserOrg = await Promise.all(
-      employeeIds.map((uniqueUserId) => userModel.UserOrganization.findOne({
-        uniqueUserId,
-        organizationId: adminOrganizationId,
-      }).populate({
-        path: 'userId',
-        populate: {
-          path: 'roleId',
-        },
-      })),
+      employeeIds.map((uniqueUserId) => userModel.UserOrganization
+        .findOne({
+          uniqueUserId,
+          organizationId: adminOrganizationId,
+        })
+        .populate({
+          path: 'userId',
+          populate: {
+            path: 'roleId',
+          },
+        })),
     );
 
     const filteredUserOrg = employeesUserOrg
@@ -393,8 +417,18 @@ const createBulkAttendance = async (req) => {
 
     const createAndLogPromises = filteredUserOrg
       .map(async (userOrgEmployee) => {
-        const attendancePayload = struct.AdminAttendance(req, userOrgEmployee, req.body);
-        const createdAttendance = await new userModel.Attendance(attendancePayload).save();
+        const newAttendanceSnapshot = await createAttendanceSnapshot(
+          userOrgEmployee.organizationId,
+          session,
+        );
+        const attendancePayload = struct.AdminAttendance(
+          req,
+          userOrgEmployee,
+          req.body,
+          newAttendanceSnapshot?._id,
+        );
+        const createdAttendance = await new userModel.Attendance(attendancePayload)
+          .save({ session });
         const populatedAttendance = await userModel.Attendance.findById(createdAttendance._id)
           .populate({ path: 'userOrganizationId' })
           .populate({
@@ -403,9 +437,10 @@ const createBulkAttendance = async (req) => {
               path: 'roleId',
             },
           });
+        await session.commitTransaction();
         await Promise.all([
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id, session),
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id, session),
         ]);
         return populatedAttendance;
       });
@@ -413,7 +448,10 @@ const createBulkAttendance = async (req) => {
     const createdAttendances = await Promise.all(createAndLogPromises);
     return createdAttendances;
   } catch (error) {
+    await session.abortTransaction();
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  } finally {
+    await session.endSession();
   }
 };
 

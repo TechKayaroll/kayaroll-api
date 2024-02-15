@@ -5,6 +5,7 @@ exports.schemaCreateLocationProfile = Joi.object({
   placeId: Joi.string().required(),
   lat: Joi.number().required(),
   long: Joi.number().required(),
+  radius: Joi.number().required(),
   employeeIds: Joi.array().items(Joi.string()).empty(Joi.array().length(0)).default([]),
 });
 
@@ -14,6 +15,7 @@ exports.schemaUpdateLocationProfile = Joi.object({
   placeId: Joi.string().optional(),
   lat: Joi.number().optional(),
   long: Joi.number().optional(),
+  radius: Joi.number().optional(),
   employeeIds: Joi.array().items(Joi.string()).empty(Joi.array().length(0)).default([]),
 });
 exports.schemaDeleteLocationProfile = Joi.object({

@@ -10,6 +10,7 @@ const Attendance = (
   attendanceImageUrl,
   attendanceType,
   userOrganizationId,
+  attendanceSettingsSnapshotId,
 ) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -24,6 +25,7 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
+  attendanceSettingsSnapshotId,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
@@ -131,7 +133,7 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   return attendance;
 };
 
-const AdminAttendance = (req, employeeUserOrg, requestBody) => ({
+const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSnapshotId) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
   userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg._id),
@@ -145,7 +147,9 @@ const AdminAttendance = (req, employeeUserOrg, requestBody) => ({
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
+  attendanceSettingsSnapshotId,
 });
+
 
 module.exports = {
   Attendance,

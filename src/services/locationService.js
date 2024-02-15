@@ -7,25 +7,23 @@ const Model = require('../models');
 const struct = require('../struct/locationStruct');
 const userStruct = require('../struct/userStruct');
 
-
 const { GOOGLE_MAP_API_BASE_URL } = require('../utils/constants');
 const { ResponseError } = require('../helpers/response');
 
 const createLocationProfile = async (organizationId, reqBody, session) => {
-  const { employeeIds, ...locationPayload } = reqBody;
   const adminOrganizationId = new mongoose.Types.ObjectId(organizationId);
-  const location = struct.locationQuery(locationPayload, adminOrganizationId);
+  const locationData = struct.createLocationData(reqBody, adminOrganizationId);
   const locationExist = await Model.Location.findOne({
-    name: location.name,
-    organizationId: location.organizationId,
+    name: locationData.name,
+    organizationId: adminOrganizationId,
   });
   if (locationExist) {
     throw new ResponseError(
       StatusCodes.BAD_REQUEST,
-      `Location with name: "${location.name}" already exist!`,
+      `Location with name: "${locationData.name}" already exist!`,
     );
   }
-  const newLocationProfile = new Model.Location(location);
+  const newLocationProfile = new Model.Location(locationData);
   newLocationProfile.save({ session });
   return newLocationProfile;
 };
@@ -39,9 +37,11 @@ const getLocationProfileList = async (orgId) => {
     .find({ organizationId: orgId })
     .populate({ path: 'organizationId' });
 
-  const promisesUserByLocation = orgLocation.map((eachLocation) => {
-    const { _id, organizationId } = eachLocation;
-    return Model.UserOrganizationLocation.find({ locationId: _id, organizationId })
+  const promisesUserByLocation = orgLocation.map(
+    (eachLocation) => Model.UserOrganizationLocation.find({
+      locationId: eachLocation._id,
+      organizationId: eachLocation.organizationId,
+    })
       .populate({
         path: 'userId',
         populate: {
@@ -51,13 +51,17 @@ const getLocationProfileList = async (orgId) => {
       .populate({ path: 'organizationId' })
       .populate({
         path: 'userOrganizationId',
-      });
-  });
+      }),
+  );
   const userByLocations = await Promise.all(promisesUserByLocation);
-  return orgLocation.map((eachLocation, index) => ({
-    location: struct.locationOrganizationData(eachLocation),
-    users: userByLocations[index]?.map(userStruct.UserOrganizationLocationDetail),
-  }));
+  const userGroupByLocation = orgLocation.map((eachLocation, index) => {
+    const userByLocation = userByLocations[index];
+    return ({
+      location: struct.locationOrganizationData(eachLocation),
+      users: userByLocation.map(userStruct.UserOrganizationLocationDetail),
+    });
+  });
+  return userGroupByLocation;
 };
 
 const removeBulkLocationProfile = async (organizationId, locationIds, session) => {
@@ -76,7 +80,6 @@ const removeBulkLocationProfile = async (organizationId, locationIds, session) =
     Model.UserOrganizationLocation.deleteMany(userOrgLocationQuery, { session }),
   ]);
 
-  await session.commitTransaction();
   return { deletedLocations, deletedUserOrgLocations };
 };
 
@@ -90,10 +93,10 @@ const getLocationDetail = async (locationId) => {
 };
 
 const updateLocation = async (locationId, locationPayload, session) => {
-  const id = new mongoose.Types.ObjectId(locationId);
+  const locId = new mongoose.Types.ObjectId(locationId);
   const updatePayload = struct.updateLocationData(locationPayload);
 
-  const locationToUpdate = await Model.Location.findById(id);
+  const locationToUpdate = await Model.Location.findById(locId);
   if (!locationToUpdate) {
     throw new ResponseError(
       StatusCodes.BAD_REQUEST,
@@ -109,9 +112,9 @@ const updateLocation = async (locationId, locationPayload, session) => {
   );
   if (!hasDuplicateName) {
     const updatedLocation = await Model.Location.findByIdAndUpdate(
-      id,
+      locationToUpdate._id,
       updatePayload,
-      { session, new: true },
+      { session },
     );
     return updatedLocation;
   }

@@ -18,6 +18,10 @@ const LocationSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  radius: {
+    type: Number,
+    required: true,
+  },
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: Organization,

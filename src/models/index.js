@@ -6,6 +6,7 @@ const Attendance = require('./Attendance/Attendance');
 const Role = require('./Role/Role');
 const AttendanceAuditLog = require('./AttendanceAuditLog/AttendanceAuditLog');
 const Location = require('./Location/Location');
+const AttendanceSettingsSnapshot = require('./AttendanceSettingsSnapshot/AttendanceSettingsSnapshot');
 
 const Model = {
   Organization,
@@ -16,6 +17,7 @@ const Model = {
   Role,
   AttendanceAuditLog,
   Location,
+  AttendanceSettingsSnapshot,
 };
 
 module.exports = Model;
