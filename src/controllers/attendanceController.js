@@ -17,7 +17,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.IN;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
-    const savedAttendance = await attendanceService.createAttendance(
+    await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
       attendanceType,
