@@ -4,6 +4,7 @@ const {
   secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
 const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS } = require('../utils/constants');
+const attendanceSettingsStruct = require('./attendanceSettingsSnapshot');
 
 const Attendance = (
   req,
@@ -110,7 +111,8 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
-  attendanceSettingsSnapshotId: attendance?.attendanceSettingsSnapshotId,
+  attendanceSettingsSnapshot: attendanceSettingsStruct
+    .AttendanceSnapshot(attendance?.attendanceSettingsSnapshot),
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
