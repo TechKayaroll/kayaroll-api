@@ -222,6 +222,7 @@ const attendanceSummaryReports = (attendances, dateRange) => {
     const pairedAttendances = pairInAndOut(dayAttendances);
     if (pairedAttendances.length === 0 && !isWeekend(currDate)) {
       reports.push({
+        dateISOString: currDate.toISOString(),
         date: currentDate,
         attendanceLog: struct.AttendanceSummaryData(null, null),
       });
@@ -233,6 +234,7 @@ const attendanceSummaryReports = (attendances, dateRange) => {
         totalDuration += totalTime;
         const attendance = struct.AttendanceSummaryData(attendanceIn, attendanceOut);
         reports.push({
+          dateISOString: currDate.toISOString(),
           date: currentDate,
           attendanceLog: attendance,
         });
@@ -389,11 +391,11 @@ const attendanceAuditLogList = async (attendanceId) => {
 
 const createBulkAttendance = async (req) => {
   const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const {
       employeeIds,
     } = req.body;
-    session.startTransaction();
     const adminOrganizationId = req.user.organizationId;
     const employeesUserOrg = await Promise.all(
       employeeIds.map((uniqueUserId) => userModel.UserOrganization
@@ -418,7 +420,7 @@ const createBulkAttendance = async (req) => {
     const createAndLogPromises = filteredUserOrg
       .map(async (userOrgEmployee) => {
         const newAttendanceSnapshot = await createAttendanceSnapshot(
-          userOrgEmployee.organizationId,
+          adminOrganizationId,
           session,
         );
         const attendancePayload = struct.AdminAttendance(
@@ -430,6 +432,7 @@ const createBulkAttendance = async (req) => {
         const createdAttendance = await new userModel.Attendance(attendancePayload)
           .save({ session });
         const populatedAttendance = await userModel.Attendance.findById(createdAttendance._id)
+          .session(session)
           .populate({ path: 'userOrganizationId' })
           .populate({
             path: 'userId',
@@ -437,11 +440,11 @@ const createBulkAttendance = async (req) => {
               path: 'roleId',
             },
           });
-        await session.commitTransaction();
         await Promise.all([
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id, session),
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id, session),
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
+          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
         ]);
+        await session.commitTransaction();
         return populatedAttendance;
       });
 

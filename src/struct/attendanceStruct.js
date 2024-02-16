@@ -80,6 +80,7 @@ const AttendanceListAdmin = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
+  attendanceSettingsSnapshotId: val?.attendanceSettingsSnapshotId,
 });
 
 const AttendanceDataResult = (val, req) => ({
@@ -109,6 +110,7 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
+  attendanceSettingsSnapshotId: attendance?.attendanceSettingsSnapshotId,
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
@@ -149,7 +151,6 @@ const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSn
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
   attendanceSettingsSnapshotId,
 });
-
 
 module.exports = {
   Attendance,

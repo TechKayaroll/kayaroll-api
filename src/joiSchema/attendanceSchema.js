@@ -142,3 +142,16 @@ exports.schemaGenerateReportByOrganizationIds = Joi.object({
     .empty(0)
     .default(1),
 });
+
+exports.schemaEmployeeAttendanceDetails = Joi.object({
+  from: Joi.date()
+    .format('YYYY-MM-DD')
+    .empty('')
+    .default(dayjs().subtract('3', 'month').format('YYYY-MM-DD')),
+  to: Joi.date()
+    .format('YYYY-MM-DD')
+    .greater(Joi.ref('from'))
+    .allow(Joi.ref('from'))
+    .empty('')
+    .default(dayjs().format('YYYY-MM-DD')),
+});

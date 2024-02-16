@@ -365,3 +365,33 @@ exports.createAttendance = async (req, res, next) => {
     next(e);
   }
 };
+
+exports.employeeAttendanceDetails = async (req, res, next) => {
+  try {
+    const { userId, organizationId } = req.user;
+    const { list: attendances, userOrg } = await attendanceService.attendanceReportListAdmin(
+      {
+        userId: new mongoose.Types.ObjectId(userId),
+        from: req.query.from,
+        to: req.query.to,
+      },
+      new mongoose.Types.ObjectId(organizationId),
+    );
+
+    const summaryReports = attendanceService.attendanceSummaryReports(attendances, {
+      from: req.query.from,
+      to: req.query.to,
+    });
+
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: {
+        user: userStruct.UserReportProfile(userOrg),
+        summaryReports,
+      },
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
