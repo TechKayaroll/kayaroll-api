@@ -29,6 +29,16 @@ const USER_ROLE = {
   EMPLOYEE: 'employee',
 };
 
+const SHIFT_DAY = {
+  SUNDAY: 'sun',
+  MONDAY: 'mon',
+  TUESDAY: 'tue',
+  WEDNESDAY: 'wed',
+  THURSDAY: 'thu',
+  FRIDAY: 'fri',
+  SATURDAY: 'sat',
+};
+
 const GOOGLE_MAP_API_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
 module.exports = {
@@ -37,5 +47,6 @@ module.exports = {
   ATTENDANCE_STATUS,
   ATTENDANCE_REPORT_STATUS,
   USER_ROLE,
+  SHIFT_DAY,
   GOOGLE_MAP_API_BASE_URL,
 };

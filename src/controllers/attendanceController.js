@@ -17,16 +17,20 @@ exports.attendanceCheckIn = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.IN;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
-    await attendanceService.createAttendance(
+    const { inRadius, inRadiusSnapshots } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
       attendanceType,
       session,
     );
+
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: {},
+      data: {
+        inRadius,
+        inRadiusSnapshots,
+      },
       code: StatusCodes.OK,
     });
   } catch (e) {
@@ -43,10 +47,18 @@ exports.attendanceCheckOut = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.OUT;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
-    await attendanceService.createAttendance(req, attendanceImageUrl, attendanceType);
+    const { inRadius, inRadiusSnapshots } = await attendanceService.createAttendance(
+      req,
+      attendanceImageUrl,
+      attendanceType,
+    );
+
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: {},
+      data: {
+        inRadius,
+        inRadiusSnapshots,
+      },
       code: StatusCodes.OK,
     });
   } catch (e) {
