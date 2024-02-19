@@ -2,10 +2,14 @@ const mongoose = require('mongoose');
 const { SHIFT_DAY } = require('../../utils/constants');
 
 const ShiftSchema = new mongoose.Schema({
-  day: {
+  name: {
+    type: String,
+  },
+  day: [{
     type: String,
     enum: Object.values(SHIFT_DAY),
-  },
+    required: true,
+  }],
   shifts: [{
     startTime: {
       type: Date,

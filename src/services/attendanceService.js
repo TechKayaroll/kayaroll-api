@@ -212,7 +212,7 @@ const attendanceReportListAdmin = async (query, organizationId) => {
       },
     })
       .where(whereParam)
-      .sort({ attendanceDate: sortBy })
+      .sort({ attendanceDate: sortBy });
     return { list, userOrg };
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);

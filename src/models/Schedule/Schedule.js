@@ -3,6 +3,15 @@ const Shift = require('../Shift/Shift');
 const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 
+const validateDate = (value) => value instanceof Date && !Number.isNaN(value);
+const validateUserIdUniqueInOrganization = async (userId, organizationId) => {
+  const existingSchedule = await mongoose.models.Schedule.findOne({
+    organizationId,
+    users: userId,
+  });
+  return !existingSchedule;
+};
+
 const ScheduleSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -15,6 +24,12 @@ const ScheduleSchema = new mongoose.Schema({
   users: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: User,
+    validate: {
+      async validator(userId) {
+        return validateUserIdUniqueInOrganization(userId, this.organizationId);
+      },
+      message: 'User already exists in another Schedule with the same organization.',
+    },
   }],
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,11 +38,29 @@ const ScheduleSchema = new mongoose.Schema({
   },
   effectiveStartDate: {
     type: Date,
-    required: true,
+    validate: [{
+      validator: validateDate,
+      message: 'Effective start date must be a valid date.',
+    },
+    {
+      validator(value) {
+        return !this.effectiveEndDate || (value && value < this.effectiveEndDate);
+      },
+      message: 'Effective start date must be before effective end date.',
+    }],
   },
   effectiveEndDate: {
     type: Date,
-    required: true,
+    validate: [{
+      validator: validateDate,
+      message: 'Effective end date must be a valid date.',
+    },
+    {
+      validator(value) {
+        return !this.effectiveStartDate || (value && value > this.effectiveStartDate);
+      },
+      message: 'Effective end date must be after effective start date.',
+    }],
   },
   isDefault: {
     type: Boolean,
@@ -46,18 +79,7 @@ const ScheduleSchema = new mongoose.Schema({
       message: 'Only one document with isDefault set to true is allowed per organization.',
     },
   },
-
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
-
-ScheduleSchema.path('effectiveStartDate').validate(
-  (value) => value < this.effectiveEndDate,
-  'Effective start date must be before effective end date.',
-);
-
-ScheduleSchema.path('effectiveEndDate').validate(
-  (value) => value > this.effectiveStartDate,
-  'Effective end date must be after effective start date.',
-);
 
 const Schedule = mongoose.model('Schedule', ScheduleSchema, 'schedule');
 
