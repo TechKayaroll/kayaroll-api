@@ -213,7 +213,6 @@ const attendanceReportListAdmin = async (query, organizationId) => {
     })
       .where(whereParam)
       .sort({ attendanceDate: sortBy })
-      .populate({ path: 'attendanceSettingsSnapshotId' });
     return { list, userOrg };
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
