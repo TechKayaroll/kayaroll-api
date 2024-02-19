@@ -12,6 +12,7 @@ const uploadGcp = require('../helpers/gcp');
 const {
   ATTENDANCE_AUDIT_LOG, ATTENDANCE_STATUS, ATTENDANCE_TYPE, USER_ROLE,
 } = require('../utils/constants');
+const { isWithinRadius } = require('../helpers/calculation');
 
 const struct = require('../struct/attendanceStruct');
 const attendanceSettingsStruct = require('../struct/attendanceSettingsSnapshot');
@@ -68,20 +69,19 @@ const uploadAttendanceImage = async (req, attendanceType) => {
   }
 };
 
-const createAttendanceSnapshot = async (organizationId, session) => {
-  const location = await userModel.Location.findOne({
+const createAttendanceSnapshot = async (userId, organizationId, session) => {
+  const userOrgLocations = await userModel.UserOrganizationLocation.find({
+    userId,
     organizationId,
-  });
-
-  let newAttSnapshot;
-  if (location) {
-    const attendanceSettingsSnapshotData = attendanceSettingsStruct
-      .AttendanceSnapshotData(location);
-    newAttSnapshot = new userModel
-      .AttendanceSettingsSnapshot(attendanceSettingsSnapshotData);
-    await newAttSnapshot.save({ session });
-  }
-  return newAttSnapshot;
+  })
+    .session(session)
+    .populate({
+      path: 'locationId',
+    });
+  const newAttSnapshots = userOrgLocations.map(
+    ({ locationId }) => attendanceSettingsStruct.AttendanceSnapshotData(locationId),
+  );
+  return newAttSnapshots;
 };
 
 const createAttendance = async (req, attendanceImageUrl, attendanceType, session) => {
@@ -92,13 +92,17 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
 
-  const newAttSnapshot = await createAttendanceSnapshot(userOrganization.organizationId, session);
+  const newAttSnapshots = await createAttendanceSnapshot(
+    userOrganization.userId,
+    userOrganization.organizationId,
+    session,
+  );
   const attendancePayload = struct.Attendance(
     req,
     attendanceImageUrl,
     attendanceType,
     userOrganization._id,
-    newAttSnapshot?._id,
+    newAttSnapshots,
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
@@ -109,8 +113,21 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     savedAttendance._id,
     session,
   );
-
-  return savedAttendance;
+  let inRadius = false;
+  let inRadiusSnapshots = [];
+  if (newAttSnapshots?.length === 0) {
+    inRadius = true;
+  } else {
+    inRadiusSnapshots = newAttSnapshots.filter((snapshot) => {
+      const { locationLat, locationLong, locationRadius } = snapshot;
+      const centerCoordinates = [locationLat, locationLong];
+      const otherCoordinates = [savedAttendance?.lat, savedAttendance?.long];
+      const withinRad = isWithinRadius(centerCoordinates, otherCoordinates, locationRadius);
+      return withinRad;
+    });
+    inRadius = inRadiusSnapshots.length > 0;
+  }
+  return { savedAttendance, inRadius, inRadiusSnapshots };
 };
 const attendanceDetail = async (attendanceId) => {
   try {
@@ -421,6 +438,7 @@ const createBulkAttendance = async (req) => {
     const createAndLogPromises = filteredUserOrg
       .map(async (userOrgEmployee) => {
         const newAttendanceSnapshot = await createAttendanceSnapshot(
+          userOrgEmployee?.userId,
           adminOrganizationId,
           session,
         );
@@ -428,7 +446,7 @@ const createBulkAttendance = async (req) => {
           req,
           userOrgEmployee,
           req.body,
-          newAttendanceSnapshot?._id,
+          newAttendanceSnapshot,
         );
         const createdAttendance = await new userModel.Attendance(attendancePayload)
           .save({ session });

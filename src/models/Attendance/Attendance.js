@@ -3,7 +3,6 @@ const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 const UserOrganization = require('../Relationship/UserOrganization');
 const { ATTENDANCE_TYPE, ATTENDANCE_STATUS } = require('../../utils/constants');
-const AttendanceSettingsSnapshot = require('../AttendanceSettingsSnapshot/AttendanceSettingsSnapshot');
 
 const AttendanceSchema = new mongoose.Schema({
   userId: {
@@ -65,11 +64,33 @@ const AttendanceSchema = new mongoose.Schema({
     ref: User,
     required: true,
   },
-  attendanceSettingsSnapshotId: {
-    type: mongoose.Types.ObjectId,
-    ref: AttendanceSettingsSnapshot,
-    immutable: true,
-  },
+  attendanceSettingsSnapshots: [{
+    locationName: {
+      type: String,
+      immutable: true,
+      required: true,
+    },
+    locationLat: {
+      type: Number,
+      immutable: true,
+      required: true,
+    },
+    locationLong: {
+      type: Number,
+      immutable: true,
+      required: true,
+    },
+    locationPlaceId: {
+      type: String,
+      immutable: true,
+      required: true,
+    },
+    locationRadius: {
+      type: Number,
+      immutable: true,
+      required: true,
+    },
+  }],
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');

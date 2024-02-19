@@ -4,14 +4,13 @@ const {
   secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
 const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS } = require('../utils/constants');
-const attendanceSettingsStruct = require('./attendanceSettingsSnapshot');
 
 const Attendance = (
   req,
   attendanceImageUrl,
   attendanceType,
   userOrganizationId,
-  attendanceSettingsSnapshotId,
+  attendanceSettingsSnapshots,
 ) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -26,7 +25,7 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
-  attendanceSettingsSnapshotId,
+  attendanceSettingsSnapshots,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
@@ -81,7 +80,7 @@ const AttendanceListAdmin = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
-  attendanceSettingsSnapshotId: val?.attendanceSettingsSnapshotId,
+  attendanceSettingsSnapshots: val?.attendanceSettingsSnapshots,
 });
 
 const AttendanceDataResult = (val, req) => ({
@@ -111,8 +110,7 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
-  attendanceSettingsSnapshot: attendanceSettingsStruct
-    .AttendanceSnapshot(attendance?.attendanceSettingsSnapshot),
+  attendanceSettingsSnapshots: attendance.attendanceSettingsSnapshots,
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
@@ -137,7 +135,7 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   return attendance;
 };
 
-const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSnapshotId) => ({
+const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSnapshots) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
   userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg._id),
@@ -151,7 +149,7 @@ const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSn
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
-  attendanceSettingsSnapshotId,
+  attendanceSettingsSnapshots,
 });
 
 module.exports = {
