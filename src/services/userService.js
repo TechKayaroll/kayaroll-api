@@ -278,7 +278,7 @@ const updateUserOrganizationAttendanceLocation = async (id, locationId, session)
   }
 };
 
-const validateEmployeeIds = async (employeeIds, organizationId) => {
+const validateEmployeeIds = async (employeeIds, organizationId, session) => {
   const uniqueEmployeeIds = [...new Set(employeeIds)];
   if (uniqueEmployeeIds.length !== employeeIds.length) {
     throw new Error('Duplicate user IDs found in employeeIds.');
@@ -287,7 +287,8 @@ const validateEmployeeIds = async (employeeIds, organizationId) => {
   const users = await Model.UserOrganization.find({
     userId: { $in: uniqueEmployeeIds },
     organizationId,
-  });
+  })
+    .session(session);
   const foundUserIds = users.map((user) => user._id.toString());
   const invalidUserIds = uniqueEmployeeIds.filter((id) => !foundUserIds.includes(id.toString()));
   if (invalidUserIds.length > 0) {

@@ -4,7 +4,7 @@ const scheduleService = require('../services/scheduleService');
 exports.createSchedule = async (req, res, next) => {
   try {
     const adminOrganizationId = req.user.organizationId;
-    const createdSchedule = scheduleService.createSchedule(adminOrganizationId, req);
+    const createdSchedule = await scheduleService.createSchedule(adminOrganizationId, req);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: createdSchedule,
@@ -18,7 +18,8 @@ exports.createSchedule = async (req, res, next) => {
 exports.deleteSchedules = async (req, res, next) => {
   try {
     const { scheduleIds } = req.body;
-    const deletedSchedules = scheduleService.deleteSchedules(scheduleIds);
+    const adminScheduleId = req.user.organizationId;
+    const deletedSchedules = await scheduleService.deleteSchedules(adminScheduleId, scheduleIds);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: deletedSchedules,
@@ -31,9 +32,14 @@ exports.deleteSchedules = async (req, res, next) => {
 exports.setDefaultScheduleById = async (req, res, next) => {
   try {
     const { scheduleId } = req.params;
+    const adminOrganizationId = req.user.organizationId;
+    const updatedDetaulScheduleById = await scheduleService.setDefaultScheduleById(
+      adminOrganizationId,
+      scheduleId,
+    );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: req.params,
+      data: updatedDetaulScheduleById,
       code: StatusCodes.OK,
     });
   } catch (error) {
@@ -42,10 +48,17 @@ exports.setDefaultScheduleById = async (req, res, next) => {
 };
 exports.getScheduleList = async (req, res, next) => {
   try {
-    const { page, limit } = req.query;
+    const adminOrganizationId = req.user.organizationId;
+    const { list, pagination } = await scheduleService.getScheduleList(
+      adminOrganizationId,
+      req.query,
+    );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: req.query,
+      data: {
+        list,
+        pagination,
+      },
       code: StatusCodes.OK,
     });
   } catch (error) {

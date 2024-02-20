@@ -11,7 +11,12 @@ const ScheduleData = ({
   effectiveEndDate,
   isDefault: false,
 });
+const SchedulePagination = (page, limit, totalData) => ({
+  totalPage: Math.ceil(totalData / limit),
+  currentPage: page,
+});
 
 module.exports = {
   ScheduleData,
+  SchedulePagination,
 };

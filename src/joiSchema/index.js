@@ -1,9 +1,9 @@
 const Joi = require('joi');
 
-exports.limit = Joi.number().integer().positive().min(1)
+exports.limit = (limitCount = 10) => Joi.number().integer().positive().min(1)
   .max(100)
   .empty(0)
-  .default(100);
-exports.page = Joi.number().integer().positive().min(1)
+  .default(limitCount);
+exports.page = (page = 1) => Joi.number().integer().positive().min(1)
   .empty(0)
-  .default(1);
+  .default(page);

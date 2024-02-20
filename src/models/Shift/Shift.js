@@ -5,11 +5,11 @@ const ShiftSchema = new mongoose.Schema({
   name: {
     type: String,
   },
-  day: [{
+  day: {
     type: String,
     enum: Object.values(SHIFT_DAY),
     required: true,
-  }],
+  },
   shifts: [{
     startTime: {
       type: Date,
