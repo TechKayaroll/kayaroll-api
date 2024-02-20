@@ -30,7 +30,7 @@ const ScheduleRoutes = () => {
 
   ChildRouter.post(
     '/admin/set-default/:scheduleId',
-    validate.validate(null, schema.schemaSetDefaultSchedule),
+    validate.validate(schema.schemaSetDefaultSchedule),
     authorizationByRole([USER_ROLE.ADMIN]),
     CONTROLLER.setDefaultScheduleById,
   );
