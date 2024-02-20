@@ -279,20 +279,17 @@ const updateUserOrganizationAttendanceLocation = async (id, locationId, session)
 };
 
 const validateEmployeeIds = async (employeeIds, organizationId, session) => {
+  if (!employeeIds || employeeIds.length === 0) return [];
   const uniqueEmployeeIds = [...new Set(employeeIds)];
-  if (uniqueEmployeeIds.length !== employeeIds.length) {
-    throw new Error('Duplicate user IDs found in employeeIds.');
-  }
-
   const users = await Model.UserOrganization.find({
     userId: { $in: uniqueEmployeeIds },
     organizationId,
   })
     .session(session);
-  const foundUserIds = users.map((user) => user._id.toString());
+  const foundUserIds = users.map((user) => user.userId.toString());
   const invalidUserIds = uniqueEmployeeIds.filter((id) => !foundUserIds.includes(id.toString()));
   if (invalidUserIds.length > 0) {
-    throw new Error('Some user IDs do not belong to the specified organization.');
+    throw new ResponseError(StatusCodes.BAD_REQUEST, 'Some user IDs do not belong to the specified organization.');
   }
 
   return uniqueEmployeeIds.map((id) => new mongoose.Types.ObjectId(id));

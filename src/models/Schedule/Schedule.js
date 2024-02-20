@@ -68,15 +68,17 @@ const ScheduleSchema = new mongoose.Schema({
     validate: {
       async validator(value) {
         if (value) {
-          const count = await mongoose.models.Schedule.countDocuments({
+          const existingDefaultSchedule = await mongoose.models.Schedule.findOne({
             isDefault: true,
             organizationId: this.organizationId,
+            _id: { $ne: this._id }, // Exclude the current document being updated
           });
-          return count === 0;
+          return !existingDefaultSchedule;
         }
         return true;
       },
       message: 'Only one document with isDefault set to true is allowed per organization.',
+      onlyWhenSetToTrue: true,
     },
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });

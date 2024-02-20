@@ -69,7 +69,6 @@ const setDefaultWorkschedule = async (organizationId, schedulePayload, session) 
     organizationId,
     isDefault: true,
   });
-
   if (otherWorkSchedules.length > 0) {
     const workScheduleIdsToBeUpdated = otherWorkSchedules.map((schedule) => schedule._id);
     await Model.Schedule.updateMany(
@@ -95,26 +94,37 @@ const setDefaultWorkschedule = async (organizationId, schedulePayload, session) 
   return scheduleToBeUpdated;
 };
 
+const findOneScheduleByName = async (organizationId, scheduleName, session) => {
+  const schedule = await Model.Schedule.findOne({
+    organizationId,
+    name: scheduleName,
+  })
+    .populate({
+      path: 'users',
+    })
+    .populate({
+      path: 'organizationId',
+    })
+    .populate({ path: 'shifts' })
+    .session(session);
+  return schedule;
+};
+
 const createSchedule = async (organizationId, req, session) => {
   const createdShifts = await createShifts(req.body.shifts, session);
 
   const employeeIds = await userService.validateEmployeeIds(req.body.employeeIds);
-  const scheduleCount = await Model.Schedule.countDocuments({ organizationId }, { session });
-
-  const scheduleNameExist = await Model.Schedule.findOne({
-    organizationId,
-    name: req.body.scheduleName,
-  });
+  const scheduleNameExist = await findOneScheduleByName(req.body.scheduleName);
   if (scheduleNameExist) {
     throw new ResponseError(
       StatusCodes.BAD_REQUEST,
-      `Location with name: "${scheduleNameExist.name}" already exist!`,
+      `Schedule with name: "${scheduleNameExist.name}" already exist!`,
     );
   }
   const schedulePayload = scheduleStruct.ScheduleData({
     employeeIds,
     organizationId,
-    scheduleName: `Schedule ${scheduleCount + 1}`,
+    scheduleName: req.body.scheduleName,
     shifts: createdShifts.map((shift) => shift._id),
   });
   const createdSchedule = await Model.Schedule.create(schedulePayload);
@@ -132,18 +142,87 @@ const createSchedule = async (organizationId, req, session) => {
   return createdScheduleResult;
 };
 
+const deleteShifts = async (shiftIds, session) => {
+  const deleteShiftQuery = { _id: { $in: shiftIds } };
+
+  const shiftToDelete = await Model.Shift.find(deleteShiftQuery).session(session);
+  await Model.Shift.deleteMany(deleteShiftQuery, { session });
+
+  return shiftToDelete;
+};
 const deleteSchedules = async (organizationId, scheduleIds, session) => {
   const deleteScheduleQuery = { _id: { $in: scheduleIds }, organizationId };
   const schedulesToDelete = await Model.Schedule.find(deleteScheduleQuery).session(session);
 
   const shiftIdsToDelete = schedulesToDelete.flatMap((schedule) => schedule.shifts);
-  const deleteShiftQuery = { _id: { $in: shiftIdsToDelete } };
-
-  const shiftToDelete = await Model.Shift.find(deleteShiftQuery).session(session);
-  await Model.Shift.deleteMany(deleteShiftQuery, { session });
+  const shiftToDelete = await deleteShifts(shiftIdsToDelete);
   await Model.Schedule.deleteMany(deleteScheduleQuery, { session });
 
   return { schedulesToDelete, shiftToDelete };
+};
+
+const findScheduleById = async (organizationId, scheduleId, session) => {
+  const schedule = await Model.Schedule.findById(scheduleId)
+    .where(organizationId)
+    .populate({
+      path: 'users',
+    })
+    .populate({
+      path: 'organizationId',
+    })
+    .populate({ path: 'shifts' })
+    .session(session);
+  return schedule;
+};
+const updateScheduleById = async (organizationId, scheduleId, payload, session) => {
+  const workScheduleToBeUpdated = await Model.Schedule
+    .findById(scheduleId)
+    .where({ organizationId });
+  if (!workScheduleToBeUpdated) {
+    throw new ResponseError(StatusCodes.BAD_REQUEST, 'Schedule not found!');
+  }
+
+  const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
+  await deleteShifts(shiftIdsToDelete, session);
+
+  const createdShifts = await createShifts(payload.shifts, session);
+  const employeeIds = await userService.validateEmployeeIds(payload.employeeIds, organizationId);
+
+  const scheduleNameExist = await findOneScheduleByName(organizationId, payload.scheduleName);
+  if (scheduleNameExist && scheduleNameExist._id !== scheduleId) {
+    throw new ResponseError(
+      StatusCodes.BAD_REQUEST,
+      `Schedule with name: "${payload.scheduleName}" already exists!`,
+    );
+  }
+
+  const schedulePayload = {
+    scheduleName: payload.scheduleName,
+    employeeIds,
+    shifts: createdShifts.map((shift) => shift._id),
+  };
+  let updatedSchedule = workScheduleToBeUpdated;
+  if (payload.isDefault === true) {
+    const createdDefaultWorkSchedule = await setDefaultWorkschedule(
+      organizationId,
+      {
+        scheduleId: workScheduleToBeUpdated._id,
+        effectiveEndDate: payload.effectiveEndDate,
+        effectiveStartDate: payload.effectiveStartDate,
+      },
+      session,
+    );
+    updatedSchedule = createdDefaultWorkSchedule;
+  } else {
+    schedulePayload.isDefault = payload.isDefault;
+    schedulePayload.effectiveEndDate = undefined;
+    schedulePayload.effectiveStartDate = undefined;
+  }
+  Object.assign(updatedSchedule, schedulePayload);
+  await updatedSchedule.save({ session });
+
+  const schedule = await findScheduleById(organizationId, updatedSchedule._id);
+  return schedule;
 };
 
 module.exports = {
@@ -151,4 +230,6 @@ module.exports = {
   createSchedule,
   deleteSchedules,
   setDefaultWorkschedule,
+  updateScheduleById,
+  findScheduleById,
 };

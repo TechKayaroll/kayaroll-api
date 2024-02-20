@@ -94,3 +94,45 @@ exports.getScheduleList = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateScheduleById = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { scheduleId } = req.params;
+    const adminOrganizationId = req.user.organizationId;
+
+    const updatedSchedule = await scheduleService.updateScheduleById(
+      adminOrganizationId,
+      scheduleId,
+      req.body,
+    );
+    await session.commitTransaction();
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: updatedSchedule,
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+    await session.abortTransaction();
+  } finally {
+    session.endSession();
+  }
+};
+
+exports.getScheduleDetail = async (req, res, next) => {
+  try {
+    const { scheduleId } = req.params;
+    const adminOrganizationId = req.user.organizationId;
+
+    const schedule = await scheduleService.findScheduleById(adminOrganizationId, scheduleId);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: schedule,
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

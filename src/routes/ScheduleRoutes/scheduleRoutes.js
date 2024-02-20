@@ -14,12 +14,13 @@ const ScheduleRoutes = () => {
     authorizationByRole([USER_ROLE.ADMIN]),
     CONTROLLER.createSchedule,
   );
-  // ChildRouter.post(
-  //   '/update/:scheduleId',
-  //   validate.validate(null, schema.schemaSearchLocation),
-  //   authorizationByRole([USER_ROLE.ADMIN]),
-  //   CONTROLLER.createSchedule,
-  // );
+
+  ChildRouter.post(
+    '/admin/update/:scheduleId',
+    validate.validate(schema.schemaUpdateScheduleById),
+    authorizationByRole([USER_ROLE.ADMIN]),
+    CONTROLLER.updateScheduleById,
+  );
 
   ChildRouter.post(
     '/admin/delete',
@@ -30,15 +31,21 @@ const ScheduleRoutes = () => {
 
   ChildRouter.post(
     '/admin/set-default/:scheduleId',
-    validate.validate(schema.schemaSetDefaultSchedule),
     authorizationByRole([USER_ROLE.ADMIN]),
     CONTROLLER.setDefaultScheduleById,
   );
+
   ChildRouter.get(
     '/admin/list',
     validate.validate(null, schema.schemaGetScheduleListQuery),
     authorizationByRole([USER_ROLE.ADMIN]),
     CONTROLLER.getScheduleList,
+  );
+
+  ChildRouter.get(
+    '/admin/detail/:scheduleId',
+    authorizationByRole([USER_ROLE.ADMIN]),
+    CONTROLLER.getScheduleDetail,
   );
 
   return ChildRouter;
