@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 const UserOrganization = require('../Relationship/UserOrganization');
-const { ATTENDANCE_TYPE, ATTENDANCE_STATUS } = require('../../utils/constants');
+const { ATTENDANCE_TYPE, ATTENDANCE_STATUS, SHIFT_DAY } = require('../../utils/constants');
 
 const AttendanceSchema = new mongoose.Schema({
   userId: {
@@ -64,7 +64,7 @@ const AttendanceSchema = new mongoose.Schema({
     ref: User,
     required: true,
   },
-  attendanceSettingsSnapshots: [{
+  attendanceLocationSnapshots: [{
     locationName: {
       type: String,
       immutable: true,
@@ -89,6 +89,47 @@ const AttendanceSchema = new mongoose.Schema({
       type: Number,
       immutable: true,
       required: true,
+    },
+  }],
+  attendanceScheduleSnapshots: [{
+    scheduleName: {
+      type: String,
+      required: true,
+      immutable: true,
+    },
+    scheduleShifts: [{
+      name: {
+        type: String,
+        immutable: true,
+      },
+      day: {
+        type: String,
+        enum: Object.values(SHIFT_DAY),
+        required: true,
+        immutable: true,
+      },
+      shifts: [{
+        startTime: {
+          type: Date,
+          required: true,
+          immutable: true,
+        },
+        endTime: {
+          type: Date,
+          required: true,
+          immutable: true,
+        },
+      }],
+    }],
+    effectiveStartDate: {
+      type: Date,
+      required: true,
+      immutable: true,
+    },
+    effectiveEndDate: {
+      type: Date,
+      required: true,
+      immutable: true,
     },
   }],
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });

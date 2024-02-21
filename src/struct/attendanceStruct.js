@@ -10,7 +10,8 @@ const Attendance = (
   attendanceImageUrl,
   attendanceType,
   userOrganizationId,
-  attendanceSettingsSnapshots,
+  attendanceLocationSnapshots,
+  scheduleSnapshots,
 ) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -25,7 +26,8 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
-  attendanceSettingsSnapshots,
+  attendanceLocationSnapshots,
+  attendanceScheduleSnapshots: scheduleSnapshots,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
@@ -80,7 +82,7 @@ const AttendanceListAdmin = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
-  attendanceSettingsSnapshots: val?.attendanceSettingsSnapshots,
+  attendanceLocationSnapshots: val?.attendanceLocationSnapshots,
 });
 
 const AttendanceDataResult = (val, req) => ({
@@ -110,7 +112,7 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
-  attendanceSettingsSnapshots: attendance.attendanceSettingsSnapshots,
+  attendanceLocationSnapshots: attendance.attendanceLocationSnapshots,
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
@@ -135,7 +137,7 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   return attendance;
 };
 
-const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSnapshots) => ({
+const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceLocationSnapshots) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
   userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg._id),
@@ -149,7 +151,7 @@ const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceSettingsSn
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
-  attendanceSettingsSnapshots,
+  attendanceLocationSnapshots,
 });
 
 module.exports = {

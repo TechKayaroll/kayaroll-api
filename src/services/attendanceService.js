@@ -84,6 +84,17 @@ const createAttendanceSnapshot = async (userId, organizationId, session) => {
   return newAttSnapshots;
 };
 
+const createAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
+  const scheduleSnapshots = await userModel.Schedule
+    .find({ users: userId, organizationId })
+    .populate({ path: 'users' })
+    .populate({ path: 'shifts' })
+    .populate({ path: 'organizationId' })
+    .session(session);
+  const attendanceScheduleSnapshots = attendanceSettingsStruct
+    .AttendanceScheduleSnapshots(scheduleSnapshots);
+  return attendanceScheduleSnapshots;
+};
 const createAttendance = async (req, attendanceImageUrl, attendanceType, session) => {
   const userOrgQuery = {
     organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -92,17 +103,25 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
 
-  const newAttSnapshots = await createAttendanceSnapshot(
-    userOrganization.userId,
-    userOrganization.organizationId,
-    session,
-  );
+  const [attSnapshot, scheduleSnapshots] = await Promise.all([
+    createAttendanceSnapshot(
+      userOrganization.userId,
+      userOrganization.organizationId,
+      session,
+    ),
+    createAttendanceScheduleSnapshots(
+      userOrganization.userId,
+      userOrganization.organizationId,
+      session,
+    ),
+  ]);
   const attendancePayload = struct.Attendance(
     req,
     attendanceImageUrl,
     attendanceType,
     userOrganization._id,
-    newAttSnapshots,
+    attSnapshot,
+    scheduleSnapshots,
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
@@ -115,10 +134,10 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   );
   let inRadius = false;
   let inRadiusSnapshots = [];
-  if (newAttSnapshots?.length === 0) {
+  if (attSnapshot?.length === 0) {
     inRadius = true;
   } else {
-    inRadiusSnapshots = newAttSnapshots.filter((snapshot) => {
+    inRadiusSnapshots = attSnapshot.filter((snapshot) => {
       const { locationLat, locationLong, locationRadius } = snapshot;
       const centerCoordinates = [locationLat, locationLong];
       const otherCoordinates = [savedAttendance?.lat, savedAttendance?.long];
@@ -490,4 +509,5 @@ module.exports = {
   attendanceUpdate,
   attendanceAuditLogList,
   createBulkAttendance,
+  createAttendanceScheduleSnapshots,
 };

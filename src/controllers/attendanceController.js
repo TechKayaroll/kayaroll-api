@@ -17,7 +17,10 @@ exports.attendanceCheckIn = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.IN;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
-    const { inRadius, inRadiusSnapshots } = await attendanceService.createAttendance(
+    const {
+      inRadius,
+      inRadiusSnapshots,
+    } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
       attendanceType,

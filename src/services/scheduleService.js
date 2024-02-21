@@ -198,7 +198,7 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
 
   const schedulePayload = {
     scheduleName: payload.scheduleName,
-    employeeIds,
+    users: employeeIds,
     shifts: createdShifts.map((shift) => shift._id),
   };
   let updatedSchedule = workScheduleToBeUpdated;

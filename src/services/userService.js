@@ -291,8 +291,8 @@ const validateEmployeeIds = async (employeeIds, organizationId, session) => {
   if (invalidUserIds.length > 0) {
     throw new ResponseError(StatusCodes.BAD_REQUEST, 'Some user IDs do not belong to the specified organization.');
   }
-
-  return uniqueEmployeeIds.map((id) => new mongoose.Types.ObjectId(id));
+  const ids = uniqueEmployeeIds.map((id) => new mongoose.Types.ObjectId(id));
+  return ids;
 };
 
 module.exports = {
