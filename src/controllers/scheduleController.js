@@ -1,6 +1,7 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
 const scheduleService = require('../services/scheduleService');
+const { ResponseError } = require('../helpers/response');
 
 exports.createSchedule = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -100,12 +101,16 @@ exports.updateScheduleById = async (req, res, next) => {
   session.startTransaction();
   try {
     const { scheduleId } = req.params;
+    if (!scheduleId) {
+      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Please provide param: scheduleId');
+    }
     const adminOrganizationId = req.user.organizationId;
 
     const updatedSchedule = await scheduleService.updateScheduleById(
       adminOrganizationId,
       scheduleId,
       req.body,
+      session,
     );
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({

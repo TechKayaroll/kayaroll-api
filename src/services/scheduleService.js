@@ -110,11 +110,39 @@ const findOneScheduleByName = async (organizationId, scheduleName, session) => {
   return schedule;
 };
 
+const assignUserToSchedule = async (organizationId, userIds, scheduleId, session) => {
+  const existingSchedules = await Model.Schedule.find({
+    organizationId,
+    users: { $in: userIds },
+  }).session(session);
+
+  const bulkUpdates = existingSchedules.map((schedule) => {
+    if (schedule._id.toString() !== scheduleId) {
+      const updatedUserIds = schedule.users.filter((id) => !userIds.includes(id.toString()));
+      return Model.Schedule.updateOne(
+        { _id: schedule._id },
+        { users: updatedUserIds },
+        { session },
+      );
+    }
+    return null;
+  });
+  await Promise.all(bulkUpdates.filter((update) => update !== null));
+
+  await Model.Schedule.updateOne(
+    { _id: scheduleId, organizationId },
+    { $addToSet: { users: { $each: userIds } } },
+    { session },
+  );
+};
 const createSchedule = async (organizationId, req, session) => {
   const createdShifts = await createShifts(req.body.shifts, session);
-
-  const employeeIds = await userService.validateEmployeeIds(req.body.employeeIds);
-  const scheduleNameExist = await findOneScheduleByName(req.body.scheduleName);
+  const employeeIds = await userService.validateEmployeeIds(
+    req.body.employeeIds,
+    organizationId,
+    session,
+  );
+  const scheduleNameExist = await findOneScheduleByName(organizationId, req.body.scheduleName);
   if (scheduleNameExist) {
     throw new ResponseError(
       StatusCodes.BAD_REQUEST,
@@ -122,13 +150,14 @@ const createSchedule = async (organizationId, req, session) => {
     );
   }
   const schedulePayload = scheduleStruct.ScheduleData({
-    employeeIds,
     organizationId,
     scheduleName: req.body.scheduleName,
     shifts: createdShifts.map((shift) => shift._id),
   });
   const createdSchedule = await Model.Schedule.create(schedulePayload);
   await createdSchedule.save({ session });
+
+  await assignUserToSchedule(organizationId, employeeIds, createdSchedule._id, session);
 
   let createdScheduleResult = createdSchedule;
   if (req.body.isDefault) {
@@ -181,26 +210,35 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
   if (!workScheduleToBeUpdated) {
     throw new ResponseError(StatusCodes.BAD_REQUEST, 'Schedule not found!');
   }
-
+  const schedulePayload = {};
   const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
   await deleteShifts(shiftIdsToDelete, session);
 
-  const createdShifts = await createShifts(payload.shifts, session);
-  const employeeIds = await userService.validateEmployeeIds(payload.employeeIds, organizationId);
-
-  const scheduleNameExist = await findOneScheduleByName(organizationId, payload.scheduleName);
-  if (scheduleNameExist && scheduleNameExist._id !== scheduleId) {
-    throw new ResponseError(
-      StatusCodes.BAD_REQUEST,
-      `Schedule with name: "${payload.scheduleName}" already exists!`,
+  const employeeIds = await userService.validateEmployeeIds(
+    payload.employeeIds,
+    organizationId,
+    session,
+  );
+  if (payload.scheduleName) {
+    const scheduleNameExist = await findOneScheduleByName(
+      organizationId,
+      payload.scheduleName,
+      session,
     );
+    if (scheduleNameExist && scheduleNameExist._id !== scheduleId) {
+      throw new ResponseError(
+        StatusCodes.BAD_REQUEST,
+        `Schedule with name: "${payload.scheduleName}" already exists!`,
+      );
+    }
+    schedulePayload.scheduleName = payload.scheduleName;
   }
 
-  const schedulePayload = {
-    scheduleName: payload.scheduleName,
-    users: employeeIds,
-    shifts: createdShifts.map((shift) => shift._id),
-  };
+  if (payload.shifts) {
+    const createdShifts = await createShifts(payload.shifts, session);
+    schedulePayload.shifts = createdShifts.map((shift) => shift._id);
+  }
+
   let updatedSchedule = workScheduleToBeUpdated;
   if (payload.isDefault === true) {
     const createdDefaultWorkSchedule = await setDefaultWorkschedule(
@@ -218,6 +256,8 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     schedulePayload.effectiveEndDate = undefined;
     schedulePayload.effectiveStartDate = undefined;
   }
+  await assignUserToSchedule(organizationId, employeeIds, updatedSchedule._id, session);
+
   Object.assign(updatedSchedule, schedulePayload);
   await updatedSchedule.save({ session });
 

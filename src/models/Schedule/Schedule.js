@@ -4,10 +4,11 @@ const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 
 const validateDate = (value) => value instanceof Date && !Number.isNaN(value);
-const validateUserIdUniqueInOrganization = async (userId, organizationId) => {
+const validateUserIdUniqueInOrganization = async (userId, organizationId, scheduleId) => {
   const existingSchedule = await mongoose.models.Schedule.findOne({
     organizationId,
     users: userId,
+    _id: { $ne: scheduleId },
   });
   return !existingSchedule;
 };
@@ -26,7 +27,7 @@ const ScheduleSchema = new mongoose.Schema({
     ref: User,
     validate: {
       async validator(userId) {
-        return validateUserIdUniqueInOrganization(userId, this.organizationId);
+        return validateUserIdUniqueInOrganization(userId, this.organizationId, this._id);
       },
       message: 'User already exists in another Schedule with the same organization.',
     },
