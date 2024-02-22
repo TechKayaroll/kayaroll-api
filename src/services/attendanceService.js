@@ -15,6 +15,7 @@ const {
 const { isWithinRadius } = require('../helpers/calculation');
 
 const struct = require('../struct/attendanceStruct');
+const scheduleStruct = require('../struct/scheduleStruct');
 const attendanceSettingsStruct = require('../struct/attendanceSettingsSnapshot');
 
 const attendanceModel = userModel;
@@ -61,10 +62,14 @@ const uploadAttendanceImage = async (req, attendanceType) => {
       throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Invalid Attendance Type when uploading attendance image');
     }
     await uploadGcp.UploadFile(req.file);
-    fs.unlinkSync(req.file.path);
+    fs.unlink(req.file.path, (err) => {
+      if (err) {
+        throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, err);
+      }
+    });
+
     return imageUrl;
   } catch (error) {
-    fs.unlinkSync(req.file.path);
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -102,8 +107,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   };
   const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
-
-  const [attSnapshot, scheduleSnapshots] = await Promise.all([
+  const [attSnapshot, createdScheduleSnapshots] = await Promise.all([
     createAttendanceSnapshot(
       userOrganization.userId,
       userOrganization.organizationId,
@@ -121,7 +125,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     attendanceType,
     userOrganization._id,
     attSnapshot,
-    scheduleSnapshots,
+    createdScheduleSnapshots,
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
@@ -134,6 +138,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   );
   let inRadius = false;
   let inRadiusSnapshots = [];
+  let scheduleSnapshots = [];
   if (attSnapshot?.length === 0) {
     inRadius = true;
   } else {
@@ -146,7 +151,14 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     });
     inRadius = inRadiusSnapshots.length > 0;
   }
-  return { savedAttendance, inRadius, inRadiusSnapshots };
+  if (scheduleSnapshots.length > 0) {
+    scheduleSnapshots = createdScheduleSnapshots.map(
+      (schedule) => scheduleStruct.ScheduleSnapshot(schedule),
+    );
+  }
+  return {
+    savedAttendance, inRadius, inRadiusSnapshots, scheduleSnapshots,
+  };
 };
 const attendanceDetail = async (attendanceId) => {
   try {

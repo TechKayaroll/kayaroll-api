@@ -20,6 +20,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
     const {
       inRadius,
       inRadiusSnapshots,
+      scheduleSnapshots,
     } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
@@ -33,6 +34,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
       data: {
         inRadius,
         inRadiusSnapshots,
+        scheduleSnapshots,
       },
       code: StatusCodes.OK,
     });
@@ -50,7 +52,11 @@ exports.attendanceCheckOut = async (req, res, next) => {
   try {
     const attendanceType = ATTENDANCE_TYPE.OUT;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
-    const { inRadius, inRadiusSnapshots } = await attendanceService.createAttendance(
+    const {
+      inRadius,
+      inRadiusSnapshots,
+      scheduleSnapshots,
+    } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
       attendanceType,
@@ -61,6 +67,7 @@ exports.attendanceCheckOut = async (req, res, next) => {
       data: {
         inRadius,
         inRadiusSnapshots,
+        scheduleSnapshots,
       },
       code: StatusCodes.OK,
     });

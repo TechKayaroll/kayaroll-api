@@ -1,3 +1,5 @@
+const shiftStruct = require('./shiftStruct');
+
 const ScheduleData = ({
   scheduleName, employeeIds, shifts,
   organizationId, effectiveStartDate,
@@ -14,7 +16,7 @@ const ScheduleData = ({
 
 const UpdateScheduleData = ({
   scheduleName, employeeIds,
-  shifts
+  shifts,
 }) => ({
   name: scheduleName,
   users: employeeIds,
@@ -26,8 +28,19 @@ const SchedulePagination = (page, limit, totalData) => ({
   currentPage: page,
 });
 
+const ScheduleSnapshot = (schedule) => ({
+  name: schedule.name,
+  shifts: schedule.shifts.map(shiftStruct.SingleShiftData),
+  users: schedule.users,
+  organizationId: schedule.organizationId,
+  effectiveStartDate: schedule.effectiveStartDate,
+  effectiveEndDate: schedule.effectiveEndDate,
+  isDefault: schedule.isDefault,
+});
+
 module.exports = {
   ScheduleData,
   SchedulePagination,
   UpdateScheduleData,
+  ScheduleSnapshot,
 };

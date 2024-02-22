@@ -2,7 +2,7 @@ const { SHIFT_DAY } = require('../utils/constants');
 
 const SingleShiftData = (data) => ({
   day: data?.day,
-  shifts: data.shifts.map((shiftTime) => ({
+  shifts: data?.shifts.map((shiftTime) => ({
     startTime: shiftTime.inTime,
     endTime: shiftTime.outTime,
   })),
