@@ -14,6 +14,7 @@ exports.AttendanceScheduleSnapshots = (schedules) => {
       day: shift.day,
       shifts: shift.shifts,
     })),
+    isDefault: schedule.isDefault,
     effectiveStartDate: schedule.effectiveStartDate,
     effectiveEndDate: schedule.effectiveEndDate,
   }));

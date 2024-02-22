@@ -121,14 +121,16 @@ const AttendanceSchema = new mongoose.Schema({
         },
       }],
     }],
+    isDefault: {
+      type: Boolean,
+      immutable: true,
+    },
     effectiveStartDate: {
       type: Date,
-      required: true,
       immutable: true,
     },
     effectiveEndDate: {
       type: Date,
-      required: true,
       immutable: true,
     },
   }],
