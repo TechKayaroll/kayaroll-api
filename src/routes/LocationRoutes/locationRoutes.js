@@ -41,6 +41,7 @@ const AdminLocationRoutes = () => {
 
   ChildRouter.get(
     '/admin/profiles',
+    validate.validate(null, schema.schemaGetLocationProfileQuery),
     authorizationByRole([USER_ROLE.ADMIN]),
     CONTROLLER.getLocationProfile,
   );

@@ -32,10 +32,17 @@ const getUserLocationProfile = async () => {
 
 };
 
-const getLocationProfileList = async (orgId) => {
+const getLocationProfileList = async (orgId, reqQuery) => {
+  const { page = 1, limit = 5 } = reqQuery;
+  const skip = (page - 1) * limit;
+
   const orgLocation = await Model.Location
     .find({ organizationId: orgId })
-    .populate({ path: 'organizationId' });
+    .populate({ path: 'organizationId' })
+    .skip(skip)
+    .limit(limit);
+
+  const totalData = await Model.Location.countDocuments({ organizationId: orgId });
 
   const promisesUserByLocation = orgLocation.map(
     (eachLocation) => Model.UserOrganizationLocation.find({
@@ -61,7 +68,13 @@ const getLocationProfileList = async (orgId) => {
       users: userByLocation.map(userStruct.UserOrganizationLocationDetail),
     });
   });
-  return userGroupByLocation;
+
+  const pagination = struct.LocationPagination(page, limit, totalData);
+
+  return {
+    list: userGroupByLocation,
+    pagination,
+  };
 };
 
 const removeBulkLocationProfile = async (organizationId, locationIds, session) => {

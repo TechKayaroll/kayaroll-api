@@ -1,4 +1,10 @@
 const Joi = require('joi');
+const globalSchema = require('.');
+
+exports.schemaGetLocationProfileQuery = Joi.object({
+  limit: globalSchema.limit(1),
+  page: globalSchema.page(),
+});
 
 exports.schemaCreateLocationProfile = Joi.object({
   locationName: Joi.string().required(),

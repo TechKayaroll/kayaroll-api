@@ -1,3 +1,5 @@
+const globalStruct = require('.');
+
 exports.locationData = (location) => ({
   id: location._id,
   name: location.name,
@@ -48,3 +50,5 @@ exports.locationPrediction = (prediction) => ({
   address: prediction.description,
   placeId: prediction.place_id,
 });
+
+exports.LocationPagination = globalStruct.Pagination;

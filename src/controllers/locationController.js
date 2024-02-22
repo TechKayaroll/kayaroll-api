@@ -47,7 +47,7 @@ const createLocationProfile = async (req, res, next) => {
 const getLocationProfile = async (req, res, next) => {
   try {
     const { organizationId } = req.user;
-    const data = await locationServices.getLocationProfileList(organizationId);
+    const data = await locationServices.getLocationProfileList(organizationId, req.query);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data,
