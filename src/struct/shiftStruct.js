@@ -1,3 +1,4 @@
+const dayjs = require('dayjs');
 const { SHIFT_DAY } = require('../utils/constants');
 
 const SingleShiftData = (data) => ({
@@ -5,6 +6,14 @@ const SingleShiftData = (data) => ({
   shifts: data?.shifts.map((shiftTime) => ({
     startTime: shiftTime.inTime,
     endTime: shiftTime.outTime,
+  })),
+});
+
+const ShiftFormatedTime = (shift) => ({
+  day: shift?.day,
+  shifts: shift?.shifts.map((shiftTime) => ({
+    startTime: dayjs(shiftTime.inTime).format('hh:mm'),
+    endTime: dayjs(shiftTime.outTime).format('hh:mm'),
   })),
 });
 
@@ -23,4 +32,5 @@ const SingleShiftData = (data) => ({
 
 module.exports = {
   SingleShiftData,
+  ShiftFormatedTime,
 };

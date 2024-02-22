@@ -1,6 +1,8 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
 const scheduleService = require('../services/scheduleService');
+const scheduleStruct = require('../struct/scheduleStruct');
+const shiftStruct = require('../struct/shiftStruct');
 const { ResponseError } = require('../helpers/response');
 
 exports.createSchedule = async (req, res, next) => {
@@ -134,7 +136,7 @@ exports.getScheduleDetail = async (req, res, next) => {
     const schedule = await scheduleService.findScheduleById(adminOrganizationId, scheduleId);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: schedule,
+      data: scheduleStruct.SchedulePreview(schedule),
       code: StatusCodes.OK,
     });
   } catch (error) {

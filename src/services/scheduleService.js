@@ -38,7 +38,7 @@ const getScheduleList = async (organizationId, {
   ]);
 
   return {
-    list: schedules,
+    list: schedules.map(scheduleStruct.SchedulePreview),
     pagination: scheduleStruct.SchedulePagination(
       page,
       limit,
