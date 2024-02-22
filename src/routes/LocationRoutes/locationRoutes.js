@@ -7,7 +7,6 @@ const { USER_ROLE } = require('../../utils/constants');
 
 const AdminLocationRoutes = () => {
   ChildRouter.use(authentication);
-
   ChildRouter.get(
     '/search-address',
     validate.validate(null, schema.schemaSearchLocation),
