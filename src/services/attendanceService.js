@@ -105,7 +105,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
     userId: new mongoose.Types.ObjectId(req.user.userId),
   };
-  const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery);
+  const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery).session(session);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
   const [attSnapshot, createdScheduleSnapshots] = await Promise.all([
     createAttendanceSnapshot(
