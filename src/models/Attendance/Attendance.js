@@ -94,7 +94,7 @@ const AttendanceSchema = new mongoose.Schema({
       type: String,
       immutable: true,
       required: true,
-    }
+    },
   }],
   attendanceScheduleSnapshots: [{
     scheduleName: {

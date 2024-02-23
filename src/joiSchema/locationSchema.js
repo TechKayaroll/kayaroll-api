@@ -23,6 +23,7 @@ exports.schemaUpdateLocationProfile = Joi.object({
   lat: Joi.number().optional(),
   long: Joi.number().optional(),
   radius: Joi.number().optional(),
+  address: Joi.string().optional(),
   employeeIds: Joi.array().items(Joi.string()).empty(Joi.array().length(0)).default([]),
 });
 exports.schemaDeleteLocationProfile = Joi.object({
