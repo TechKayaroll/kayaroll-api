@@ -18,6 +18,10 @@ const LocationSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  address: {
+    type: String,
+    required: true,
+  },
   radius: {
     type: Number,
     required: true,

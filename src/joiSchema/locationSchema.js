@@ -12,6 +12,7 @@ exports.schemaCreateLocationProfile = Joi.object({
   lat: Joi.number().required(),
   long: Joi.number().required(),
   radius: Joi.number().required(),
+  address: Joi.string().required(),
   employeeIds: Joi.array().items(Joi.string()).empty(Joi.array().length(0)).default([]),
 });
 

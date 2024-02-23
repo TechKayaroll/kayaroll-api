@@ -7,6 +7,7 @@ exports.locationData = (location) => ({
   lat: location.lat,
   long: location.long,
   radius: location.radius,
+  address: location?.address || '',
   organizationId: location.organizationId,
 });
 
@@ -16,6 +17,7 @@ exports.createLocationData = (reqBody, organizationId) => ({
   lat: reqBody.lat,
   long: reqBody.long,
   radius: reqBody.radius,
+  address: reqBody.address,
   organizationId,
 });
 
