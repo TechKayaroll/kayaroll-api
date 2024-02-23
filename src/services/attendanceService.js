@@ -197,7 +197,7 @@ const attandanceList = async (param, userId, organizationId) => {
     })
       .populate({ path: 'userOrganizationId' })
       .where(whereParam)
-      .sort({ createdDate: sortBy })
+      .sort({ attendanceDate: sortBy })
       .limit(param.limit)
       .skip(offset * param.limit);
 
