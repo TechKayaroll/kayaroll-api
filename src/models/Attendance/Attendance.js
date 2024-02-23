@@ -94,7 +94,6 @@ const AttendanceSchema = new mongoose.Schema({
   attendanceScheduleSnapshots: [{
     scheduleName: {
       type: String,
-      required: true,
       immutable: true,
     },
     scheduleShifts: [{
@@ -131,6 +130,14 @@ const AttendanceSchema = new mongoose.Schema({
     },
     effectiveEndDate: {
       type: Date,
+      immutable: true,
+    },
+    gracePeriod: {
+      type: Number,
+      immutable: true,
+    },
+    overtimeTolerance: {
+      type: Number,
       immutable: true,
     },
   }],

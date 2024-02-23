@@ -10,8 +10,8 @@ exports.schemaCreateSchedule = Joi.object({
   shifts: Joi.array().items(
     Joi.array().items(
       Joi.object({
-        inTime: Joi.date().required(),
-        outTime: Joi.date().greater(Joi.ref('inTime')).required(),
+        startTime: Joi.date().required(),
+        endTime: Joi.date().greater(Joi.ref('startTime')).required(),
       }),
     ).default([]),
   ).length(7).required(),
@@ -61,8 +61,8 @@ exports.schemaUpdateScheduleById = Joi.object({
   shifts: Joi.array().items(
     Joi.array().items(
       Joi.object({
-        inTime: Joi.date().required(),
-        outTime: Joi.date().greater(Joi.ref('inTime')).required(),
+        startTime: Joi.date().required(),
+        endTime: Joi.date().greater(Joi.ref('startTime')).required(),
       }),
     ).default([]),
   ).length(7),

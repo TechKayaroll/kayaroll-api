@@ -73,7 +73,7 @@ const setDefaultWorkschedule = async (organizationId, schedulePayload, session) 
     const workScheduleIdsToBeUpdated = otherWorkSchedules.map((schedule) => schedule._id);
     await Model.Schedule.updateMany(
       { _id: { $in: workScheduleIdsToBeUpdated } },
-      { $set: { isDefault: false, effectiveStartDate: undefined, effectiveEndDate: undefined } },
+      { $set: { isDefault: false } },
       { session },
     );
   }
@@ -256,8 +256,6 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     updatedSchedule = createdDefaultWorkSchedule;
   } else {
     schedulePayload.isDefault = payload.isDefault;
-    schedulePayload.effectiveEndDate = undefined;
-    schedulePayload.effectiveStartDate = undefined;
   }
   await assignUserToSchedule(organizationId, employeeIds, updatedSchedule._id, session);
 

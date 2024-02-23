@@ -12,8 +12,20 @@ const { USER_ROLE } = require('../../utils/constants');
 const AttendanceRoutes = () => {
   ChildRouter.use(authentication);
 
-  ChildRouter.post('/check-in', authorizationByRole([USER_ROLE.EMPLOYEE]), upload.single('imageFile'), validate.validate(schema.schemaAttendance), CONTROLLER.attendanceCheckIn);
-  ChildRouter.post('/check-out', authorizationByRole([USER_ROLE.EMPLOYEE]), upload.single('imageFile'), validate.validate(schema.schemaAttendance), CONTROLLER.attendanceCheckOut);
+  ChildRouter.post(
+    '/check-in',
+    authorizationByRole([USER_ROLE.EMPLOYEE]),
+    upload.single('imageFile'),
+    validate.validate(schema.schemaAttendance),
+    CONTROLLER.attendanceCheckIn,
+  );
+  ChildRouter.post(
+    '/check-out',
+    authorizationByRole([USER_ROLE.EMPLOYEE]),
+    upload.single('imageFile'),
+    validate.validate(schema.schemaAttendance),
+    CONTROLLER.attendanceCheckOut,
+  );
   ChildRouter.get('/list', validate.validate(null, schema.schemaAttendanceList), CONTROLLER.attendanceList);
   ChildRouter.get('/details', validate.validate(null, schema.schemaEmployeeAttendanceDetails), authorizationByRole([USER_ROLE.EMPLOYEE]), CONTROLLER.employeeAttendanceDetails);
   ChildRouter.get('/admin/dashboard', authorizationByRole([USER_ROLE.ADMIN]), validate.validate(null, schema.schemaAttendanceListAdmin), CONTROLLER.attendanceListAdmin);

@@ -1,5 +1,4 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
-const fs = require('fs');
 const dayjs = require('dayjs');
 const mongoose = require('mongoose');
 const { ResponseError } = require('../helpers/response');
@@ -27,7 +26,6 @@ exports.attendanceCheckIn = async (req, res, next) => {
       attendanceType,
       session,
     );
-
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
@@ -72,7 +70,6 @@ exports.attendanceCheckOut = async (req, res, next) => {
       code: StatusCodes.OK,
     });
   } catch (e) {
-    fs.unlinkSync(req.file.path);
     next(e);
   }
 };

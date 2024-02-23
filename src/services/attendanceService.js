@@ -89,16 +89,15 @@ const createAttendanceSnapshot = async (userId, organizationId, session) => {
   return newAttSnapshots;
 };
 
-const createAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
+const findAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
   const scheduleSnapshots = await userModel.Schedule
     .find({ users: userId, organizationId })
     .populate({ path: 'users' })
     .populate({ path: 'shifts' })
     .populate({ path: 'organizationId' })
     .session(session);
-  const attendanceScheduleSnapshots = attendanceSettingsStruct
-    .AttendanceScheduleSnapshots(scheduleSnapshots);
-  return attendanceScheduleSnapshots;
+
+  return scheduleSnapshots;
 };
 const createAttendance = async (req, attendanceImageUrl, attendanceType, session) => {
   const userOrgQuery = {
@@ -113,7 +112,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
       userOrganization.organizationId,
       session,
     ),
-    createAttendanceScheduleSnapshots(
+    findAttendanceScheduleSnapshots(
       userOrganization.userId,
       userOrganization.organizationId,
       session,
@@ -125,7 +124,8 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     attendanceType,
     userOrganization._id,
     attSnapshot,
-    createdScheduleSnapshots,
+    attendanceSettingsStruct
+      .AttendanceScheduleSnapshots(createdScheduleSnapshots),
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
@@ -151,8 +151,9 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     });
     inRadius = inRadiusSnapshots.length > 0;
   }
-  if (scheduleSnapshots.length > 0) {
-    scheduleSnapshots = createdScheduleSnapshots.map(
+  console.log(JSON.stringify(savedAttendance, null, 2));
+  if (savedAttendance?.attendanceScheduleSnapshots.length > 0) {
+    scheduleSnapshots = savedAttendance?.attendanceScheduleSnapshots?.map(
       (schedule) => scheduleStruct.ScheduleSnapshot(schedule),
     );
   }
@@ -521,5 +522,5 @@ module.exports = {
   attendanceUpdate,
   attendanceAuditLogList,
   createBulkAttendance,
-  createAttendanceScheduleSnapshots,
+  findAttendanceScheduleSnapshots,
 };
