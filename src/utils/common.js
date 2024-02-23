@@ -21,6 +21,11 @@ const generateCompanyCode = (companyName) => {
 
 // eslint-disable-next-line max-len
 const calculationStatusAttendanceHistory = async (attendanceType, actualTime, attendanceSchedule) => {
+  /* NOTE:
+  1. belum mastiin value dari attendanceSchedule
+  2. untuk logic nya harusnya udh cover untuk statusnya
+  3. perlu di test lagi
+  */
   let workScheduleEnd = 0;
   let workScheduleStart = 0;
   let overtimeTolerance = 0;

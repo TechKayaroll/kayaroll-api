@@ -31,7 +31,7 @@ const Attendance = (
   attendanceLocationSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
   attendanceStatusHistory: statusHisory,
-  timeDiff: timeDiff || 'unknown',
+  timeDiff: timeDiff || 0,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({

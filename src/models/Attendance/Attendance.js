@@ -147,7 +147,7 @@ const AttendanceSchema = new mongoose.Schema({
     enum: Object.values(ATTENDANCE_STATUS_HISTORY),
   },
   timeDiff: {
-    type: 'string',
+    type: Number,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
