@@ -210,7 +210,10 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
   if (!workScheduleToBeUpdated) {
     throw new ResponseError(StatusCodes.BAD_REQUEST, 'Schedule not found!');
   }
-  const schedulePayload = {};
+  const schedulePayload = {
+    gracePeriod: payload?.gracePeriod,
+    overtimeTolerance: payload?.overtimeTolerance,
+  };
   const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
   await deleteShifts(shiftIdsToDelete, session);
 

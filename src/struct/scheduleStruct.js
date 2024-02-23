@@ -1,19 +1,12 @@
 const shiftStruct = require('./shiftStruct');
-const userStruct = require('./userStruct');
-const organizationStruct = require('./organizationStruct');
 
 const ScheduleData = ({
-  scheduleName, employeeIds, shifts,
-  organizationId, effectiveStartDate,
-  effectiveEndDate,
+  scheduleName, employeeIds, ...otherPayload
 }) => ({
   name: scheduleName,
   users: employeeIds,
-  shifts,
-  organizationId,
-  effectiveStartDate,
-  effectiveEndDate,
   isDefault: false,
+  ...otherPayload,
 });
 
 const UpdateScheduleData = ({
@@ -38,9 +31,12 @@ const ScheduleSnapshot = (schedule) => ({
   effectiveStartDate: schedule.effectiveStartDate,
   effectiveEndDate: schedule.effectiveEndDate,
   isDefault: schedule.isDefault,
+  gracePeriod: schedule.gracePeriod,
+  overtimeTolerance: schedule.overtimeTolerance,
 });
 
 const SchedulePreview = (schedule) => ({
+  id: schedule._id,
   name: schedule.name,
   shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
   users: schedule.users.map((user) => ({
@@ -56,6 +52,8 @@ const SchedulePreview = (schedule) => ({
   effectiveStartDate: schedule.effectiveStartDate,
   effectiveEndDate: schedule.effectiveEndDate,
   isDefault: schedule.isDefault,
+  gracePeriod: schedule.gracePeriod,
+  overtimeTolerance: schedule.overtimeTolerance,
 });
 
 module.exports = {

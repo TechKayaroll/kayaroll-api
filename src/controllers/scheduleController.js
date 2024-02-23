@@ -2,8 +2,8 @@ const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
 const scheduleService = require('../services/scheduleService');
 const scheduleStruct = require('../struct/scheduleStruct');
-const shiftStruct = require('../struct/shiftStruct');
 const { ResponseError } = require('../helpers/response');
+const Model = require('../models');
 
 exports.createSchedule = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -137,6 +137,24 @@ exports.getScheduleDetail = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: scheduleStruct.SchedulePreview(schedule),
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addGraceAndtolerancePeriod = async (req, res, next) => {
+  try {
+    const result = await Model.Schedule.updateMany(
+      { $or: [{ gracePeriod: { $exists: false } }, { overtimeTolerance: { $exists: false } }] },
+      { $set: { gracePeriod: 30, overtimeTolerance: 30 } },
+    );
+
+    console.log(`${result.nModified} documents updated successfully.`);
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: result,
       code: StatusCodes.OK,
     });
   } catch (error) {

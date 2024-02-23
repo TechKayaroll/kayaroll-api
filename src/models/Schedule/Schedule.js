@@ -82,6 +82,18 @@ const ScheduleSchema = new mongoose.Schema({
       onlyWhenSetToTrue: true,
     },
   },
+  gracePeriod: {
+    type: Number,
+    default: 30,
+    required: true,
+    min: 0,
+  },
+  overtimeTolerance: {
+    type: Number,
+    default: 30,
+    required: true,
+    min: 0,
+  },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Schedule = mongoose.model('Schedule', ScheduleSchema, 'schedule');
