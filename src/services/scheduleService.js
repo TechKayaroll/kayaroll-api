@@ -85,8 +85,6 @@ const setDefaultWorkschedule = async (organizationId, schedulePayload, session) 
     },
     {
       isDefault: true,
-      effectiveStartDate: schedulePayload.effectiveStartDate,
-      effectiveEndDate: schedulePayload.effectiveEndDate,
     },
     { new: true, session },
   );
@@ -115,20 +113,20 @@ const assignUserToSchedule = async (organizationId, userIds, scheduleId, session
     organizationId,
     users: { $in: userIds },
   }).session(session);
-
-  const bulkUpdates = existingSchedules.map((schedule) => {
+  const userIdToDelete = userIds.map((id) => id.toString());
+  const bulkUpdates = existingSchedules.map(async (schedule) => {
     if (schedule._id.toString() !== scheduleId) {
-      const updatedUserIds = schedule.users.filter((id) => !userIds.includes(id.toString()));
-      return Model.Schedule.updateOne(
+      const updatedUserIds = schedule.users.filter((id) => !userIdToDelete.includes(id.toString()));
+      const updatedSchedule = await Model.Schedule.updateOne(
         { _id: schedule._id },
         { users: updatedUserIds },
         { session },
       );
+      return updatedSchedule;
     }
     return null;
   });
   await Promise.all(bulkUpdates.filter((update) => update !== null));
-
   await Model.Schedule.updateOne(
     { _id: scheduleId, organizationId },
     { $addToSet: { users: { $each: userIds } } },
@@ -153,6 +151,8 @@ const createSchedule = async (organizationId, req, session) => {
     organizationId,
     scheduleName: req.body.scheduleName,
     shifts: createdShifts.map((shift) => shift._id),
+    effectiveEndDate: req.body.effectiveEndDate,
+    effectiveStartDate: req.body.effectiveStartDate,
   });
   const createdSchedule = await Model.Schedule.create(schedulePayload);
   await createdSchedule.save({ session });
@@ -213,6 +213,8 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
   const schedulePayload = {
     gracePeriod: payload?.gracePeriod,
     overtimeTolerance: payload?.overtimeTolerance,
+    effectiveEndDate: payload?.effectiveEndDate,
+    effectiveStartDate: payload?.effectiveStartDate,
   };
   const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
   await deleteShifts(shiftIdsToDelete, session);
@@ -244,25 +246,24 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
 
   let updatedSchedule = workScheduleToBeUpdated;
   if (payload.isDefault === true) {
-    const createdDefaultWorkSchedule = await setDefaultWorkschedule(
+    const updatedWorkSchedule = await setDefaultWorkschedule(
       organizationId,
-      {
-        scheduleId: workScheduleToBeUpdated._id,
-        effectiveEndDate: payload.effectiveEndDate,
-        effectiveStartDate: payload.effectiveStartDate,
-      },
+      { scheduleId: workScheduleToBeUpdated._id },
       session,
     );
-    updatedSchedule = createdDefaultWorkSchedule;
+    updatedSchedule = updatedWorkSchedule;
   } else {
     schedulePayload.isDefault = payload.isDefault;
   }
   await assignUserToSchedule(organizationId, employeeIds, updatedSchedule._id, session);
-
-  Object.assign(updatedSchedule, schedulePayload);
+  Object.entries(schedulePayload).forEach(([key, value]) => {
+    if (value !== undefined) {
+      updatedSchedule[key] = value;
+    }
+  });
   await updatedSchedule.save({ session });
 
-  const schedule = await findScheduleById(organizationId, updatedSchedule._id);
+  const schedule = await findScheduleById(organizationId, updatedSchedule._id, session);
   return schedule;
 };
 
