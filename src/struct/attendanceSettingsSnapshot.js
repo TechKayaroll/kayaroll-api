@@ -4,6 +4,7 @@ exports.AttendanceSnapshotData = (location) => ({
   locationLong: location.long,
   locationPlaceId: location.placeId,
   locationRadius: location.radius,
+  locationAddress: location?.address,
 });
 
 exports.AttendanceScheduleSnapshots = (schedules) => {
