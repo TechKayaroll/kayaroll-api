@@ -17,6 +17,7 @@ const { isWithinRadius } = require('../helpers/calculation');
 const struct = require('../struct/attendanceStruct');
 const scheduleStruct = require('../struct/scheduleStruct');
 const attendanceSettingsStruct = require('../struct/attendanceSettingsSnapshot');
+const utils = require('../utils/common');
 
 const attendanceModel = userModel;
 const logAttendance = async (reqUser, actionLogType, attendanceId, session) => {
@@ -118,6 +119,8 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
       session,
     ),
   ]);
+
+  const statusHistory = await utils.calculationStatusAttendanceHistory(attendanceType, req.body.attendanceDate);
   const attendancePayload = struct.Attendance(
     req,
     attendanceImageUrl,
@@ -126,6 +129,8 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     attSnapshot,
     attendanceSettingsStruct
       .AttendanceScheduleSnapshots(createdScheduleSnapshots),
+    statusHistory.status,
+    statusHistory.diffTime,
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
