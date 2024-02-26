@@ -35,10 +35,21 @@ const addDataToSheet = (worksheet, summaryReports) => {
 
   // Reports Data
   if (data && data.length > 0) {
-    const tableHeader = ['Date', 'In Time', 'Out Time', 'Status', 'Duration'];
+    const tableHeader = [
+      'Date',
+      'In Time',
+      'In Status',
+      'In Time Diff',
+      'Out Time',
+      'Out Status',
+      'Out Time Diff',
+      'Status',
+      'Duration',
+    ];
     worksheet.addRow(tableHeader);
 
-    data.forEach(({ date, attendanceLog }) => {
+    data.forEach((eachData) => {
+      const { date, attendanceLog } = eachData;
       const {
         attendanceIn, attendanceOut, duration, status,
       } = attendanceLog;
@@ -52,7 +63,11 @@ const addDataToSheet = (worksheet, summaryReports) => {
       const row = [
         attendanceDate,
         inTime,
+        attendanceIn?.attendanceStatusHistory,
+        attendanceIn?.timeDiff,
         outTime,
+        attendanceOut?.attendanceStatusHistory,
+        attendanceOut?.timeDiff,
         status,
         `${duration.hours} Hours ${duration.minutes} Minutes ${duration.seconds} Seconds`,
       ];
