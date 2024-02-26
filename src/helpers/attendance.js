@@ -1,5 +1,5 @@
-const dayjs = require('dayjs');
 const { ATTENDANCE_TYPE, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
+const {timeOnly} = require('./date');
 
 const pairInAndOut = (dayAttendances) => {
   const pairedAttendances = [];
@@ -53,7 +53,7 @@ const attendanceStatusHistory = (
   let status = ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE;
   let timeDiff = 0;
 
-  const currentDayIndex = dayjs(actualTime).day();
+  const currentDayIndex = timeOnly(actualTime).day();
   const currentDay = Object.values(SHIFT_DAY)[currentDayIndex];
 
   scheduleSnapshots.forEach((schedule) => {
@@ -62,10 +62,9 @@ const attendanceStatusHistory = (
       if (shift.day === currentDay) {
         shift.shifts.forEach((individualShift) => {
           const { startTime, endTime } = individualShift;
-          const workScheduleStart = dayjs(startTime);
-          const workScheduleEnd = dayjs(endTime);
-          const currentTime = dayjs(actualTime);
-
+          const workScheduleStart = timeOnly(startTime);
+          const workScheduleEnd = timeOnly(endTime);
+          const currentTime = timeOnly(actualTime);
           if (attendanceType === ATTENDANCE_TYPE.IN) {
             const isLate = currentTime.isAfter(
               workScheduleStart.add(gracePeriod, 'minute'),
@@ -75,7 +74,16 @@ const attendanceStatusHistory = (
               || currentTime.isBefore(workScheduleStart)
               || currentTime.isSame(workScheduleStart)
               || currentTime.isSame(workScheduleEnd);
-
+              // console.log(
+              //   {
+              //     workScheduleEnd: workScheduleEnd.format('HH:mm:ss'),
+              //     workScheduleStart: workScheduleEnd.format('HH:mm:ss'),
+              //     workScheduleStartAndGrace: workScheduleStart.add(gracePeriod, 'minute').format('HH:mm:ss'),
+              //     currentTime: workScheduleEnd.format('HH:mm:ss'),
+              //     isLate,
+              //     onTime,
+              //   }
+              // )
             if (isLate) {
               status = ATTENDANCE_STATUS_HISTORY.LATE;
               timeDiff = workScheduleStart

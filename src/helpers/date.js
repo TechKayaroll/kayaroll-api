@@ -42,10 +42,24 @@ const calculateTotalTime = (attendanceIn, attendanceOut) => (attendanceIn && att
   ? dayjs(attendanceOut.attendanceDate).diff(dayjs(attendanceIn.attendanceDate), 'second')
   : 0);
 
+const timeOnly = (date) => {
+  let dayjsDate;
+  if (!date) {
+    dayjsDate = dayjs();
+  } else if (date instanceof Date) {
+    dayjsDate = dayjs(date);
+  } else {
+    dayjsDate = dayjs(date);
+  }
+
+  return dayjsDate;
+};
+
 module.exports = {
   secondsToDuration,
   secondsToHMS,
   isWeekend,
   formatDate,
-  calculateTotalTime
+  calculateTotalTime,
+  timeOnly,
 };
