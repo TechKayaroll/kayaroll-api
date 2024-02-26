@@ -376,8 +376,12 @@ exports.attendanceAuditLogByAttendanceId = async (req, res, next) => {
 };
 
 exports.createAttendance = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const createdAttendances = await attendanceService.createBulkAttendance(req);
+    await session.commitTransaction();
+    console.log(createdAttendances);
     const dataResponse = createdAttendances.map(
       (attendance) => struct.AttendanceListAdmin(attendance),
     );
@@ -386,8 +390,11 @@ exports.createAttendance = async (req, res, next) => {
       data: dataResponse,
       code: StatusCodes.OK,
     });
-  } catch (e) {
-    next(e);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    await session.endSession();
   }
 };
 

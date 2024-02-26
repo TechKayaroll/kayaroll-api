@@ -443,90 +443,79 @@ const attendanceAuditLogList = async (attendanceId) => {
   }
 };
 
-const createBulkAttendance = async (req) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const {
-      employeeIds,
-    } = req.body;
-    const adminOrganizationId = req.user.organizationId;
-    const employeesUserOrg = await Promise.all(
-      employeeIds.map((userId) => userModel.UserOrganization
-        .findOne({
-          userId,
-          organizationId: adminOrganizationId,
-        })
+const createBulkAttendance = async (req, session) => {
+  const {
+    employeeIds,
+  } = req.body;
+  const adminOrganizationId = req.user.organizationId;
+  const employeesUserOrg = await Promise.all(
+    employeeIds.map((userId) => userModel.UserOrganization
+      .findOne({
+        userId: new mongoose.Types.ObjectId(userId),
+        organizationId: adminOrganizationId,
+      })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+        },
+      })),
+  );
+
+  const filteredUserOrg = employeesUserOrg
+    .filter((userOrgEmployee) => {
+      const isAdmin = userOrgEmployee?.userId?.roleId?.name === USER_ROLE.ADMIN;
+      return (userOrgEmployee && !isAdmin);
+    });
+  const createAndLogPromises = filteredUserOrg
+    .map(async (userOrgEmployee) => {
+      const [attLocationSnapshots, scheduleSnapshots] = await Promise.all([
+        createAttendanceLocationSnapshot(
+          userOrgEmployee?.userId,
+          adminOrganizationId,
+          session,
+        ),
+        findAttendanceScheduleSnapshots(
+          userOrgEmployee?.userId,
+          userOrgEmployee?.organizationId,
+          session,
+        ),
+      ]);
+      const attScheduleSnapshots = attendanceSettingsStruct
+        .AttendanceScheduleSnapshots(scheduleSnapshots);
+      const statusHistory = attendanceStatusHistory(
+        req.body.attendanceType,
+        req.body.attendanceDate,
+        attScheduleSnapshots,
+      );
+
+      const attendancePayload = struct.AdminAttendance(
+        req,
+        userOrgEmployee,
+        req.body,
+        attLocationSnapshots,
+        statusHistory,
+      );
+      const createdAttendance = await new userModel.Attendance(attendancePayload)
+        .save({ session });
+      const populatedAttendance = await userModel.Attendance.findById(createdAttendance._id)
+        .session(session)
+        .populate({ path: 'userOrganizationId' })
         .populate({
           path: 'userId',
           populate: {
             path: 'roleId',
           },
-        })),
-    );
+        });
+      await Promise.all([
+        logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
+        logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
+      ]);
+      return populatedAttendance;
+    });
 
-    const filteredUserOrg = employeesUserOrg
-      .filter((userOrgEmployee) => {
-        const isAdmin = userOrgEmployee?.userId?.roleId?.name === USER_ROLE.ADMIN;
-        return (userOrgEmployee && !isAdmin);
-      });
-
-    const createAndLogPromises = filteredUserOrg
-      .map(async (userOrgEmployee) => {
-        const [attLocationSnapshots, scheduleSnapshots] = await Promise.all([
-          createAttendanceLocationSnapshot(
-            userOrgEmployee?.userId,
-            adminOrganizationId,
-            session,
-          ),
-          findAttendanceScheduleSnapshots(
-            userOrgEmployee?.userId,
-            userOrgEmployee?.organizationId,
-            session,
-          ),
-        ]);
-        const attScheduleSnapshot = attendanceSettingsStruct
-          .AttendanceScheduleSnapshots(scheduleSnapshots);
-        const statusHistory = attendanceStatusHistory(
-          req.body.attendanceType,
-          req.body.attendanceDate,
-          attScheduleSnapshot,
-        );
-
-        const attendancePayload = struct.AdminAttendance(
-          req,
-          userOrgEmployee,
-          req.body,
-          attLocationSnapshots,
-          statusHistory,
-        );
-        const createdAttendance = await new userModel.Attendance(attendancePayload)
-          .save({ session });
-        const populatedAttendance = await userModel.Attendance.findById(createdAttendance._id)
-          .session(session)
-          .populate({ path: 'userOrganizationId' })
-          .populate({
-            path: 'userId',
-            populate: {
-              path: 'roleId',
-            },
-          });
-        await Promise.all([
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.CREATE, createdAttendance._id),
-          logAttendance(req.user, ATTENDANCE_AUDIT_LOG.APPROVE, createdAttendance._id),
-        ]);
-        await session.commitTransaction();
-        return populatedAttendance;
-      });
-
-    const createdAttendances = await Promise.all(createAndLogPromises);
-    return createdAttendances;
-  } catch (error) {
-    await session.abortTransaction();
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  } finally {
-    await session.endSession();
-  }
+  const createdAttendances = await Promise.all(createAndLogPromises);
+  return createdAttendances;
 };
 
 module.exports = {

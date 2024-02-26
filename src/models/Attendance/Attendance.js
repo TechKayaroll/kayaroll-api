@@ -44,6 +44,15 @@ const AttendanceSchema = new mongoose.Schema({
     enum: Object.values(ATTENDANCE_STATUS),
     default: ATTENDANCE_STATUS.PENDING,
   },
+  attendanceStatusHistory: {
+    type: String,
+    enum: Object.values(ATTENDANCE_STATUS_HISTORY),
+    default: ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+  },
+  timeDiff: {
+    type: Number,
+    default: 0,
+  },
   browser: {
     type: 'string',
     default: '',
@@ -147,14 +156,6 @@ const AttendanceSchema = new mongoose.Schema({
       immutable: true,
     },
   }],
-  attendanceStatusHistory: {
-    type: String,
-    enum: Object.values(ATTENDANCE_STATUS_HISTORY),
-  },
-  timeDiff: {
-    type: Number,
-    default: 0,
-  },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');

@@ -90,6 +90,7 @@ const AttendanceListAdmin = (val) => ({
   status: val.status,
   createdDate: val.createdDate,
   attendanceLocationSnapshots: val?.attendanceLocationSnapshots,
+  attendanceScheduleSnapshots: val?.attendanceScheduleSnapshots,
 });
 
 const AttendanceDataResult = (val, req) => ({
@@ -171,8 +172,8 @@ const AdminAttendance = (
   attendanceLocationSnapshots,
   scheduleSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
-  attendanceStatusHistory: historyStatus.status,
-  timeDiff: historyStatus.timeDiff || 0,
+  attendanceStatusHistory: historyStatus?.status,
+  timeDiff: historyStatus?.timeDiff || 0,
 });
 
 module.exports = {
