@@ -381,7 +381,6 @@ exports.createAttendance = async (req, res, next) => {
   try {
     const createdAttendances = await attendanceService.createBulkAttendance(req);
     await session.commitTransaction();
-    console.log(createdAttendances);
     const dataResponse = createdAttendances.map(
       (attendance) => struct.AttendanceListAdmin(attendance),
     );

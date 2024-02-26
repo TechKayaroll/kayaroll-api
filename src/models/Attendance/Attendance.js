@@ -79,27 +79,22 @@ const AttendanceSchema = new mongoose.Schema({
     locationName: {
       type: String,
       immutable: true,
-      required: true,
     },
     locationLat: {
       type: Number,
       immutable: true,
-      required: true,
     },
     locationLong: {
       type: Number,
       immutable: true,
-      required: true,
     },
     locationPlaceId: {
       type: String,
       immutable: true,
-      required: true,
     },
     locationRadius: {
       type: Number,
       immutable: true,
-      required: true,
     },
     locationAddress: {
       type: String,
