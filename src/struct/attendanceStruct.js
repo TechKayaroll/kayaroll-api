@@ -27,6 +27,7 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
+  attendanceLocationSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
   attendanceStatusHistory: historyStatus.status,
   timeDiff: historyStatus.timeDiff || 0,

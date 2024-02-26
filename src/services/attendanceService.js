@@ -74,7 +74,7 @@ const uploadAttendanceImage = async (req, attendanceType) => {
   }
 };
 
-const createAttendanceSnapshot = async (userId, organizationId, session) => {
+const createAttendanceLocationSnapshot = async (userId, organizationId, session) => {
   const userOrgLocations = await userModel.UserOrganizationLocation.find({
     userId,
     organizationId,
@@ -83,10 +83,10 @@ const createAttendanceSnapshot = async (userId, organizationId, session) => {
     .populate({
       path: 'locationId',
     });
-  const newAttSnapshots = userOrgLocations.map(
+  const locSnapshots = userOrgLocations.map(
     ({ locationId }) => attendanceSettingsStruct.AttendanceSnapshotData(locationId),
   );
-  return newAttSnapshots;
+  return locSnapshots;
 };
 
 const findAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
@@ -106,8 +106,8 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   };
   const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery).session(session);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
-  const [attSnapshot, createdScheduleSnapshots] = await Promise.all([
-    createAttendanceSnapshot(
+  const [attLocationSnapshots, createdScheduleSnapshots] = await Promise.all([
+    createAttendanceLocationSnapshot(
       userOrganization.userId,
       userOrganization.organizationId,
       session,
@@ -130,7 +130,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     attendanceImageUrl,
     attendanceType,
     userOrganization._id,
-    attSnapshot,
+    attLocationSnapshots,
     attScheduleSnapshot,
     statusHistory,
   );
@@ -145,10 +145,10 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   let inRadius = false;
   let inRadiusSnapshots = [];
   let scheduleSnapshots = [];
-  if (attSnapshot?.length === 0) {
+  if (attLocationSnapshots?.length === 0) {
     inRadius = true;
   } else {
-    inRadiusSnapshots = attSnapshot.filter((snapshot) => {
+    inRadiusSnapshots = attLocationSnapshots.filter((snapshot) => {
       const { locationLat, locationLong, locationRadius } = snapshot;
       const centerCoordinates = [locationLat, locationLong];
       const otherCoordinates = [savedAttendance?.lat, savedAttendance?.long];
@@ -163,7 +163,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     );
   }
   return {
-    savedAttendance, inRadius, inRadiusSnapshots, scheduleSnapshots,
+    savedAttendance, inRadius, inRadiusSnapshots, scheduleSnapshots, attLocationSnapshots,
   };
 };
 const attendanceDetail = async (attendanceId) => {
@@ -473,7 +473,7 @@ const createBulkAttendance = async (req) => {
 
     const createAndLogPromises = filteredUserOrg
       .map(async (userOrgEmployee) => {
-        const newAttendanceSnapshot = await createAttendanceSnapshot(
+        const newAttendanceSnapshot = await createAttendanceLocationSnapshot(
           userOrgEmployee?.userId,
           adminOrganizationId,
           session,
