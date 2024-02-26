@@ -119,6 +119,9 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
+  attendanceStatusHistory: attendance?.attendanceStatusHistory
+  || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+  timeDiff: attendance?.timeDiff || 0,
   attendanceLocationSnapshots: attendance.attendanceLocationSnapshots,
 });
 
@@ -144,7 +147,14 @@ const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
   return attendance;
 };
 
-const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceLocationSnapshots) => ({
+const AdminAttendance = (
+  req,
+  employeeUserOrg,
+  requestBody,
+  attendanceLocationSnapshots,
+  scheduleSnapshots,
+  historyStatus,
+) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
   userOrganizationId: new mongoose.Types.ObjectId(employeeUserOrg._id),
@@ -159,6 +169,10 @@ const AdminAttendance = (req, employeeUserOrg, requestBody, attendanceLocationSn
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
   attendanceLocationSnapshots,
+  scheduleSnapshots,
+  attendanceScheduleSnapshots: scheduleSnapshots,
+  attendanceStatusHistory: historyStatus.status,
+  timeDiff: historyStatus.timeDiff || 0,
 });
 
 module.exports = {

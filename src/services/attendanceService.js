@@ -473,16 +473,32 @@ const createBulkAttendance = async (req) => {
 
     const createAndLogPromises = filteredUserOrg
       .map(async (userOrgEmployee) => {
-        const newAttendanceSnapshot = await createAttendanceLocationSnapshot(
-          userOrgEmployee?.userId,
-          adminOrganizationId,
-          session,
+        const [attLocationSnapshots, scheduleSnapshots] = await Promise.all([
+          createAttendanceLocationSnapshot(
+            userOrgEmployee?.userId,
+            adminOrganizationId,
+            session,
+          ),
+          findAttendanceScheduleSnapshots(
+            userOrgEmployee?.userId,
+            userOrgEmployee?.organizationId,
+            session,
+          ),
+        ]);
+        const attScheduleSnapshot = attendanceSettingsStruct
+          .AttendanceScheduleSnapshots(scheduleSnapshots);
+        const statusHistory = attendanceStatusHistory(
+          req.body.attendanceType,
+          req.body.attendanceDate,
+          attScheduleSnapshot,
         );
+
         const attendancePayload = struct.AdminAttendance(
           req,
           userOrgEmployee,
           req.body,
-          newAttendanceSnapshot,
+          attLocationSnapshots,
+          statusHistory,
         );
         const createdAttendance = await new userModel.Attendance(attendancePayload)
           .save({ session });
