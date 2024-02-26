@@ -3,7 +3,7 @@ const dayjs = require('dayjs');
 const {
   secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
-const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS } = require('../utils/constants');
+const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
 
 const Attendance = (
   req,
@@ -27,7 +27,6 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
-  attendanceLocationSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
   attendanceStatusHistory: historyStatus.status,
   timeDiff: historyStatus.timeDiff || 0,
@@ -61,6 +60,8 @@ const AttendanceList = (val) => ({
   attendanceId: val._id,
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
+  attendanceStatusHistory: val?.attendanceStatusHistory,
+  timeDiff: val?.timeDiff,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
   datetime: val.attendanceDate,
   lat: val.lat,
@@ -78,6 +79,8 @@ const AttendanceListAdmin = (val) => ({
   attendanceId: val._id.toString(),
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
+  attendanceStatusHistory: val?.attendanceStatusHistory || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+  timeDiff: val?.timeDiff || 0,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
   employeeName: val.userId?.fullname || 'unknown',
   datetime: val.attendanceDate,
