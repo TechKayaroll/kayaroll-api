@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 const UserOrganization = require('../Relationship/UserOrganization');
-const { ATTENDANCE_TYPE, ATTENDANCE_STATUS, SHIFT_DAY } = require('../../utils/constants');
+const {
+  ATTENDANCE_TYPE, ATTENDANCE_STATUS, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY,
+} = require('../../utils/constants');
 
 const AttendanceSchema = new mongoose.Schema({
   userId: {
@@ -93,7 +95,6 @@ const AttendanceSchema = new mongoose.Schema({
     locationAddress: {
       type: String,
       immutable: true,
-      required: true,
     },
   }],
   attendanceScheduleSnapshots: [{
@@ -146,6 +147,14 @@ const AttendanceSchema = new mongoose.Schema({
       immutable: true,
     },
   }],
+  attendanceStatusHistory: {
+    type: String,
+    enum: Object.values(ATTENDANCE_STATUS_HISTORY),
+  },
+  timeDiff: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema, 'attendance');

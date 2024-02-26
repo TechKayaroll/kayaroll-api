@@ -163,8 +163,6 @@ const createSchedule = async (organizationId, req, session) => {
   if (req.body.isDefault) {
     const createdDefaultWorkSchedule = await setDefaultWorkschedule(organizationId, {
       scheduleId: createdSchedule._id,
-      effectiveEndDate: req.body.effectiveEndDate,
-      effectiveStartDate: req.body.effectiveStartDate,
     }, session);
     createdScheduleResult = createdDefaultWorkSchedule;
   }

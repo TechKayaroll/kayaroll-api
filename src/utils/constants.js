@@ -39,6 +39,14 @@ const SHIFT_DAY = {
   SATURDAY: 'sat',
 };
 
+const ATTENDANCE_STATUS_HISTORY = {
+  LATE: 'late',
+  EARLY_DEPARTURE: 'early-departure',
+  OVERTIME: 'overtime',
+  ON_TIME: 'on-time',
+  NO_SCHEDULE: 'no-schedule',
+};
+
 const GOOGLE_MAP_API_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
 module.exports = {
@@ -49,4 +57,5 @@ module.exports = {
   USER_ROLE,
   SHIFT_DAY,
   GOOGLE_MAP_API_BASE_URL,
+  ATTENDANCE_STATUS_HISTORY,
 };

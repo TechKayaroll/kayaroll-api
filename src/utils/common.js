@@ -11,6 +11,7 @@ const generateUserIdByNameAndIndex = (name, indexCount) => {
   const uniqueId = `${prefix}-${randomString}${paddedCounter}`;
   return uniqueId;
 };
+
 const generateCompanyCode = (companyName) => {
   const companyCode = generateCodeByString(3, companyName);
   const rndStr = getRandomString(3);

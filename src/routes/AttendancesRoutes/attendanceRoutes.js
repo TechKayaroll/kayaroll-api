@@ -28,7 +28,12 @@ const AttendanceRoutes = () => {
   );
   ChildRouter.get('/list', validate.validate(null, schema.schemaAttendanceList), CONTROLLER.attendanceList);
   ChildRouter.get('/details', validate.validate(null, schema.schemaEmployeeAttendanceDetails), authorizationByRole([USER_ROLE.EMPLOYEE]), CONTROLLER.employeeAttendanceDetails);
-  ChildRouter.get('/admin/dashboard', authorizationByRole([USER_ROLE.ADMIN]), validate.validate(null, schema.schemaAttendanceListAdmin), CONTROLLER.attendanceListAdmin);
+  ChildRouter.get(
+    '/admin/dashboard',
+    authorizationByRole([USER_ROLE.ADMIN]),
+    validate.validate(null, schema.schemaAttendanceListAdmin),
+    CONTROLLER.attendanceListAdmin,
+  );
   ChildRouter.post('/admin/approval', authorizationByRole([USER_ROLE.ADMIN]), validate.validate(schema.schemaApproval), CONTROLLER.attendanceApproval);
   ChildRouter.put('/admin/update', authorizationByRole([USER_ROLE.ADMIN]), validate.validate(schema.schemaAttendanceUpdate), CONTROLLER.attendanceUpdate);
   ChildRouter.post('/admin/report', authorizationByRole([USER_ROLE.ADMIN]), validate.validate(null, schema.schemaAttendanceReportAdmin), CONTROLLER.attendanceReport);
