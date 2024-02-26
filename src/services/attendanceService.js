@@ -91,12 +91,14 @@ const createAttendanceLocationSnapshot = async (userId, organizationId, session)
 
 const findAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
   const scheduleSnapshots = await userModel.Schedule
-    .find({ users: userId, organizationId })
+    .find({
+      users: new mongoose.Types.ObjectId(userId),
+      organizationId: new mongoose.Types.ObjectId(organizationId),
+    })
     .populate({ path: 'users' })
     .populate({ path: 'shifts' })
     .populate({ path: 'organizationId' })
     .session(session);
-
   return scheduleSnapshots;
 };
 const createAttendance = async (req, attendanceImageUrl, attendanceType, session) => {
@@ -488,12 +490,12 @@ const createBulkAttendance = async (req, session) => {
         req.body.attendanceDate,
         attScheduleSnapshots,
       );
-
       const attendancePayload = struct.AdminAttendance(
         req,
         userOrgEmployee,
         req.body,
         attLocationSnapshots,
+        attScheduleSnapshots,
         statusHistory,
       );
       const createdAttendance = await new userModel.Attendance(attendancePayload)
