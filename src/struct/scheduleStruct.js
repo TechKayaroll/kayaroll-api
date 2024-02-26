@@ -23,19 +23,16 @@ const SchedulePagination = (page, limit, totalData) => ({
   currentPage: page,
 });
 
-const ScheduleSnapshot = (attendanceSchedule) => {
-  console.log(attendanceSchedule, 'suini');
-  return ({
-    name: attendanceSchedule.scheduleName,
-    shifts: attendanceSchedule?.scheduleShifts?.map(shiftStruct.SingleShiftData),
-    organizationId: attendanceSchedule.organizationId,
-    effectiveStartDate: attendanceSchedule.effectiveStartDate,
-    effectiveEndDate: attendanceSchedule.effectiveEndDate,
-    isDefault: attendanceSchedule.isDefault,
-    gracePeriod: attendanceSchedule.gracePeriod,
-    overtimeTolerance: attendanceSchedule.overtimeTolerance,
-  });
-};
+const ScheduleSnapshot = (attendanceSchedule) => ({
+  name: attendanceSchedule.scheduleName,
+  shifts: attendanceSchedule?.scheduleShifts?.map(shiftStruct.SingleShiftData),
+  organizationId: attendanceSchedule.organizationId,
+  effectiveStartDate: attendanceSchedule.effectiveStartDate,
+  effectiveEndDate: attendanceSchedule.effectiveEndDate,
+  isDefault: attendanceSchedule.isDefault,
+  gracePeriod: attendanceSchedule.gracePeriod,
+  overtimeTolerance: attendanceSchedule.overtimeTolerance,
+});
 
 const SchedulePreview = (schedule) => ({
   id: schedule._id,

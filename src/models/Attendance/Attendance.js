@@ -144,10 +144,12 @@ const AttendanceSchema = new mongoose.Schema({
     },
   }],
   attendanceStatusHistory: {
+    type: String,
     enum: Object.values(ATTENDANCE_STATUS_HISTORY),
   },
   timeDiff: {
     type: Number,
+    default: 0,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 

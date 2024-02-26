@@ -12,8 +12,7 @@ const Attendance = (
   userOrganizationId,
   attendanceLocationSnapshots,
   scheduleSnapshots,
-  statusHisory,
-  timeDiff,
+  historyStatus,
 ) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -30,8 +29,8 @@ const Attendance = (
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
   attendanceLocationSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
-  attendanceStatusHistory: statusHisory,
-  timeDiff: timeDiff || 0,
+  attendanceStatusHistory: historyStatus.status,
+  timeDiff: historyStatus.timeDiff || 0,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({

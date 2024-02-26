@@ -6,7 +6,7 @@ const { ResponseError } = require('../helpers/response');
 const {
   secondsToDuration, calculateTotalTime, isWeekend,
 } = require('../helpers/date');
-const { pairInAndOut } = require('../helpers/attendance');
+const { pairInAndOut, attendanceStatusHistory } = require('../helpers/attendance');
 const userModel = require('../models');
 const uploadGcp = require('../helpers/gcp');
 const {
@@ -17,7 +17,6 @@ const { isWithinRadius } = require('../helpers/calculation');
 const struct = require('../struct/attendanceStruct');
 const scheduleStruct = require('../struct/scheduleStruct');
 const attendanceSettingsStruct = require('../struct/attendanceSettingsSnapshot');
-const utils = require('../utils/common');
 
 const attendanceModel = userModel;
 const logAttendance = async (reqUser, actionLogType, attendanceId, session) => {
@@ -119,22 +118,24 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
       session,
     ),
   ]);
-
-  const statusHistory = await utils.calculationStatusAttendanceHistory(attendanceType, req.body.attendanceDate);
+  const attScheduleSnapshot = attendanceSettingsStruct
+    .AttendanceScheduleSnapshots(createdScheduleSnapshots);
+  const statusHistory = attendanceStatusHistory(
+    attendanceType,
+    req.body.attendanceDate,
+    attScheduleSnapshot,
+  );
   const attendancePayload = struct.Attendance(
     req,
     attendanceImageUrl,
     attendanceType,
     userOrganization._id,
     attSnapshot,
-    attendanceSettingsStruct
-      .AttendanceScheduleSnapshots(createdScheduleSnapshots),
-    statusHistory.status,
-    statusHistory.diffTime,
+    attScheduleSnapshot,
+    statusHistory,
   );
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
-
   await logAttendance(
     req.user,
     ATTENDANCE_AUDIT_LOG.CREATE,
@@ -156,7 +157,6 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     });
     inRadius = inRadiusSnapshots.length > 0;
   }
-  console.log(JSON.stringify(savedAttendance, null, 2));
   if (savedAttendance?.attendanceScheduleSnapshots.length > 0) {
     scheduleSnapshots = savedAttendance?.attendanceScheduleSnapshots?.map(
       (schedule) => scheduleStruct.ScheduleSnapshot(schedule),
