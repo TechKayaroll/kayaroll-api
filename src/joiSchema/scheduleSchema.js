@@ -101,8 +101,8 @@ exports.schemaUpdateScheduleById = Joi.object({
           'date.min': 'effectiveEndDate must be tomorrow onwards.',
         }),
     }),
-  gracePeriod: Joi.number().min(0),
-  overtimeTolerance: Joi.number().min(0),
+  gracePeriod: Joi.number().min(0).optional(),
+  overtimeTolerance: Joi.number().min(0).optional(),
 });
 
 exports.schemaDeleteSchedule = Joi.object({

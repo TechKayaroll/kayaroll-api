@@ -7,6 +7,7 @@ exports.locationData = (location) => ({
   lat: location.lat,
   long: location.long,
   radius: location.radius,
+  address: location?.address || '',
   organizationId: location.organizationId,
 });
 
@@ -16,6 +17,7 @@ exports.createLocationData = (reqBody, organizationId) => ({
   lat: reqBody.lat,
   long: reqBody.long,
   radius: reqBody.radius,
+  address: reqBody.address,
   organizationId,
 });
 
@@ -26,6 +28,7 @@ exports.locationOrganizationData = (locationOrg) => ({
   lat: locationOrg.lat,
   long: locationOrg.long,
   radius: locationOrg.radius,
+  address: locationOrg.address,
   organizationId: locationOrg.organizationId._id,
   organizationName: locationOrg.organizationId.name,
   invitationCode: locationOrg.organizationId.invitationCode,
@@ -37,6 +40,7 @@ exports.updateLocationData = (locationPayload) => ({
   lat: locationPayload?.lat,
   long: locationPayload?.long,
   radius: locationPayload?.radius,
+  address: locationPayload?.address,
 });
 
 exports.geocodeResults = (result) => ({
