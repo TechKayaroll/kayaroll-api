@@ -487,10 +487,9 @@ const createBulkAttendance = async (req, session) => {
         .AttendanceScheduleSnapshots(scheduleSnapshots);
       const statusHistory = attendanceStatusHistory(
         req.body.attendanceType,
-        req.body.attendanceDate,
+        req.body.datetime,
         attScheduleSnapshots,
       );
-      console.log(statusHistory);
       const attendancePayload = struct.AdminAttendance(
         req,
         userOrgEmployee,

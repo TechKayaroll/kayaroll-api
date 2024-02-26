@@ -1,5 +1,5 @@
+const dayjs = require('dayjs');
 const { ATTENDANCE_TYPE, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
-const {timeOnly} = require('./date');
 
 const pairInAndOut = (dayAttendances) => {
   const pairedAttendances = [];
@@ -45,26 +45,26 @@ const pairInAndOut = (dayAttendances) => {
   return pairedAttendances;
 };
 
-const attendanceStatusHistory = (
+function attendanceStatusHistory(
   attendanceType,
   actualTime,
-  scheduleSnapshots = [],
-) => {
+  attendanceSchedule,
+) {
   let status = ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE;
   let timeDiff = 0;
 
-  const currentDayIndex = timeOnly(actualTime).day();
+  const currentDayIndex = dayjs(actualTime).day();
   const currentDay = Object.values(SHIFT_DAY)[currentDayIndex];
 
-  scheduleSnapshots.forEach((schedule) => {
-    const { gracePeriod, overtimeTolerance, scheduleShifts = [] } = schedule;
+  attendanceSchedule.forEach((schedule) => {
+    const { gracePeriod, overtimeTolerance, scheduleShifts } = schedule;
     scheduleShifts.forEach((shift) => {
       if (shift.day === currentDay) {
         shift.shifts.forEach((individualShift) => {
           const { startTime, endTime } = individualShift;
-          const workScheduleStart = timeOnly(startTime);
-          const workScheduleEnd = timeOnly(endTime);
-          const currentTime = timeOnly(actualTime);
+          const workScheduleStart = dayjs(startTime);
+          const workScheduleEnd = dayjs(endTime);
+          const currentTime = dayjs(actualTime);
           if (attendanceType === ATTENDANCE_TYPE.IN) {
             const isLate = currentTime.isAfter(
               workScheduleStart.add(gracePeriod, 'minute'),
@@ -74,16 +74,7 @@ const attendanceStatusHistory = (
               || currentTime.isBefore(workScheduleStart)
               || currentTime.isSame(workScheduleStart)
               || currentTime.isSame(workScheduleEnd);
-              // console.log(
-              //   {
-              //     workScheduleEnd: workScheduleEnd.format('HH:mm:ss'),
-              //     workScheduleStart: workScheduleEnd.format('HH:mm:ss'),
-              //     workScheduleStartAndGrace: workScheduleStart.add(gracePeriod, 'minute').format('HH:mm:ss'),
-              //     currentTime: workScheduleEnd.format('HH:mm:ss'),
-              //     isLate,
-              //     onTime,
-              //   }
-              // )
+
             if (isLate) {
               status = ATTENDANCE_STATUS_HISTORY.LATE;
               timeDiff = workScheduleStart
@@ -93,6 +84,20 @@ const attendanceStatusHistory = (
               status = ATTENDANCE_STATUS_HISTORY.ON_TIME;
               timeDiff = 0;
             }
+            // console.log({
+            //   actualTime,
+            //   isLate,
+            //   onTime,
+            //   currentTime: currentTime.format('HH:mm:ss'),
+            //   startTime: workScheduleStart.format('HH:mm:ss'),
+            //   endTime: workScheduleEnd.format('HH:mm:ss'),
+            //   startTimeGracePeriod: workScheduleStart
+            //     .add(gracePeriod, 'minutes')
+            //     .format('HH:mm:ss'),
+            //   endTimeOvertimeTolerance: workScheduleEnd
+            //     .add(overtimeTolerance, 'minutes')
+            //     .format('HH:mm:ss'),
+            // });
           } else if (attendanceType === ATTENDANCE_TYPE.OUT) {
             const isEarlyDeparture = currentTime.isBefore(workScheduleEnd)
               && currentTime.isAfter(workScheduleStart.add(gracePeriod, 'minute'));
@@ -124,6 +129,20 @@ const attendanceStatusHistory = (
               status = ATTENDANCE_STATUS_HISTORY.ON_TIME;
               timeDiff = 0;
             }
+            // console.log({
+            //   isEarlyDeparture,
+            //   isOvertime,
+            //   onTime,
+            //   currentTime: currentTime.format('HH:mm:ss'),
+            //   startTime: workScheduleStart.format('HH:mm:ss'),
+            //   endTime: workScheduleEnd.format('HH:mm:ss'),
+            //   startTimeGracePeriod: workScheduleStart
+            //     .add(gracePeriod, 'minutes')
+            //     .format('HH:mm:ss'),
+            //   endTimeOvertimeTolerance: workScheduleEnd
+            //     .add(overtimeTolerance, 'minutes')
+            //     .format('HH:mm:ss'),
+            // });
           }
         });
       }
@@ -131,7 +150,7 @@ const attendanceStatusHistory = (
   });
 
   return { status, timeDiff };
-};
+}
 
 module.exports = {
   pairInAndOut,
