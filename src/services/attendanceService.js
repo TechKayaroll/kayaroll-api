@@ -452,9 +452,9 @@ const createBulkAttendance = async (req) => {
     } = req.body;
     const adminOrganizationId = req.user.organizationId;
     const employeesUserOrg = await Promise.all(
-      employeeIds.map((uniqueUserId) => userModel.UserOrganization
+      employeeIds.map((userId) => userModel.UserOrganization
         .findOne({
-          uniqueUserId,
+          userId,
           organizationId: adminOrganizationId,
         })
         .populate({
