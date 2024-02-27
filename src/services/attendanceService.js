@@ -89,11 +89,13 @@ const createAttendanceLocationSnapshot = async (userId, organizationId, session)
   return locSnapshots;
 };
 
-const findAttendanceScheduleSnapshots = async (userId, organizationId, session) => {
+const findAttendanceScheduleSnapshots = async (userId, organizationId, attendanceDate, session) => {
   const scheduleSnapshots = await userModel.Schedule
     .find({
       users: new mongoose.Types.ObjectId(userId),
       organizationId: new mongoose.Types.ObjectId(organizationId),
+      effectiveStartDate: { $lte: attendanceDate },
+      effectiveEndDate: { $gte: attendanceDate },
     })
     .populate({ path: 'users' })
     .populate({ path: 'shifts' })
@@ -108,6 +110,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   };
   const userOrganization = await userModel.UserOrganization.findOne(userOrgQuery).session(session);
   if (!userOrganization) throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'UserOrganization is not exist!');
+  const attendanceDate = dayjs().toISOString();
   const [attLocationSnapshots, createdScheduleSnapshots] = await Promise.all([
     createAttendanceLocationSnapshot(
       userOrganization.userId,
@@ -117,6 +120,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     findAttendanceScheduleSnapshots(
       userOrganization.userId,
       userOrganization.organizationId,
+      attendanceDate,
       session,
     ),
   ]);
@@ -124,13 +128,14 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     .AttendanceScheduleSnapshots(createdScheduleSnapshots);
   const statusHistory = attendanceStatusHistory(
     attendanceType,
-    req.body.attendanceDate,
+    attendanceDate,
     attScheduleSnapshot,
   );
   const attendancePayload = struct.Attendance(
     req,
     attendanceImageUrl,
     attendanceType,
+    attendanceDate,
     userOrganization._id,
     attLocationSnapshots,
     attScheduleSnapshot,
@@ -480,6 +485,7 @@ const createBulkAttendance = async (req, session) => {
         findAttendanceScheduleSnapshots(
           userOrgEmployee?.userId,
           userOrgEmployee?.organizationId,
+          req.body.datetime,
           session,
         ),
       ]);

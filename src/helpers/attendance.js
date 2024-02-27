@@ -55,6 +55,7 @@ function attendanceStatusHistory(
 
   const currentDayIndex = dayjs(actualTime).day();
   const currentDay = Object.values(SHIFT_DAY)[currentDayIndex];
+  const currentTime = dayjs(actualTime);
 
   attendanceSchedule.forEach((schedule) => {
     const { gracePeriod, overtimeTolerance, scheduleShifts } = schedule;
@@ -64,7 +65,6 @@ function attendanceStatusHistory(
           const { startTime, endTime } = individualShift;
           const workScheduleStart = dayjs(startTime);
           const workScheduleEnd = dayjs(endTime);
-          const currentTime = dayjs(actualTime);
           if (attendanceType === ATTENDANCE_TYPE.IN) {
             const isLate = currentTime.isAfter(
               workScheduleStart.add(gracePeriod, 'minute'),
