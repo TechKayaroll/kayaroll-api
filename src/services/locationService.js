@@ -33,11 +33,13 @@ const getUserLocationProfile = async () => {
 };
 
 const getLocationProfileList = async (orgId, reqQuery) => {
-  const { page = 1, limit = 5 } = reqQuery;
+  const { page = 1, limit = 5, name } = reqQuery;
   const skip = (page - 1) * limit;
 
+  const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
+
   const orgLocation = await Model.Location
-    .find({ organizationId: orgId })
+    .find({ organizationId: orgId, ...nameFilter })
     .populate({ path: 'organizationId' })
     .skip(skip)
     .limit(limit);
