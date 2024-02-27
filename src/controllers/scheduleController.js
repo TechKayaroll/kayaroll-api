@@ -117,7 +117,7 @@ exports.updateScheduleById = async (req, res, next) => {
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: updatedSchedule,
+      data: scheduleStruct.SchedulePreview(updatedSchedule),
       code: StatusCodes.OK,
     });
   } catch (error) {

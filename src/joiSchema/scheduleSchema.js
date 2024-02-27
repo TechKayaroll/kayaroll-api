@@ -17,7 +17,6 @@ exports.schemaCreateSchedule = Joi.object({
   ).length(7).required(),
   effectiveStartDate: Joi.date()
     .min('now')
-    .iso()
     .when('isDefault', {
       is: true,
       then: Joi.date().required()
@@ -31,12 +30,10 @@ exports.schemaCreateSchedule = Joi.object({
     }),
   effectiveEndDate: Joi.date()
     .min('now')
-    .iso()
     .when('effectiveStartDate', {
       is: Joi.exist(),
       then: Joi.date()
         .min(Joi.ref('effectiveStartDate'))
-        .iso()
         .required()
         .messages({
           'date.min': 'effectiveEndDate must not be before effectiveStartDate.',
@@ -44,7 +41,6 @@ exports.schemaCreateSchedule = Joi.object({
         }),
       otherwise: Joi.date()
         .min('now')
-        .iso()
         .optional()
         .messages({
           'date.min': 'effectiveEndDate must be tomorrow onwards.',
@@ -68,7 +64,6 @@ exports.schemaUpdateScheduleById = Joi.object({
   ).length(7),
   effectiveStartDate: Joi.date()
     .min('now')
-    .iso()
     .when('isDefault', {
       is: true,
       then: Joi.date().required()
@@ -82,12 +77,10 @@ exports.schemaUpdateScheduleById = Joi.object({
     }),
   effectiveEndDate: Joi.date()
     .min('now')
-    .iso()
     .when('effectiveStartDate', {
       is: Joi.exist(),
       then: Joi.date()
         .min(Joi.ref('effectiveStartDate'))
-        .iso()
         .required()
         .messages({
           'date.min': 'effectiveEndDate must not be before effectiveStartDate.',
@@ -95,7 +88,6 @@ exports.schemaUpdateScheduleById = Joi.object({
         }),
       otherwise: Joi.date()
         .min('now')
-        .iso()
         .optional()
         .messages({
           'date.min': 'effectiveEndDate must be tomorrow onwards.',
@@ -114,7 +106,6 @@ exports.schemaDeleteSchedule = Joi.object({
 exports.schemaSetDefaultSchedule = Joi.object({
   effectiveStartDate: Joi.date()
     .min('now')
-    .iso()
     .required()
     .messages({
       'date.min': 'effectiveStartDate must be tomorrow onwards.',
@@ -122,7 +113,6 @@ exports.schemaSetDefaultSchedule = Joi.object({
     }),
   effectiveEndDate: Joi.date()
     .min(Joi.ref('effectiveStartDate'))
-    .iso()
     .required()
     .messages({
       'date.min': 'EffectiveEndDate must not be before effectiveStartDate.',

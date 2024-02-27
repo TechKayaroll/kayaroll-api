@@ -214,8 +214,6 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     effectiveEndDate: payload?.effectiveEndDate,
     effectiveStartDate: payload?.effectiveStartDate,
   };
-  const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
-  await deleteShifts(shiftIdsToDelete, session);
 
   const employeeIds = await userService.validateEmployeeIds(
     payload.employeeIds,
@@ -238,6 +236,8 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
   }
 
   if (payload.shifts) {
+    const shiftIdsToDelete = workScheduleToBeUpdated.shifts;
+    await deleteShifts(shiftIdsToDelete, session);
     const createdShifts = await createShifts(payload.shifts, session);
     schedulePayload.shifts = createdShifts.map((shift) => shift._id);
   }
@@ -254,6 +254,7 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     schedulePayload.isDefault = payload.isDefault;
   }
   await assignUserToSchedule(organizationId, employeeIds, updatedSchedule._id, session);
+  console.log(schedulePayload)
   Object.entries(schedulePayload).forEach(([key, value]) => {
     if (value !== undefined) {
       updatedSchedule[key] = value;

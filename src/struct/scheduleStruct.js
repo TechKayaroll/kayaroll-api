@@ -1,3 +1,4 @@
+const dayjs = require('dayjs');
 const shiftStruct = require('./shiftStruct');
 
 const ScheduleData = ({
@@ -50,6 +51,8 @@ const SchedulePreview = (schedule) => ({
   },
   effectiveStartDate: schedule.effectiveStartDate,
   effectiveEndDate: schedule.effectiveEndDate,
+  formattedStartDate: dayjs(schedule.effectiveStartDate).format('DD MMM YYYY, HH:mm:ss'),
+  formattedEndDate: dayjs(schedule.effectiveEndDate).format('DD MMM YYYY, HH:mm:ss'),
   isDefault: schedule.isDefault,
   gracePeriod: schedule.gracePeriod,
   overtimeTolerance: schedule.overtimeTolerance,

@@ -50,6 +50,7 @@ const AttendanceRoutes = () => {
 
   ChildRouter.get('//audit-log/:id', CONTROLLER.attendanceAuditLogByAttendanceId);
   ChildRouter.get('/:id', CONTROLLER.attendanceDetailById);
+
   return ChildRouter;
 };
 

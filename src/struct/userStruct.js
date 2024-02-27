@@ -29,6 +29,7 @@ const UserRegistrationResponse = (userOrg) => ({
   fullname: userOrg.userId.fullname || 'unknown',
   email: userOrg.userId.email,
   role: userOrg.userId.roleId.name,
+  organizationId: userOrg.organizationId._id,
   organization: userOrg.organizationId.name,
   invitationCode: userOrg.organizationId.invitationCode,
 });
