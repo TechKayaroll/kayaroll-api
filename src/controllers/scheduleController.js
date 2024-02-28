@@ -88,7 +88,7 @@ exports.getScheduleList = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {
-        list,
+        list: list.map((schedule) => scheduleStruct.SchedulePreview(schedule)),
         pagination,
       },
       code: StatusCodes.OK,

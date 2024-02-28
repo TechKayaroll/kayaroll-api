@@ -30,7 +30,7 @@ const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
 
   const scheduleUserOrgPairs = await Promise.all(userOrgPromises);
   const enrichedSchedules = scheduleUserOrgPairs.map(({ schedule, userOrgs }) => ({
-    ...schedule.toObject(),
+    ...schedule,
     users: userOrgs,
   }));
   return enrichedSchedules;
@@ -65,10 +65,8 @@ const getScheduleList = async (organizationId, {
     Model.Schedule.countDocuments({ organizationId, ...nameFilter }),
   ]);
 
-  const enrichedSchedules = enrichedSchedulesUsers(schedules, organizationId);
-
   return {
-    list: enrichedSchedules.map(scheduleStruct.SchedulePreview),
+    list: schedules,
     pagination: scheduleStruct.SchedulePagination(
       page,
       limit,
