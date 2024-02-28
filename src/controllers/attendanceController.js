@@ -42,7 +42,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
     await session.abortTransaction();
     next(e);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 

@@ -15,69 +15,34 @@ const generateUniqueUserOrgId = async (organizationId) => {
   return uniqueId;
 };
 
-const createOrUpdateExistingUser = async (userPayload) => {
-  try {
-    const findByQuery = { email: userPayload.email };
-    const opts = { upsert: true, new: true, setDefaultsOnInsert: true };
-    const user = Model.User.findOneAndUpdate(
-      findByQuery,
-      {
-        fullname: userPayload.fullname,
-        email: userPayload.email,
-        password: userPayload.password || undefined,
-        roleId: userPayload.roleId || '',
-      },
-      opts,
-    );
-    return user;
-  } catch (error) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create User');
-  }
+const createOrUpdateExistingUser = async (userPayload, session) => {
+  const findByQuery = { email: userPayload.email };
+  const opts = {
+    upsert: true,
+    new: true,
+    setDefaultsOnInsert: true,
+    session,
+  };
+  const user = Model.User.findOneAndUpdate(
+    findByQuery,
+    {
+      fullname: userPayload.fullname,
+      email: userPayload.email,
+      password: userPayload.password || undefined,
+      roleId: userPayload.roleId || '',
+    },
+    opts,
+  );
+  return user;
 };
-const insertUserOrganization = async (user, org) => {
-  try {
-    const userOrgPayload = {
-      userId: user._id,
-      organizationId: org._id,
-    };
-    const userOrganization = new Model.UserOrganization(userOrgPayload);
-    const createdUserOrganization = await userOrganization.save();
-    return createdUserOrganization;
-  } catch (error) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error create UserOrganization');
-  }
-};
-
-const insertDataUser = async (payload, payloadOrg) => {
-  const user = new Model.User(payload);
-  const organization = new Model.Organization(payloadOrg);
-  const userOrganization = new Model.UserOrganization();
-  const session = await mongoose.startSession();
-  let companyId = '';
-  let org;
-  try {
-    session.startTransaction();
-    const opts = { session };
-    companyId = payloadOrg.organizationId;
-    if (payloadOrg.organizationId === undefined) {
-      org = await organization.save(opts);
-      companyId = org._id;
-    }
-
-    const usr = await user.save(opts);
-    if (usr !== undefined && (org !== undefined || companyId !== '')) {
-      userOrganization.userId = usr._id;
-      userOrganization.organizationId = companyId;
-      await userOrganization.save(opts);
-    }
-    await session.commitTransaction();
-    await session.endSession();
-    return usr;
-  } catch (e) {
-    await session.abortTransaction();
-    await session.endSession();
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error Insert to DB for user');
-  }
+const insertUserOrganization = async (user, org, session) => {
+  const userOrgPayload = {
+    userId: user._id,
+    organizationId: org._id,
+  };
+  const userOrganization = new Model.UserOrganization(userOrgPayload);
+  const createdUserOrganization = await userOrganization.save({ session });
+  return createdUserOrganization;
 };
 
 const getOrganization = async (companyName) => {
@@ -110,9 +75,9 @@ const getAllUserOnOrganization = async (organizationId) => {
   }
 };
 
-const getDataRole = async (req) => {
+const getDataRole = async (req, session) => {
   try {
-    return await Model.Role.findOne({ name: req });
+    return await Model.Role.findOne({ name: req }).session(session);
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
@@ -149,51 +114,54 @@ const getUserAdminExists = async (email, companyName) => {
   }
 };
 
-const checkInvitationCodeExists = async (companyId) => {
+const checkInvitationCodeExists = async (companyId, session) => {
   const organization = Model.Organization;
   try {
-    return await organization.findOne({ invitationCode: companyId });
+    return await organization.findOne({ invitationCode: companyId }).session(session);
   } catch (e) {
     throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
   }
 };
 
-const findUserByCompanyAndRole = async (email, invitationCode, roleName) => {
-  try {
-    const role = await Model.Role.findOne({ name: roleName });
-    const organization = await Model.Organization.findOne({
-      invitationCode,
-    });
-    if (!role || !organization) return null;
+const findUserByCompanyAndRole = async (email, invitationCode, roleName, session) => {
+  const role = await Model.Role
+    .findOne({ name: roleName })
+    .session(session);
 
-    const user = await Model.User.findOne({
-      email,
+  const organization = await Model.Organization
+    .findOne({
+      invitationCode,
+    })
+    .session(session);
+
+  if (!role || !organization) return null;
+
+  const user = await Model.User.findOne({
+    email,
+  })
+    .populate({
+      path: 'roleId',
+    })
+    .where({ roleId: role._id })
+    .session(session);
+
+  if (user) {
+    const userOrganization = await Model.UserOrganization.findOne({
+      userId: user._id,
+      organizationId: organization._id,
     })
       .populate({
-        path: 'roleId',
+        path: 'userId',
+        populate: {
+          path: 'roleId',
+          model: 'Role',
+        },
       })
-      .where({ roleId: role._id });
-
-    if (user) {
-      const userOrganization = await Model.UserOrganization.findOne({
-        userId: user._id,
-        organizationId: organization._id,
-      })
-        .populate({
-          path: 'userId',
-          populate: {
-            path: 'roleId',
-            model: 'Role',
-          },
-        })
-        .populate({ path: 'organizationId' });
-      return userOrganization;
-    }
-
-    return null;
-  } catch (error) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+      .populate({ path: 'organizationId' })
+      .session(session);
+    return userOrganization;
   }
+  return null;
 };
 
 const getUserExists = async (email, companyId) => {
@@ -219,25 +187,22 @@ const getUserExists = async (email, companyId) => {
   }
 };
 
-const getDataUser = async (userId, organizationId) => {
+const getDataUser = async (userId, organizationId, session) => {
   const userOrganization = Model.UserOrganization;
-  try {
-    return await userOrganization.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-      organizationId: new mongoose.Types.ObjectId(organizationId),
+  const userOrg = await userOrganization.findOne({
+    userId: new mongoose.Types.ObjectId(userId),
+    organizationId: new mongoose.Types.ObjectId(organizationId),
+  })
+    .populate({
+      path: 'userId',
+      populate: {
+        path: 'roleId',
+        model: 'Role',
+      },
     })
-      .populate({
-        path: 'userId',
-        populate: {
-          path: 'roleId',
-          model: 'Role',
-        },
-      })
-      .populate({ path: 'organizationId' })
-      .exec();
-  } catch (e) {
-    throw new ResponseError(StatusCodes.INTERNAL_SERVER_ERROR, e);
-  }
+    .populate({ path: 'organizationId' })
+    .session(session);
+  return userOrg;
 };
 
 const updateDataUserAdmin = async (req, payload) => {
@@ -296,7 +261,6 @@ const validateEmployeeIds = async (employeeIds, organizationId, session) => {
 };
 
 module.exports = {
-  insertDataUser,
   createOrUpdateExistingUser,
   insertUserOrganization,
   getOrganization,

@@ -21,7 +21,7 @@ exports.createSchedule = async (req, res, next) => {
     await session.abortTransaction();
     next(error);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 
@@ -46,7 +46,7 @@ exports.deleteSchedules = async (req, res, next) => {
     await session.abortTransaction();
     next(error);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 exports.setDefaultScheduleById = async (req, res, next) => {
@@ -75,7 +75,7 @@ exports.setDefaultScheduleById = async (req, res, next) => {
     await session.abortTransaction();
     next(error);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 exports.getScheduleList = async (req, res, next) => {
@@ -124,7 +124,7 @@ exports.updateScheduleById = async (req, res, next) => {
     next(error);
     await session.abortTransaction();
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 

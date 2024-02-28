@@ -40,7 +40,7 @@ const createLocationProfile = async (req, res, next) => {
     await session.abortTransaction();
     next(e);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 
@@ -82,7 +82,7 @@ const removeLocationProfiles = async (req, res, next) => {
     await session.abortTransaction();
     next(error);
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 };
 

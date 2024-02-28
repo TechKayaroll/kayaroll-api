@@ -1,4 +1,5 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
+const mongoose = require('mongoose');
 const jwt = require('../helpers/jwt');
 const struct = require('../struct/userStruct');
 const model = require('../services/userService');
@@ -58,73 +59,87 @@ exports.login = async (req, res, next) => {
 };
 
 exports.register = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const {
       companyId, role, token, name, email, password,
     } = req.body;
-    const organization = await model.checkInvitationCodeExists(companyId);
+    const organization = await model.checkInvitationCodeExists(companyId, session);
     if (organization === null || organization.name === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
     }
-
-    let isRegisteredAccount = false;
-    let registeredUser;
-
-    const roleData = await model.getDataRole(role);
+    let registeredUser = null;
+    const roleData = await model.getDataRole(role, session);
     if (!token) {
-      registeredUser = await model.findUserByCompanyAndRole(email, companyId, role);
-      if (!registeredUser) {
-        const user = struct.UserRegistration(companyId, {
-          name,
-          email,
-          password: hash(password),
-        });
-        user.roleId = roleData._id;
-        const newUser = await model.createOrUpdateExistingUser(user);
-        await model.insertUserOrganization(newUser, organization);
-        registeredUser = await model.findUserByCompanyAndRole(
-          newUser.email,
-          companyId,
-          roleData.name,
-        );
-      } else {
-        isRegisteredAccount = true;
+      registeredUser = await model.findUserByCompanyAndRole(email, companyId, role, session);
+      if (registeredUser) {
+        throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
       }
+      const user = struct.UserRegistration(companyId, {
+        name,
+        email,
+        password: hash(password),
+      });
+      user.roleId = roleData._id;
+      const newUser = await model.createOrUpdateExistingUser(user, session);
+      const userOrganization = await model.insertUserOrganization(newUser, organization, session);
+      newUser.userOrganizationId = userOrganization._id;
+      await newUser.save({ session });
+      registeredUser = await model.findUserByCompanyAndRole(
+        newUser.email,
+        companyId,
+        roleData.name,
+        session,
+      );
     } else {
       const googlePayload = await jwt.decodeToken(req.body.token);
-      registeredUser = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
-      if (!registeredUser) {
-        const user = struct.UserRegistration(companyId, {
-          name: googlePayload.name,
-          email: googlePayload.email,
-        });
-        user.roleId = roleData._id;
-        const existingOrNewUser = await model.createOrUpdateExistingUser(user);
-        await model.insertUserOrganization(existingOrNewUser, organization);
-        registeredUser = await model.findUserByCompanyAndRole(
-          existingOrNewUser.email,
-          companyId,
-          roleData.name,
-        );
-      } else {
-        isRegisteredAccount = true;
+      registeredUser = await model.findUserByCompanyAndRole(
+        googlePayload.email,
+        companyId,
+        role,
+        session,
+      );
+      if (registeredUser) {
+        throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
       }
-    }
-    if (isRegisteredAccount) {
-      throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
+      const user = struct.UserRegistration(companyId, {
+        name: googlePayload.name,
+        email: googlePayload.email,
+      });
+      user.roleId = roleData._id;
+      const existingOrNewUser = await model.createOrUpdateExistingUser(user, session);
+      const userOrganization = await model.insertUserOrganization(
+        existingOrNewUser,
+        organization,
+        session,
+      );
+      existingOrNewUser.userOrganizationId = userOrganization._id;
+      await existingOrNewUser.save({ session });
+      registeredUser = await model.findUserByCompanyAndRole(
+        existingOrNewUser.email,
+        companyId,
+        roleData.name,
+        session,
+      );
     }
     const userOrgData = await model.getDataUser(
       registeredUser.userId._id,
       registeredUser.organizationId._id,
+      session,
     );
     const userRes = struct.UserRegistrationResponse(userOrgData);
+    await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: userRes,
       code: StatusCodes.OK,
     });
-  } catch (e) {
-    next(e);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    await session.endSession();
   }
 };
 

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
+const UserOrganization = require('../Relationship/UserOrganization');
 
 const UserSchema = new mongoose.Schema({
   fullname: {
@@ -18,6 +19,11 @@ const UserSchema = new mongoose.Schema({
   roleId: {
     type: Schema.Types.ObjectId,
     ref: 'Role',
+    required: true,
+  },
+  userOrganizationId: {
+    type: Schema.Types.ObjectId,
+    ref: UserOrganization,
     required: true,
   },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
