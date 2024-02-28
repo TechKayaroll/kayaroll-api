@@ -39,11 +39,15 @@ const SchedulePreview = (schedule) => ({
   id: schedule._id,
   name: schedule.name,
   shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
-  users: schedule.users.map((user) => ({
-    id: user?._id,
-    name: user?.fullname,
-    email: user?.email,
-  })),
+  users: schedule.users.map((user) => {
+    console.log(user);
+    return ({
+      id: user?._id,
+      name: user?.fullname,
+      email: user?.email,
+      uniqueUserId: user?.uniqueUserId,
+    })
+  }),
   organization: {
     id: schedule.organizationId._id,
     name: schedule.organizationId.name,

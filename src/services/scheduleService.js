@@ -8,6 +8,34 @@ const { validateShifts } = require('../helpers/scheduleShift');
 const userService = require('./userService');
 const { ResponseError } = require('../helpers/response');
 
+const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
+  const userOrgPromises = schedules.map(async (schedule) => {
+    const { users } = schedule;
+    const userOrgs = await Promise.all(users.map(async (user) => {
+      const userOrg = await Model.UserOrganization
+        .findOne({ userId: user._id, organizationId })
+        .populate('userId')
+        .populate('organizationId')
+        .session(session);
+      return {
+        _id: userOrg.userId._id,
+        fullname: userOrg.userId.fullname,
+        email: userOrg.userId.email,
+        roleId: userOrg.userId.roleId,
+        uniqueUserId: userOrg.uniqueUserId,
+      };
+    }));
+    return { schedule, userOrgs };
+  });
+
+  const scheduleUserOrgPairs = await Promise.all(userOrgPromises);
+  const enrichedSchedules = scheduleUserOrgPairs.map(({ schedule, userOrgs }) => ({
+    ...schedule.toObject(),
+    users: userOrgs,
+  }));
+  return enrichedSchedules;
+};
+
 const getScheduleList = async (organizationId, {
   page, limit, sortBy = 'asc', name, isDefault,
 }) => {
@@ -37,8 +65,10 @@ const getScheduleList = async (organizationId, {
     Model.Schedule.countDocuments({ organizationId, ...nameFilter }),
   ]);
 
+  const enrichedSchedules = enrichedSchedulesUsers(schedules, organizationId);
+
   return {
-    list: schedules.map(scheduleStruct.SchedulePreview),
+    list: enrichedSchedules.map(scheduleStruct.SchedulePreview),
     pagination: scheduleStruct.SchedulePagination(
       page,
       limit,
@@ -199,8 +229,10 @@ const findScheduleById = async (organizationId, scheduleId, session) => {
     })
     .populate({ path: 'shifts' })
     .session(session);
+
   return schedule;
 };
+
 const updateScheduleById = async (organizationId, scheduleId, payload, session) => {
   const workScheduleToBeUpdated = await Model.Schedule
     .findById(scheduleId)
@@ -254,7 +286,6 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     schedulePayload.isDefault = payload.isDefault;
   }
   await assignUserToSchedule(organizationId, employeeIds, updatedSchedule._id, session);
-  console.log(schedulePayload)
   Object.entries(schedulePayload).forEach(([key, value]) => {
     if (value !== undefined) {
       updatedSchedule[key] = value;
@@ -273,4 +304,5 @@ module.exports = {
   setDefaultWorkschedule,
   updateScheduleById,
   findScheduleById,
+  enrichedSchedulesUsers,
 };

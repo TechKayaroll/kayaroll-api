@@ -114,10 +114,15 @@ exports.updateScheduleById = async (req, res, next) => {
       req.body,
       session,
     );
+    const [enrichedSchedule] = await scheduleService.enrichedSchedulesUsers(
+      [updatedSchedule],
+      adminOrganizationId,
+      session,
+    );
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.SchedulePreview(updatedSchedule),
+      data: scheduleStruct.SchedulePreview(enrichedSchedule),
       code: StatusCodes.OK,
     });
   } catch (error) {
@@ -134,9 +139,13 @@ exports.getScheduleDetail = async (req, res, next) => {
     const adminOrganizationId = req.user.organizationId;
 
     const schedule = await scheduleService.findScheduleById(adminOrganizationId, scheduleId);
+    const [enrichedSchedule] = await scheduleService.enrichedSchedulesUsers(
+      [schedule],
+      adminOrganizationId,
+    );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.SchedulePreview(schedule),
+      data: scheduleStruct.SchedulePreview(enrichedSchedule),
       code: StatusCodes.OK,
     });
   } catch (error) {
