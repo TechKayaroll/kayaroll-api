@@ -21,11 +21,6 @@ const UserSchema = new mongoose.Schema({
     ref: 'Role',
     required: true,
   },
-  userOrganizationId: {
-    type: Schema.Types.ObjectId,
-    ref: UserOrganization,
-    required: true,
-  },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 const User = mongoose.model('User', UserSchema, 'user');

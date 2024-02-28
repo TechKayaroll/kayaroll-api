@@ -83,9 +83,7 @@ exports.register = async (req, res, next) => {
       });
       user.roleId = roleData._id;
       const newUser = await model.createOrUpdateExistingUser(user, session);
-      const userOrganization = await model.insertUserOrganization(newUser, organization, session);
-      newUser.userOrganizationId = userOrganization._id;
-      await newUser.save({ session });
+      await model.insertUserOrganization(newUser, organization, session);
       registeredUser = await model.findUserByCompanyAndRole(
         newUser.email,
         companyId,
@@ -109,13 +107,11 @@ exports.register = async (req, res, next) => {
       });
       user.roleId = roleData._id;
       const existingOrNewUser = await model.createOrUpdateExistingUser(user, session);
-      const userOrganization = await model.insertUserOrganization(
+      await model.insertUserOrganization(
         existingOrNewUser,
         organization,
         session,
       );
-      existingOrNewUser.userOrganizationId = userOrganization._id;
-      await existingOrNewUser.save({ session });
       registeredUser = await model.findUserByCompanyAndRole(
         existingOrNewUser.email,
         companyId,
