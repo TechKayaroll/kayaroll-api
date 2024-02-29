@@ -38,7 +38,7 @@ const getScheduleList = async (organizationId, {
   const skip = (page - 1) * limit;
 
   const sortCriteria = {
-    createdAt: sortBy === 'asc' ? 1 : -1,
+    createdDate: sortBy === 'asc' ? 1 : -1,
   };
 
   const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};

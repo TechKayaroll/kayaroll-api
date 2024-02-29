@@ -78,6 +78,8 @@ const SchedulePreview = (schedule) => ({
   isDefault: schedule.isDefault,
   gracePeriod: schedule.gracePeriod,
   overtimeTolerance: schedule.overtimeTolerance,
+  updatedDate: schedule?.updatedDate,
+  createdDate: schedule?.createdDate,
 });
 
 const ScheduleDeletePreview = (schedule) => ({
