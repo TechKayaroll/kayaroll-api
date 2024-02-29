@@ -35,6 +35,27 @@ const ScheduleSnapshot = (attendanceSchedule) => ({
   overtimeTolerance: attendanceSchedule.overtimeTolerance,
 });
 
+const EnrichedSchedule = ({ schedule, userOrgs }) => ({
+  id: schedule._id,
+  name: schedule.name,
+  shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
+  users: userOrgs.map((userOrg) => ({
+    id: userOrg.userId,
+    name: userOrg?.userId?.fullname,
+    email: userOrg?.userId.email,
+    uniqueUserId: userOrg?.uniqueUserId,
+  })),
+  organization: {
+    id: schedule.organizationId._id,
+    name: schedule.organizationId.name,
+    invitationCode: schedule.organizationId.invitationCode,
+  },
+  effectiveStartDate: schedule.effectiveStartDate,
+  effectiveEndDate: schedule.effectiveEndDate,
+  isDefault: schedule.isDefault,
+  gracePeriod: schedule.gracePeriod,
+  overtimeTolerance: schedule.overtimeTolerance,
+});
 const SchedulePreview = (schedule) => ({
   id: schedule._id,
   name: schedule.name,
@@ -59,10 +80,27 @@ const SchedulePreview = (schedule) => ({
   overtimeTolerance: schedule.overtimeTolerance,
 });
 
+const ScheduleDeletePreview = (schedule) => ({
+  id: schedule._id,
+  name: schedule.name,
+  shifts: schedule.shifts,
+  users: schedule.users,
+  organizationId: schedule.organizationId,
+  isDefault: schedule.isDefault,
+  gracePeriod: schedule.gracePeriod,
+  overtimeTolerance: schedule.overtimeTolerance,
+  effectiveStartDate: schedule.effectiveStartDate,
+  effectiveEndDate: schedule.effectiveEndDate,
+  formattedStartDate: dayjs(schedule.effectiveStartDate).format('DD MMM YYYY, HH:mm:ss'),
+  formattedEndDate: dayjs(schedule.effectiveEndDate).format('DD MMM YYYY, HH:mm:ss'),
+});
+
 module.exports = {
   ScheduleData,
   SchedulePagination,
   UpdateScheduleData,
   ScheduleSnapshot,
   SchedulePreview,
+  ScheduleDeletePreview,
+  EnrichedSchedule,
 };

@@ -9,6 +9,8 @@ const SingleShiftData = (data) => ({
 });
 
 const ShiftFormatedTime = (shift) => ({
+  id: shift?._id,
+  name: shift?.name,
   day: shift?.day,
   shifts: shift?.shifts.map((shiftTime) => ({
     startTime: dayjs(shiftTime.startTime).format('hh:mm'),

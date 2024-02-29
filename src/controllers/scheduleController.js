@@ -31,7 +31,7 @@ exports.deleteSchedules = async (req, res, next) => {
   try {
     const { scheduleIds } = req.body;
     const adminScheduleId = req.user.organizationId;
-    const deletedSchedules = await scheduleService.deleteSchedules(
+    const { schedulesToDelete } = await scheduleService.deleteSchedules(
       adminScheduleId,
       scheduleIds,
       session,
@@ -39,7 +39,7 @@ exports.deleteSchedules = async (req, res, next) => {
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: deletedSchedules,
+      data: schedulesToDelete.map(scheduleStruct.ScheduleDeletePreview),
       code: StatusCodes.OK,
     });
   } catch (error) {
@@ -122,7 +122,7 @@ exports.updateScheduleById = async (req, res, next) => {
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.SchedulePreview(enrichedSchedule),
+      data: scheduleStruct.EnrichedSchedule(enrichedSchedule),
       code: StatusCodes.OK,
     });
   } catch (error) {
@@ -145,7 +145,7 @@ exports.getScheduleDetail = async (req, res, next) => {
     );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.SchedulePreview(enrichedSchedule),
+      data: scheduleStruct.EnrichedSchedule(enrichedSchedule),
       code: StatusCodes.OK,
     });
   } catch (error) {

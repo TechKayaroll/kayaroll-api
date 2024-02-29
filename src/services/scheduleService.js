@@ -29,11 +29,7 @@ const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
   });
 
   const scheduleUserOrgPairs = await Promise.all(userOrgPromises);
-  const enrichedSchedules = scheduleUserOrgPairs.map(({ schedule, userOrgs }) => ({
-    ...schedule,
-    users: userOrgs,
-  }));
-  return enrichedSchedules;
+  return scheduleUserOrgPairs;
 };
 
 const getScheduleList = async (organizationId, {
