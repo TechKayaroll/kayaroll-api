@@ -1,5 +1,25 @@
 const Joi = require('joi');
+const dayjs = require('dayjs');
 const globalSchema = require('.');
+const { SHIFT_DAY } = require('../utils/constants');
+
+const endTimeShiftValidation = (value, helpers) => {
+  const { path, ancestors } = helpers.state;
+  const currentTime = dayjs();
+  const startTime = dayjs(ancestors[0].startTime)
+    .set('year', currentTime.year())
+    .set('month', currentTime.month())
+    .set('date', currentTime.date());
+  const endTime = dayjs(value)
+    .set('year', currentTime.year())
+    .set('month', currentTime.month())
+    .set('date', currentTime.date());
+  if (startTime.isAfter(endTime)) {
+    const day = Object.values(SHIFT_DAY)[path[1]];
+    return helpers.message(`${day.toUpperCase()}: "endTime" must be greater than "startTime"`);
+  }
+  return value;
+};
 
 exports.schemaCreateSchedule = Joi.object({
   scheduleName: Joi.string(),
@@ -11,7 +31,9 @@ exports.schemaCreateSchedule = Joi.object({
     Joi.array().items(
       Joi.object({
         startTime: Joi.date().required(),
-        endTime: Joi.date().greater(Joi.ref('startTime')).required(),
+        endTime: Joi.date()
+          .required()
+          .custom(endTimeShiftValidation),
       }),
     ).default([]),
   ).length(7).required(),
@@ -58,7 +80,9 @@ exports.schemaUpdateScheduleById = Joi.object({
     Joi.array().items(
       Joi.object({
         startTime: Joi.date().required(),
-        endTime: Joi.date().greater(Joi.ref('startTime')).required(),
+        endTime: Joi.date()
+          .required()
+          .custom(endTimeShiftValidation),
       }),
     ).default([]),
   ).length(7),

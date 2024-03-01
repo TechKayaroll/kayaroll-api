@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const dayjs = require('dayjs');
 const { ATTENDANCE_TYPE, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
 
@@ -53,9 +54,10 @@ function attendanceStatusHistory(
   let status = ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE;
   let timeDiff = 0;
 
-  const currentDayIndex = dayjs(actualTime).day();
-  const currentDay = Object.values(SHIFT_DAY)[currentDayIndex];
   const currentTime = dayjs(actualTime);
+  const currentDayIndex = currentTime.day();
+  const currentDay = Object.values(SHIFT_DAY)[currentDayIndex];
+  const startOfDay = dayjs(currentTime).startOf('day');
 
   attendanceSchedule.forEach((schedule) => {
     const { gracePeriod, overtimeTolerance, scheduleShifts } = schedule;
@@ -63,68 +65,72 @@ function attendanceStatusHistory(
       if (shift.day === currentDay) {
         shift.shifts.forEach((individualShift) => {
           const { startTime, endTime } = individualShift;
-          const workScheduleStart = dayjs(startTime);
-          const workScheduleEnd = dayjs(endTime);
+          const workScheduleStart = dayjs(startTime)
+            .set('year', currentTime.year())
+            .set('month', currentTime.month())
+            .set('date', currentTime.date());
+          const workScheduleEnd = dayjs(endTime)
+            .set('year', currentTime.year())
+            .set('month', currentTime.month())
+            .set('date', currentTime.date());
+          const startGracePeriod = workScheduleStart.add(gracePeriod, 'minute');
+          const endOvertimeTolerace = workScheduleEnd.add(
+            overtimeTolerance,
+            'minute',
+          );
+
           if (attendanceType === ATTENDANCE_TYPE.IN) {
-            const isLate = currentTime.isAfter(
-              workScheduleStart.add(gracePeriod, 'minute'),
-            ) && currentTime.isBefore(workScheduleEnd);
-            const onTime = (currentTime.isAfter(workScheduleStart)
+            // isLate = currTime >= (workScheduleStart + gracePeriod) &&  currTime <= workScheduleEnd
+            // onTime = currTime >= 00:00:00 && currTime < (workScheduleStart + gracePeriod)
+            const isLate = (currentTime.isAfter(startGracePeriod)
                 && currentTime.isBefore(workScheduleEnd))
-              || currentTime.isBefore(workScheduleStart)
-              || currentTime.isSame(workScheduleStart)
-              || currentTime.isSame(workScheduleEnd);
+              || currentTime.isSame(workScheduleEnd)
+              || currentTime.isSame(workScheduleStart);
+
+            const onTime = (currentTime.isAfter(startOfDay)
+                && currentTime.isBefore(startGracePeriod))
+              || currentTime.isSame(startOfDay);
 
             if (isLate) {
               status = ATTENDANCE_STATUS_HISTORY.LATE;
-              timeDiff = workScheduleStart
-                .add(gracePeriod, 'minutes')
-                .diff(currentTime, 'seconds');
+              timeDiff = currentTime.diff(startGracePeriod, 'seconds');
             } else if (onTime) {
               status = ATTENDANCE_STATUS_HISTORY.ON_TIME;
               timeDiff = 0;
             }
             // console.log({
-            //   actualTime,
             //   isLate,
             //   onTime,
-            //   currentTime: currentTime.format('HH:mm:ss'),
-            //   startTime: workScheduleStart.format('HH:mm:ss'),
-            //   endTime: workScheduleEnd.format('HH:mm:ss'),
-            //   startTimeGracePeriod: workScheduleStart
-            //     .add(gracePeriod, 'minutes')
-            //     .format('HH:mm:ss'),
-            //   endTimeOvertimeTolerance: workScheduleEnd
-            //     .add(overtimeTolerance, 'minutes')
-            //     .format('HH:mm:ss'),
+            //   workScheduleStart: workScheduleStart.format(
+            //     'DD MMM YYYY, HH:mm:ss',
+            //   ),
+            //   workScheduleEnd: workScheduleEnd.format('DD MMM YYYY, HH:mm:ss'),
+            //   currentTime: currentTime.format('DD MMM YYYY, HH:mm:ss'),
+            //   startGracePeriod: startGracePeriod.format(
+            //     'DD MMM YYYY, HH:mm:ss',
+            //   ),
+            //   endTime: workScheduleEnd.format('DD MMM YYYY, HH:mm:ss'),
             // });
           } else if (attendanceType === ATTENDANCE_TYPE.OUT) {
+            // isEarlyDeparture = currTime < workScheduleEnd && currTime > (workschedulestart + graceperiod)
+            // isOvertime = currTime >= (workscheduleEnd + overtimeTolerance)
+            // onTime = currentTime >= workScheduleStart && currTime <= (workScheduleEnd + overtimeTolerance)
+
             const isEarlyDeparture = currentTime.isBefore(workScheduleEnd)
-              && currentTime.isAfter(workScheduleStart.add(gracePeriod, 'minute'));
-            const isOvertime = currentTime.isAfter(
-              workScheduleEnd.add(overtimeTolerance, 'minutes'),
-            )
-              || currentTime.isSame(
-                workScheduleEnd.add(overtimeTolerance, 'minutes'),
-              );
+              && currentTime.isAfter(startGracePeriod);
+            const isOvertime = currentTime.isAfter(endOvertimeTolerace)
+              || currentTime.isSame(endOvertimeTolerace);
             const onTime = (currentTime.isAfter(workScheduleStart)
-                && currentTime.isBefore(
-                  workScheduleEnd.add(overtimeTolerance, 'minutes'),
-                ))
+                && currentTime.isBefore(endOvertimeTolerace))
               || currentTime.isSame(workScheduleStart)
-              || currentTime.isSame(
-                workScheduleEnd.add(overtimeTolerance, 'minutes'),
-              );
+              || currentTime.isSame(endOvertimeTolerace);
 
             if (isEarlyDeparture) {
               status = ATTENDANCE_STATUS_HISTORY.EARLY_DEPARTURE;
               timeDiff = workScheduleEnd.diff(currentTime, 'seconds');
             } else if (isOvertime) {
               status = ATTENDANCE_STATUS_HISTORY.OVERTIME;
-              timeDiff = currentTime.diff(
-                workScheduleEnd.add(overtimeTolerance, 'minutes'),
-                'seconds',
-              );
+              timeDiff = currentTime.diff(endOvertimeTolerace, 'seconds');
             } else if (onTime) {
               status = ATTENDANCE_STATUS_HISTORY.ON_TIME;
               timeDiff = 0;
