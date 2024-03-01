@@ -1,4 +1,4 @@
-const dayjs = require('dayjs');
+const dayjs = require("dayjs");
 
 const SingleShiftData = (data) => ({
   day: data?.day,
@@ -13,8 +13,8 @@ const ShiftFormatedTime = (shift) => ({
   name: shift?.name,
   day: shift?.day,
   shifts: shift?.shifts.map((shiftTime) => ({
-    startTime: dayjs(shiftTime.startTime).format('hh:mm'),
-    endTime: dayjs(shiftTime.endTime).format('hh:mm'),
+    startTime: dayjs(shiftTime.startTime).toDate(),
+    endTime: dayjs(shiftTime.endTime).toDate(),
   })),
 });
 
