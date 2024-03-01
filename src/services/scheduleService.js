@@ -116,11 +116,8 @@ const setDefaultWorkschedule = async (organizationId, schedulePayload, session) 
   return scheduleToBeUpdated;
 };
 
-const findOneScheduleByName = async (organizationId, scheduleName, session) => {
-  const schedule = await Model.Schedule.findOne({
-    organizationId,
-    name: scheduleName,
-  })
+const findOneSchedule = async (query, session) => {
+  const schedule = await Model.Schedule.findOne(query)
     .populate({
       path: 'users',
     })
@@ -164,7 +161,13 @@ const createSchedule = async (organizationId, req, session) => {
     organizationId,
     session,
   );
-  const scheduleNameExist = await findOneScheduleByName(organizationId, req.body.scheduleName);
+  const scheduleNameExist = await findOneSchedule(
+    {
+      organizationId,
+      name: req.body.scheduleName,
+    },
+    session,
+  );
   if (scheduleNameExist) {
     throw new ResponseError(
       StatusCodes.BAD_REQUEST,
@@ -247,9 +250,12 @@ const updateScheduleById = async (organizationId, scheduleId, payload, session) 
     session,
   );
   if (payload.scheduleName) {
-    const scheduleNameExist = await findOneScheduleByName(
-      organizationId,
-      payload.scheduleName,
+    const scheduleNameExist = await findOneSchedule(
+      {
+        organizationId,
+        name: payload.scheduleName,
+        _id: { $ne: scheduleId },
+      },
       session,
     );
     if (scheduleNameExist && scheduleNameExist._id !== scheduleId) {

@@ -160,7 +160,6 @@ exports.addGraceAndtolerancePeriod = async (req, res, next) => {
       { $set: { gracePeriod: 30, overtimeTolerance: 30 } },
     );
 
-    console.log(`${result.nModified} documents updated successfully.`);
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: result,
