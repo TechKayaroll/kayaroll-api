@@ -114,7 +114,8 @@ exports.updateScheduleById = async (req, res, next) => {
       req.body,
       session,
     );
-    const [enrichedSchedule] = await scheduleService.enrichedSchedulesUsers(
+    // const [enrichedSchedule] =
+    await scheduleService.enrichedSchedulesUsers(
       [updatedSchedule],
       adminOrganizationId,
       session,
@@ -122,7 +123,7 @@ exports.updateScheduleById = async (req, res, next) => {
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.EnrichedSchedule(enrichedSchedule),
+      data: {},
       code: StatusCodes.OK,
     });
   } catch (error) {
