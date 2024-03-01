@@ -47,6 +47,12 @@ const ATTENDANCE_STATUS_HISTORY = {
   NO_SCHEDULE: 'no-schedule',
 };
 
+const ATTENDANCE_LOCATION_STATUS = {
+  INSIDE_RADIUS: 'inside-radius',
+  OUTSIDE_RADIUS: 'outside-radius',
+  NO_LOCATION: 'no-location',
+};
+
 const GOOGLE_MAP_API_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
 module.exports = {
@@ -58,4 +64,5 @@ module.exports = {
   SHIFT_DAY,
   GOOGLE_MAP_API_BASE_URL,
   ATTENDANCE_STATUS_HISTORY,
+  ATTENDANCE_LOCATION_STATUS,
 };

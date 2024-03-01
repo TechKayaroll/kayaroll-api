@@ -6,13 +6,13 @@ const { ResponseError } = require('../helpers/response');
 const {
   secondsToDuration, calculateTotalTime, isWeekend,
 } = require('../helpers/date');
-const { pairInAndOut, attendanceStatusHistory } = require('../helpers/attendance');
+const { pairInAndOut, attendanceStatusHistory, attendanceLocationStatus } = require('../helpers/attendance');
 const userModel = require('../models');
 const uploadGcp = require('../helpers/gcp');
 const {
-  ATTENDANCE_AUDIT_LOG, ATTENDANCE_STATUS, ATTENDANCE_TYPE, USER_ROLE,
+  ATTENDANCE_AUDIT_LOG, ATTENDANCE_STATUS, ATTENDANCE_TYPE, USER_ROLE, ATTENDANCE_LOCATION_STATUS,
 } = require('../utils/constants');
-const { isWithinRadius } = require('../helpers/calculation');
+require('../helpers/calculation');
 
 const struct = require('../struct/attendanceStruct');
 const scheduleStruct = require('../struct/scheduleStruct');
@@ -74,7 +74,7 @@ const uploadAttendanceImage = async (req, attendanceType) => {
   }
 };
 
-const createAttendanceLocationSnapshot = async (userId, organizationId, session) => {
+const createAttendanceLocationSnapshot = async (userId, organizationId, coordinate, session) => {
   const userOrgLocations = await userModel.UserOrganizationLocation.find({
     userId,
     organizationId,
@@ -83,10 +83,31 @@ const createAttendanceLocationSnapshot = async (userId, organizationId, session)
     .populate({
       path: 'locationId',
     });
+
+  const statusCount = new Map();
+  let finalLocationStatus = ATTENDANCE_LOCATION_STATUS.NO_LOCATION;
   const locSnapshots = userOrgLocations.map(
-    ({ locationId }) => attendanceSettingsStruct.AttendanceSnapshotData(locationId),
+    ({ locationId }) => {
+      const snapshot = attendanceSettingsStruct.AttendanceSnapshotData(locationId);
+      const { status, distance } = attendanceLocationStatus(snapshot, coordinate);
+      const currStatusCount = statusCount.get(status);
+      if (!statusCount.has(status)) {
+        statusCount.set(status, 1);
+      } else {
+        statusCount.set(status, currStatusCount + 1);
+      }
+      snapshot.locationStatus = status;
+      snapshot.locationDistance = distance;
+      return snapshot;
+    },
   );
-  return locSnapshots;
+  if (statusCount.get(ATTENDANCE_LOCATION_STATUS.INSIDE_RADIUS) > 0) {
+    finalLocationStatus = ATTENDANCE_LOCATION_STATUS.INSIDE_RADIUS;
+  } else if (statusCount.get(ATTENDANCE_LOCATION_STATUS.OUTSIDE_RADIUS) > 0) {
+    finalLocationStatus = ATTENDANCE_LOCATION_STATUS.OUTSIDE_RADIUS;
+  }
+
+  return { snapshot: locSnapshots, locationStatus: finalLocationStatus };
 };
 
 const findAttendanceScheduleSnapshots = async (userId, organizationId, attendanceDate, session) => {
@@ -115,6 +136,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     createAttendanceLocationSnapshot(
       userOrganization.userId,
       userOrganization.organizationId,
+      { lat: req.body.lat, long: req.body.long },
       session,
     ),
     findAttendanceScheduleSnapshots(
@@ -131,16 +153,22 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     attendanceDate,
     attScheduleSnapshot,
   );
+
   const attendancePayload = struct.Attendance(
     req,
-    attendanceImageUrl,
-    attendanceType,
-    attendanceDate,
     userOrganization._id,
-    attLocationSnapshots,
-    attScheduleSnapshot,
-    statusHistory,
+    {
+      attendanceImageUrl,
+      attendanceType,
+      attendanceDate,
+      attendanceLocationSnapshots: attLocationSnapshots.snapshot,
+      attendanceStatusLocation: attLocationSnapshots.locationStatus,
+      attendanceScheduleSnapshots: attScheduleSnapshot,
+      attendanceStatusHistory: statusHistory.status,
+      timeDiff: statusHistory.timeDiff,
+    },
   );
+  console.log(attendancePayload.attendanceStatusHistory)
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
   await logAttendance(
@@ -149,28 +177,14 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
     savedAttendance._id,
     session,
   );
-  let inRadius = false;
-  let inRadiusSnapshots = [];
   let scheduleSnapshots = [];
-  if (attLocationSnapshots?.length === 0) {
-    inRadius = true;
-  } else {
-    inRadiusSnapshots = attLocationSnapshots.filter((snapshot) => {
-      const { locationLat, locationLong, locationRadius } = snapshot;
-      const centerCoordinates = [locationLat, locationLong];
-      const otherCoordinates = [savedAttendance?.lat, savedAttendance?.long];
-      const withinRad = isWithinRadius(centerCoordinates, otherCoordinates, locationRadius);
-      return withinRad;
-    });
-    inRadius = inRadiusSnapshots.length > 0;
-  }
   if (savedAttendance?.attendanceScheduleSnapshots.length > 0) {
     scheduleSnapshots = savedAttendance?.attendanceScheduleSnapshots?.map(
       (schedule) => scheduleStruct.ScheduleSnapshot(schedule),
     );
   }
   return {
-    savedAttendance, inRadius, inRadiusSnapshots, scheduleSnapshots, attLocationSnapshots,
+    savedAttendance, scheduleSnapshots, attLocationSnapshots,
   };
 };
 const attendanceDetail = async (attendanceId) => {
@@ -480,6 +494,7 @@ const createBulkAttendance = async (req, session) => {
         createAttendanceLocationSnapshot(
           userOrgEmployee?.userId,
           adminOrganizationId,
+          null,
           session,
         ),
         findAttendanceScheduleSnapshots(
@@ -500,9 +515,12 @@ const createBulkAttendance = async (req, session) => {
         req,
         userOrgEmployee,
         req.body,
-        attLocationSnapshots,
-        attScheduleSnapshots,
-        statusHistory,
+        {
+          attendanceLocationSnapshots: attLocationSnapshots.snapshot,
+          attendanceStatusLocation: attLocationSnapshots.locationStatus,
+          scheduleSnapshots: attScheduleSnapshots,
+          historyStatus: statusHistory,
+        },
       );
       const createdAttendance = await new userModel.Attendance(attendancePayload)
         .save({ session });

@@ -7,13 +7,17 @@ const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS, ATTENDANCE_STATUS_HISTORY }
 
 const Attendance = (
   req,
-  attendanceImageUrl,
-  attendanceType,
-  attendanceDate,
   userOrganizationId,
-  attendanceLocationSnapshots,
-  scheduleSnapshots,
-  historyStatus,
+  {
+    attendanceImageUrl,
+    attendanceType,
+    attendanceDate,
+    attendanceLocationSnapshots,
+    attendanceStatusLocation,
+    attendanceScheduleSnapshots,
+    attendanceStatusHistory,
+    timeDiff,
+  },
 ) => ({
   userId: new mongoose.Types.ObjectId(req.user.userId),
   organizationId: new mongoose.Types.ObjectId(req.user.organizationId),
@@ -28,10 +32,11 @@ const Attendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
+  attendanceStatusLocation,
   attendanceLocationSnapshots,
-  attendanceScheduleSnapshots: scheduleSnapshots,
-  attendanceStatusHistory: historyStatus.status,
-  timeDiff: historyStatus.timeDiff || 0,
+  attendanceScheduleSnapshots,
+  attendanceStatusHistory,
+  timeDiff: timeDiff || 0,
 });
 
 const AttendanceAuditLogData = (attendance, actionLogType, reqUser) => ({
@@ -58,11 +63,42 @@ const AttendanceAuditLog = (attendanceAuditLog) => ({
   createdDate: attendanceAuditLog?.createdDate,
 });
 
+const AttendanceLocationSnapshot = (snapshot) => ({
+  locationId: snapshot?.locationId,
+  locationName: snapshot?.locationName,
+  locationLat: snapshot?.locationLat,
+  locationLong: snapshot?.locationLong,
+  locationPlaceId: snapshot?.locationPlaceId,
+  locationAddress: snapshot?.locationAddress,
+  locationStatus: snapshot?.locationStatus,
+  locationDistance: snapshot?.locationDistance,
+});
+
+const AttendanceScheduleSnapshot = (snapshot) => ({
+  scheduleId: snapshot?.scheduleId,
+  scheduleName: snapshot?.scheduleName,
+  scheduleShifts: snapshot?.scheduleShifts?.map((scheduleShift) => ({
+    name: scheduleShift?.name,
+    day: scheduleShift?.day,
+    shifts: scheduleShift?.shifts?.map((eachShift) => ({
+      startTime: eachShift.startTime,
+      endTime: eachShift.endTime,
+    })),
+    id: scheduleShift?._id,
+  })),
+  isDefault: snapshot?.isDefault,
+  effectiveStartDate: snapshot?.effectiveStartDate,
+  effectiveEndDate: snapshot?.effectiveEndDate,
+  gracePeriod: snapshot?.gracePeriod,
+  overtimeTolerance: snapshot?.overtimeTolerance,
+});
+
 const AttendanceList = (val) => ({
   attendanceId: val._id,
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
   attendanceStatusHistory: val?.attendanceStatusHistory,
+  attendanceStatusLocation: val?.attendanceStatusLocation,
   timeDiff: val?.timeDiff,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
   datetime: val.attendanceDate,
@@ -70,6 +106,10 @@ const AttendanceList = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
+  attendanceLocationSnapshots: val.attendanceLocationSnapshots
+    .map(AttendanceLocationSnapshot),
+  attendanceScheduleSnapshots: val.attendanceScheduleSnapshots
+    .map(AttendanceScheduleSnapshot),
 });
 
 const AttendanceListPagination = (page, limit, totalData) => ({
@@ -90,8 +130,9 @@ const AttendanceListAdmin = (val) => ({
   long: val.long,
   status: val.status,
   createdDate: val.createdDate,
-  attendanceLocationSnapshots: val?.attendanceLocationSnapshots,
-  attendanceScheduleSnapshots: val?.attendanceScheduleSnapshots,
+  attendanceLocationSnapshots: val?.attendanceLocationSnapshots
+    .map(AttendanceLocationSnapshot),
+  attendanceScheduleSnapshots: val?.attendanceScheduleSnapshots.map(AttendanceScheduleSnapshot),
 });
 
 const AttendanceDataResult = (val, req) => ({
@@ -122,9 +163,12 @@ const AttendanceReport = (attendance) => ({
   attendanceType: attendance.attendanceType,
   status: attendance.status,
   attendanceStatusHistory: attendance?.attendanceStatusHistory
-  || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+    || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: attendance?.timeDiff || 0,
-  attendanceLocationSnapshots: attendance.attendanceLocationSnapshots,
+  attendanceLocationSnapshots: attendance?.attendanceLocationSnapshots
+    .map(AttendanceLocationSnapshot),
+  attendanceScheduleSnapshots: attendance?.attendanceScheduleSnapshots
+    .map(AttendanceScheduleSnapshot),
 });
 
 const AttendanceSummaryData = (attendanceIn, attendanceOut) => {
@@ -153,9 +197,12 @@ const AdminAttendance = (
   req,
   employeeUserOrg,
   requestBody,
-  attendanceLocationSnapshots,
-  scheduleSnapshots,
-  historyStatus,
+  {
+    attendanceLocationSnapshots,
+    attendanceStatusLocation,
+    scheduleSnapshots,
+    historyStatus,
+  },
 ) => ({
   userId: new mongoose.Types.ObjectId(employeeUserOrg.userId),
   organizationId: new mongoose.Types.ObjectId(employeeUserOrg.organizationId),
@@ -170,6 +217,7 @@ const AdminAttendance = (
   os: req?.useragent?.os || '',
   platform: req?.useragent?.platform || '',
   createdBy: new mongoose.Types.ObjectId(req.user.userId),
+  attendanceStatusLocation,
   attendanceLocationSnapshots,
   scheduleSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,

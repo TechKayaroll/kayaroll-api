@@ -3,7 +3,11 @@ const User = require('../User/User');
 const Organization = require('../Organization/Organization');
 const UserOrganization = require('../Relationship/UserOrganization');
 const {
-  ATTENDANCE_TYPE, ATTENDANCE_STATUS, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY,
+  ATTENDANCE_TYPE,
+  ATTENDANCE_STATUS,
+  SHIFT_DAY,
+  ATTENDANCE_STATUS_HISTORY,
+  ATTENDANCE_LOCATION_STATUS,
 } = require('../../utils/constants');
 
 const AttendanceSchema = new mongoose.Schema({
@@ -23,19 +27,19 @@ const AttendanceSchema = new mongoose.Schema({
     required: true,
   },
   attendanceImage: {
-    type: 'string',
+    type: String,
   },
   long: {
-    type: 'number',
+    type: Number,
   },
   lat: {
-    type: 'number',
+    type: Number,
   },
   attendanceDate: {
-    type: 'string',
+    type: String,
   },
   attendanceType: {
-    type: 'string',
+    type: String,
     enum: Object.values(ATTENDANCE_TYPE),
     required: true,
   },
@@ -48,6 +52,11 @@ const AttendanceSchema = new mongoose.Schema({
     type: String,
     enum: Object.values(ATTENDANCE_STATUS_HISTORY),
     default: ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+  },
+  attendanceStatusLocation: {
+    type: String,
+    enum: Object.values(ATTENDANCE_LOCATION_STATUS),
+    default: ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
   },
   timeDiff: {
     type: Number,
@@ -76,6 +85,10 @@ const AttendanceSchema = new mongoose.Schema({
     required: true,
   },
   attendanceLocationSnapshots: [{
+    locationId: {
+      type: String,
+      immutable: true,
+    },
     locationName: {
       type: String,
       immutable: true,
@@ -100,8 +113,21 @@ const AttendanceSchema = new mongoose.Schema({
       type: String,
       immutable: true,
     },
+    locationStatus: {
+      type: String,
+      enum: Object.values(ATTENDANCE_LOCATION_STATUS),
+      default: ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
+    },
+    locationDistance: {
+      type: Number,
+      default: 0,
+    },
   }],
   attendanceScheduleSnapshots: [{
+    scheduleId: {
+      type: String,
+      immutable: true,
+    },
     scheduleName: {
       type: String,
       immutable: true,

@@ -17,9 +17,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
     const attendanceType = ATTENDANCE_TYPE.IN;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
     const {
-      inRadius,
-      inRadiusSnapshots,
-      scheduleSnapshots,
+      savedAttendance,
     } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
@@ -29,13 +27,7 @@ exports.attendanceCheckIn = async (req, res, next) => {
     await session.commitTransaction();
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: {
-        // savedAttendance,
-        inRadius,
-        inRadiusSnapshots,
-        scheduleSnapshots,
-        // attLocationSnapshots,
-      },
+      data: struct.AttendanceList(savedAttendance),
       code: StatusCodes.OK,
     });
   } catch (e) {
@@ -53,11 +45,7 @@ exports.attendanceCheckOut = async (req, res, next) => {
     const attendanceType = ATTENDANCE_TYPE.OUT;
     const attendanceImageUrl = await attendanceService.uploadAttendanceImage(req, attendanceType);
     const {
-      // savedAttendance,
-      inRadius,
-      inRadiusSnapshots,
-      scheduleSnapshots,
-      // attLocationSnapshots,
+      savedAttendance,
     } = await attendanceService.createAttendance(
       req,
       attendanceImageUrl,
@@ -66,13 +54,7 @@ exports.attendanceCheckOut = async (req, res, next) => {
 
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: {
-        // savedAttendance,
-        inRadius,
-        inRadiusSnapshots,
-        scheduleSnapshots,
-        // attLocationSnapshots,
-      },
+      data: struct.AttendanceList(savedAttendance),
       code: StatusCodes.OK,
     });
   } catch (e) {

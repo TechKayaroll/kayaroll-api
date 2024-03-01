@@ -11,8 +11,8 @@ function haversine(lat1, lon1, lat2, lon2) {
 
   // Haversine formula
   const a = Math.sin(dlat / 2) * Math.sin(dlat / 2)
-            + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2))
-            * Math.sin(dlon / 2) * Math.sin(dlon / 2);
+    + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2))
+    * Math.sin(dlon / 2) * Math.sin(dlon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -27,6 +27,11 @@ function isWithinRadius(centerRadius, otherRadius, radius) {
   return distance <= radius;
 }
 
+function getDistance(centerRadius, otherRadius) {
+  const distance = haversine(centerRadius[0], centerRadius[1], otherRadius[0], otherRadius[1]);
+  return distance;
+}
 module.exports = {
   isWithinRadius,
+  getDistance,
 };

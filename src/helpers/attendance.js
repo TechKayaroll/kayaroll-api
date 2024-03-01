@@ -1,6 +1,9 @@
 /* eslint-disable max-len */
 const dayjs = require('dayjs');
-const { ATTENDANCE_TYPE, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
+const {
+  ATTENDANCE_TYPE, SHIFT_DAY, ATTENDANCE_STATUS_HISTORY, ATTENDANCE_LOCATION_STATUS,
+} = require('../utils/constants');
+const { getDistance } = require('./calculation');
 
 const pairInAndOut = (dayAttendances) => {
   const pairedAttendances = [];
@@ -83,12 +86,12 @@ function attendanceStatusHistory(
             // isLate = currTime >= (workScheduleStart + gracePeriod) &&  currTime <= workScheduleEnd
             // onTime = currTime >= 00:00:00 && currTime < (workScheduleStart + gracePeriod)
             const isLate = (currentTime.isAfter(startGracePeriod)
-                && currentTime.isBefore(workScheduleEnd))
+              && currentTime.isBefore(workScheduleEnd))
               || currentTime.isSame(workScheduleEnd)
               || currentTime.isSame(workScheduleStart);
 
             const onTime = (currentTime.isAfter(startOfDay)
-                && currentTime.isBefore(startGracePeriod))
+              && currentTime.isBefore(startGracePeriod))
               || currentTime.isSame(startOfDay);
 
             if (isLate) {
@@ -121,7 +124,7 @@ function attendanceStatusHistory(
             const isOvertime = currentTime.isAfter(endOvertimeTolerace)
               || currentTime.isSame(endOvertimeTolerace);
             const onTime = (currentTime.isAfter(workScheduleStart)
-                && currentTime.isBefore(endOvertimeTolerace))
+              && currentTime.isBefore(endOvertimeTolerace))
               || currentTime.isSame(workScheduleStart)
               || currentTime.isSame(endOvertimeTolerace);
 
@@ -158,7 +161,26 @@ function attendanceStatusHistory(
   return { status, timeDiff };
 }
 
+function attendanceLocationStatus(attLocationSnapshot, attendanceCoordinate) {
+  const result = {
+    status: ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
+    distance: 0,
+  };
+  if (!attLocationSnapshot || !attendanceCoordinate?.lat || !attendanceCoordinate?.long) {
+    return result;
+  }
+
+  const { locationLat, locationLong, locationRadius } = attLocationSnapshot;
+  const centerCoordinates = [locationLat, locationLong];
+  const otherCoordinates = [attendanceCoordinate.lat, attendanceCoordinate.long];
+  const distance = getDistance(centerCoordinates, otherCoordinates);
+  const withinRad = distance <= locationRadius;
+  result.distance = distance;
+  result.status = withinRad ? ATTENDANCE_LOCATION_STATUS.INSIDE_RADIUS : ATTENDANCE_LOCATION_STATUS.OUTSIDE_RADIUS;
+  return result;
+}
 module.exports = {
   pairInAndOut,
   attendanceStatusHistory,
+  attendanceLocationStatus,
 };
