@@ -3,7 +3,10 @@ const dayjs = require('dayjs');
 const {
   secondsToHMS, calculateTotalTime,
 } = require('../helpers/date');
-const { ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS, ATTENDANCE_STATUS_HISTORY } = require('../utils/constants');
+const {
+  ATTENDANCE_STATUS, ATTENDANCE_REPORT_STATUS,
+  ATTENDANCE_STATUS_HISTORY, ATTENDANCE_LOCATION_STATUS,
+} = require('../utils/constants');
 
 const Attendance = (
   req,
@@ -123,6 +126,8 @@ const AttendanceListAdmin = (val) => ({
   attendanceImage: val.attendanceImage,
   attendanceStatusHistory: val?.attendanceStatusHistory || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: val?.timeDiff || 0,
+  attendanceStatusLocation: val?.attendanceStatusLocation
+  || ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
   employeeName: val.userId?.fullname || 'unknown',
   datetime: val.attendanceDate,
