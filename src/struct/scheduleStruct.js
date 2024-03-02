@@ -40,7 +40,7 @@ const EnrichedSchedule = ({ schedule, userOrgs }) => ({
   name: schedule.name,
   shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
   users: userOrgs.map((userOrg) => ({
-    id: userOrg?._id,
+    userId: userOrg?._id,
     fullname: userOrg?.fullname,
     email: userOrg?.email,
     uniqueUserId: userOrg?.uniqueUserId,
@@ -61,7 +61,7 @@ const SchedulePreview = (schedule) => ({
   name: schedule.name,
   shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
   users: schedule.users.map((user) => ({
-    id: user?._id,
+    userId: user?._id,
     name: user?.fullname,
     email: user?.email,
     uniqueUserId: user?.uniqueUserId,
