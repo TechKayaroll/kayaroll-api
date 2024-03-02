@@ -168,7 +168,6 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
       timeDiff: statusHistory.timeDiff,
     },
   );
-  console.log(attendancePayload.attendanceStatusHistory)
   const attendance = new attendanceModel.Attendance(attendancePayload);
   const savedAttendance = await attendance.save({ session });
   await logAttendance(

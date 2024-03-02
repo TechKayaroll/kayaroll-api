@@ -1,4 +1,5 @@
 const { StatusCodes } = require('http-status-codes');
+const { default: mongoose } = require('mongoose');
 const Model = require('../models');
 const scheduleStruct = require('../struct/scheduleStruct');
 const shiftStruct = require('../struct/shiftStruct');
@@ -13,17 +14,20 @@ const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
     const { users } = schedule;
     const userOrgs = await Promise.all(users.map(async (user) => {
       const userOrg = await Model.UserOrganization
-        .findOne({ userId: user._id, organizationId })
+        .findOne({ userId: user._id, organizationId: new mongoose.Types.ObjectId(organizationId) })
         .populate('userId')
         .populate('organizationId')
         .session(session);
-      return {
-        _id: userOrg.userId._id,
-        fullname: userOrg.userId.fullname,
-        email: userOrg.userId.email,
-        roleId: userOrg.userId.roleId,
-        uniqueUserId: userOrg.uniqueUserId,
+      const enrichedUser = {
+        _id: userOrg?.userId?._id,
+        fullname: userOrg?.userId?.fullname,
+        email: userOrg?.userId?.email,
+        roleId: userOrg?.userId?.roleId,
+        uniqueUserId: userOrg?.uniqueUserId,
+        organization: userOrg?.organizationId?.name,
+        organizationId: userOrg?.organizationId?._id,
       };
+      return enrichedUser;
     }));
     return { schedule, userOrgs };
   });

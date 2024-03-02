@@ -85,10 +85,15 @@ exports.getScheduleList = async (req, res, next) => {
       adminOrganizationId,
       req.query,
     );
+    const enrichedSchedules = await scheduleService.enrichedSchedulesUsers(
+      list,
+      adminOrganizationId,
+    );
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
       data: {
-        list: list.map((schedule) => scheduleStruct.SchedulePreview(schedule)),
+        list: enrichedSchedules.map((enrichedSchedule) => scheduleStruct
+          .EnrichedSchedule(enrichedSchedule)),
         pagination,
       },
       code: StatusCodes.OK,
@@ -138,7 +143,6 @@ exports.getScheduleDetail = async (req, res, next) => {
   try {
     const { scheduleId } = req.params;
     const adminOrganizationId = req.user.organizationId;
-
     const schedule = await scheduleService.findScheduleById(adminOrganizationId, scheduleId);
     const [enrichedSchedule] = await scheduleService.enrichedSchedulesUsers(
       [schedule],
