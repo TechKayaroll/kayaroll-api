@@ -48,7 +48,7 @@ const AttendanceSchema = new mongoose.Schema({
     enum: Object.values(ATTENDANCE_STATUS),
     default: ATTENDANCE_STATUS.PENDING,
   },
-  attendanceStatusHistory: {
+  attendanceStatusSchedule: {
     type: String,
     enum: Object.values(ATTENDANCE_STATUS_HISTORY),
     default: ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,

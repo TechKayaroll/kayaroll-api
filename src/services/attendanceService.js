@@ -6,7 +6,7 @@ const { ResponseError } = require('../helpers/response');
 const {
   secondsToDuration, calculateTotalTime, isWeekend,
 } = require('../helpers/date');
-const { pairInAndOut, attendanceStatusHistory, attendanceLocationStatus } = require('../helpers/attendance');
+const { pairInAndOut, attendanceStatusSchedule, attendanceLocationStatus } = require('../helpers/attendance');
 const userModel = require('../models');
 const uploadGcp = require('../helpers/gcp');
 const {
@@ -148,7 +148,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
   ]);
   const attScheduleSnapshot = attendanceSettingsStruct
     .AttendanceScheduleSnapshots(createdScheduleSnapshots);
-  const statusHistory = attendanceStatusHistory(
+  const statusHistory = attendanceStatusSchedule(
     attendanceType,
     attendanceDate,
     attScheduleSnapshot,
@@ -164,7 +164,7 @@ const createAttendance = async (req, attendanceImageUrl, attendanceType, session
       attendanceLocationSnapshots: attLocationSnapshots.snapshot,
       attendanceStatusLocation: attLocationSnapshots.locationStatus,
       attendanceScheduleSnapshots: attScheduleSnapshot,
-      attendanceStatusHistory: statusHistory.status,
+      attendanceStatusSchedule: statusHistory.status,
       timeDiff: statusHistory.timeDiff,
     },
   );
@@ -505,7 +505,7 @@ const createBulkAttendance = async (req, session) => {
       ]);
       const attScheduleSnapshots = attendanceSettingsStruct
         .AttendanceScheduleSnapshots(scheduleSnapshots);
-      const statusHistory = attendanceStatusHistory(
+      const statusHistory = attendanceStatusSchedule(
         req.body.attendanceType,
         req.body.datetime,
         attScheduleSnapshots,

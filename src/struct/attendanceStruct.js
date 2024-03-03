@@ -18,7 +18,7 @@ const Attendance = (
     attendanceLocationSnapshots,
     attendanceStatusLocation,
     attendanceScheduleSnapshots,
-    attendanceStatusHistory,
+    attendanceStatusSchedule,
     timeDiff,
   },
 ) => ({
@@ -38,7 +38,7 @@ const Attendance = (
   attendanceStatusLocation,
   attendanceLocationSnapshots,
   attendanceScheduleSnapshots,
-  attendanceStatusHistory,
+  attendanceStatusSchedule,
   timeDiff: timeDiff || 0,
 });
 
@@ -100,7 +100,7 @@ const AttendanceList = (val) => ({
   attendanceId: val._id,
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
-  attendanceStatusHistory: val?.attendanceStatusHistory,
+  attendanceStatusSchedule: val?.attendanceStatusSchedule,
   attendanceStatusLocation: val?.attendanceStatusLocation,
   timeDiff: val?.timeDiff,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
@@ -124,7 +124,7 @@ const AttendanceListAdmin = (val) => ({
   attendanceId: val._id.toString(),
   attendanceType: val.attendanceType,
   attendanceImage: val.attendanceImage,
-  attendanceStatusHistory: val?.attendanceStatusHistory || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+  attendanceStatusSchedule: val?.attendanceStatusSchedule || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: val?.timeDiff || 0,
   attendanceStatusLocation: val?.attendanceStatusLocation
   || ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
@@ -167,7 +167,7 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
-  attendanceStatusHistory: attendance?.attendanceStatusHistory
+  attendanceStatusSchedule: attendance?.attendanceStatusSchedule
     || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: attendance?.timeDiff || 0,
   attendanceLocationSnapshots: attendance?.attendanceLocationSnapshots
@@ -226,7 +226,7 @@ const AdminAttendance = (
   attendanceLocationSnapshots,
   scheduleSnapshots,
   attendanceScheduleSnapshots: scheduleSnapshots,
-  attendanceStatusHistory: historyStatus?.status,
+  attendanceStatusSchedule: historyStatus?.status,
   timeDiff: historyStatus?.timeDiff || 0,
 });
 

@@ -49,7 +49,7 @@ const pairInAndOut = (dayAttendances) => {
   return pairedAttendances;
 };
 
-function attendanceStatusHistory(
+function attendanceStatusSchedule(
   attendanceType,
   actualTime,
   attendanceSchedule,
@@ -181,6 +181,6 @@ function attendanceLocationStatus(attLocationSnapshot, attendanceCoordinate) {
 }
 module.exports = {
   pairInAndOut,
-  attendanceStatusHistory,
+  attendanceStatusSchedule,
   attendanceLocationStatus,
 };

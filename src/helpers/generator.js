@@ -63,10 +63,10 @@ const addDataToSheet = (worksheet, summaryReports) => {
       const row = [
         attendanceDate,
         inTime,
-        attendanceIn?.attendanceStatusHistory,
+        attendanceIn?.attendanceStatusSchedule,
         attendanceIn?.timeDiff,
         outTime,
-        attendanceOut?.attendanceStatusHistory,
+        attendanceOut?.attendanceStatusSchedule,
         attendanceOut?.timeDiff,
         status,
         `${duration.hours} Hours ${duration.minutes} Minutes ${duration.seconds} Seconds`,
