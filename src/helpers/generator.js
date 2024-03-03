@@ -26,8 +26,19 @@ const addDataToSheet = (worksheet, summaryReports) => {
     'Total Duration',
     `${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds`,
   ]);
+  const tableHeader = [
+    'Date',
+    'In Time',
+    'In Status',
+    'In Time Diff',
+    'Out Time',
+    'Out Status',
+    'Out Time Diff',
+    'Status',
+    'Duration',
+  ];
 
-  new Array(5).fill('').forEach((_, index) => {
+  new Array(tableHeader.length).fill('').forEach((_, index) => {
     worksheet.getColumn(index + 1).width = 30;
     worksheet.getColumn(index + 1).alignment = { wrapText: true };
   });
@@ -35,19 +46,7 @@ const addDataToSheet = (worksheet, summaryReports) => {
 
   // Reports Data
   if (data && data.length > 0) {
-    const tableHeader = [
-      'Date',
-      'In Time',
-      'In Status',
-      'In Time Diff',
-      'Out Time',
-      'Out Status',
-      'Out Time Diff',
-      'Status',
-      'Duration',
-    ];
     worksheet.addRow(tableHeader);
-
     data.forEach((eachData) => {
       const { date, attendanceLog } = eachData;
       const {

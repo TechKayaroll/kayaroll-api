@@ -127,7 +127,7 @@ const AttendanceListAdmin = (val) => ({
   attendanceStatusSchedule: val?.attendanceStatusSchedule || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: val?.timeDiff || 0,
   attendanceStatusLocation: val?.attendanceStatusLocation
-  || ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
+    || ATTENDANCE_LOCATION_STATUS.NO_LOCATION,
   employeeId: val.userOrganizationId?.uniqueUserId || '-',
   employeeName: val.userId?.fullname || 'unknown',
   datetime: val.attendanceDate,
@@ -168,7 +168,7 @@ const AttendanceReport = (attendance) => ({
   attendanceType: attendance.attendanceType,
   status: attendance.status,
   attendanceStatusLocation: attendance?.attendanceStatusLocation
-  || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
+    || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   attendanceStatusSchedule: attendance?.attendanceStatusSchedule
     || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: attendance?.timeDiff || 0,
