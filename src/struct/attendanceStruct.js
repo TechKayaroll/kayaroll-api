@@ -167,6 +167,8 @@ const AttendanceReport = (attendance) => ({
   attendanceDate: attendance.attendanceDate,
   attendanceType: attendance.attendanceType,
   status: attendance.status,
+  attendanceStatusLocation: attendance?.attendanceStatusLocation
+  || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   attendanceStatusSchedule: attendance?.attendanceStatusSchedule
     || ATTENDANCE_STATUS_HISTORY.NO_SCHEDULE,
   timeDiff: attendance?.timeDiff || 0,
