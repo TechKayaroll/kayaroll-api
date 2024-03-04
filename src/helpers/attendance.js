@@ -86,12 +86,12 @@ function attendanceStatusSchedule(
             // isLate = currTime >= (workScheduleStart + gracePeriod) &&  currTime <= workScheduleEnd
             // onTime = currTime >= 00:00:00 && currTime < (workScheduleStart + gracePeriod)
             const isLate = (currentTime.isAfter(startGracePeriod)
-              && currentTime.isBefore(workScheduleEnd))
+                && currentTime.isBefore(workScheduleEnd))
               || currentTime.isSame(workScheduleEnd)
               || currentTime.isSame(workScheduleStart);
 
             const onTime = (currentTime.isAfter(startOfDay)
-              && currentTime.isBefore(startGracePeriod))
+                && currentTime.isBefore(startGracePeriod))
               || currentTime.isSame(startOfDay);
 
             if (isLate) {
@@ -120,11 +120,11 @@ function attendanceStatusSchedule(
             // onTime = currentTime >= workScheduleStart && currTime <= (workScheduleEnd + overtimeTolerance)
 
             const isEarlyDeparture = currentTime.isBefore(workScheduleEnd)
-              && currentTime.isAfter(startGracePeriod);
+              && currentTime.isAfter(workScheduleStart);
             const isOvertime = currentTime.isAfter(endOvertimeTolerace)
               || currentTime.isSame(endOvertimeTolerace);
             const onTime = (currentTime.isAfter(workScheduleStart)
-              && currentTime.isBefore(endOvertimeTolerace))
+                && currentTime.isBefore(endOvertimeTolerace))
               || currentTime.isSame(workScheduleStart)
               || currentTime.isSame(endOvertimeTolerace);
 
