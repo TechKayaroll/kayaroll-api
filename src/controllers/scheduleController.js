@@ -1,11 +1,18 @@
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
+const dayjs = require('dayjs');
 const scheduleService = require('../services/scheduleService');
 const scheduleStruct = require('../struct/scheduleStruct');
 const { ResponseError } = require('../helpers/response');
 const Model = require('../models');
 
 exports.createSchedule = async (req, res, next) => {
+  if (req.body.effectiveStartDate) {
+    req.body.effectiveStartDate = dayjs(req.body.effectiveStartDate).startOf('day').toISOString();
+  }
+  if (req.body.effectiveEndDate) {
+    req.body.effectiveEndDate = dayjs(req.body.effectiveEndDate).endOf('day').toISOString();
+  }
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -104,6 +111,12 @@ exports.getScheduleList = async (req, res, next) => {
 };
 
 exports.updateScheduleById = async (req, res, next) => {
+  if (req.body.effectiveStartDate) {
+    req.body.effectiveStartDate = dayjs(req.body.effectiveStartDate).startOf('day').toISOString();
+  }
+  if (req.body.effectiveEndDate) {
+    req.body.effectiveEndDate = dayjs(req.body.effectiveEndDate).endOf('day').toISOString();
+  }
   const session = await mongoose.startSession();
   session.startTransaction();
   try {

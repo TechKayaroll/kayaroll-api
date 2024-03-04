@@ -8,6 +8,7 @@ const { validateShifts } = require('../helpers/scheduleShift');
 
 const userService = require('./userService');
 const { ResponseError } = require('../helpers/response');
+const dayjs = require('dayjs');
 
 const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
   const userOrgPromises = schedules.map(async (schedule) => {
