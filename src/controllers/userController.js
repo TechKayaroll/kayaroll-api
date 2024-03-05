@@ -2,7 +2,7 @@ const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
 const jwt = require('../helpers/jwt');
 const struct = require('../struct/userStruct');
-const model = require('../services/userService');
+const userService = require('../services/userService');
 const { ResponseError } = require('../helpers/response');
 const { hash, compare } = require('../helpers/bcryptjs');
 
@@ -19,16 +19,16 @@ exports.login = async (req, res, next) => {
     const {
       companyId, token: googleToken, email, password, role,
     } = req.body;
-    const isExistOrg = await model.checkInvitationCodeExists(companyId);
+    const isExistOrg = await userService.checkInvitationCodeExists(companyId);
     if (isExistOrg === null || isExistOrg.name === undefined) throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
 
     let userData;
     if (!googleToken) {
-      userData = await model.findUserByCompanyAndRole(email, companyId, role);
+      userData = await userService.findUserByCompanyAndRole(email, companyId, role);
     } else {
       const googlePayload = await jwt.decodeToken(googleToken);
       if (!googlePayload?.email) throw new ResponseError(StatusCodes.UNAUTHORIZED, 'Invalid Token');
-      userData = await model.findUserByCompanyAndRole(googlePayload.email, companyId, role);
+      userData = await userService.findUserByCompanyAndRole(googlePayload.email, companyId, role);
     }
     if (!userData?.userId) throw new ResponseError(StatusCodes.BAD_REQUEST, 'User is not Exist');
 
@@ -65,14 +65,14 @@ exports.register = async (req, res, next) => {
     const {
       companyId, role, token, name, email, password,
     } = req.body;
-    const organization = await model.checkInvitationCodeExists(companyId, session);
+    const organization = await userService.checkInvitationCodeExists(companyId, session);
     if (organization === null || organization.name === undefined) {
       throw new ResponseError(StatusCodes.BAD_REQUEST, 'Company ID Not Exists!');
     }
     let registeredUser = null;
-    const roleData = await model.getDataRole(role, session);
+    const roleData = await userService.getDataRole(role, session);
     if (!token) {
-      registeredUser = await model.findUserByCompanyAndRole(email, companyId, role, session);
+      registeredUser = await userService.findUserByCompanyAndRole(email, companyId, role, session);
       if (registeredUser) {
         throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
       }
@@ -82,9 +82,9 @@ exports.register = async (req, res, next) => {
         password: hash(password),
       });
       user.roleId = roleData._id;
-      const newUser = await model.createOrUpdateExistingUser(user, session);
-      await model.insertUserOrganization(newUser, organization, session);
-      registeredUser = await model.findUserByCompanyAndRole(
+      const newUser = await userService.createOrUpdateExistingUser(user, session);
+      await userService.insertUserOrganization(newUser, organization, session);
+      registeredUser = await userService.findUserByCompanyAndRole(
         newUser.email,
         companyId,
         roleData.name,
@@ -92,7 +92,7 @@ exports.register = async (req, res, next) => {
       );
     } else {
       const googlePayload = await jwt.decodeToken(req.body.token);
-      registeredUser = await model.findUserByCompanyAndRole(
+      registeredUser = await userService.findUserByCompanyAndRole(
         googlePayload.email,
         companyId,
         role,
@@ -106,20 +106,20 @@ exports.register = async (req, res, next) => {
         email: googlePayload.email,
       });
       user.roleId = roleData._id;
-      const existingOrNewUser = await model.createOrUpdateExistingUser(user, session);
-      await model.insertUserOrganization(
+      const existingOrNewUser = await userService.createOrUpdateExistingUser(user, session);
+      await userService.insertUserOrganization(
         existingOrNewUser,
         organization,
         session,
       );
-      registeredUser = await model.findUserByCompanyAndRole(
+      registeredUser = await userService.findUserByCompanyAndRole(
         existingOrNewUser.email,
         companyId,
         roleData.name,
         session,
       );
     }
-    const userOrgData = await model.getDataUser(
+    const userOrgData = await userService.getDataUser(
       registeredUser.userId._id,
       registeredUser.organizationId._id,
       session,
@@ -142,7 +142,7 @@ exports.register = async (req, res, next) => {
 exports.registerCompany = async (req, res, next) => {
   try {
     const { companyName } = req.body;
-    const isExistOrg = await model.getOrganization(companyName);
+    const isExistOrg = await userService.getOrganization(companyName);
     if (isExistOrg) {
       const existOrg = struct.Organization(isExistOrg);
       res.status(StatusCodes.OK).json({
@@ -151,7 +151,7 @@ exports.registerCompany = async (req, res, next) => {
         code: StatusCodes.OK,
       });
     } else {
-      const newOrganization = await model.insertOrganization(companyName);
+      const newOrganization = await userService.insertOrganization(companyName);
       const organization = struct.Organization(newOrganization);
       res.status(StatusCodes.OK).json({
         message: ReasonPhrases.OK,
@@ -167,7 +167,7 @@ exports.registerCompany = async (req, res, next) => {
 exports.employeeList = async (req, res, next) => {
   try {
     const { organizationId } = req.user;
-    const allUsers = await model.getAllUserOnOrganization(organizationId);
+    const allUsers = await userService.getAllUserOnOrganization(organizationId);
     const allEmployee = allUsers.filter((eachUser) => eachUser.userId.roleId.name === 'employee');
     const userList = allEmployee.map((userOrg) => struct.UserRegistrationResponse(userOrg));
     res.status(StatusCodes.OK).json({
@@ -177,6 +177,30 @@ exports.employeeList = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.removeEmployeesFromOrganization = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { employeeIds, organizationId } = req.body;
+    const deletedUsers = await userService.removeEmployeesFromOrganization(
+      employeeIds,
+      organizationId,
+      session,
+    );
+    await session.commitTransaction();
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: deletedUsers,
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    await session.endSession();
   }
 };
 

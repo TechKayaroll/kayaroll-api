@@ -260,6 +260,53 @@ const validateEmployeeIds = async (employeeIds, organizationId, session) => {
   return ids;
 };
 
+const removeEmployeesFromOrganization = async (employeeIds, organizationId, session) => {
+  const result = { deletedUsers: [], deletedUserOrganizationLocation: [], deletedSchedule: [] };
+  if (!employeeIds || employeeIds.length === 0) return result;
+
+  const orgId = new mongoose.Types.ObjectId(organizationId);
+  const uniqueEmployeeIds = [...new Set(employeeIds)].map((id) => new mongoose.Types.ObjectId(id));
+  const query = { userId: { $in: uniqueEmployeeIds }, organizationId: orgId };
+
+  result.deletedUsers = await Model.UserOrganization.find(query)
+    .populate('organizationId')
+    .populate({
+      path: 'userId',
+      populate: {
+        path: 'roleId',
+      },
+    })
+    .session(session);
+  result.deletedUserOrganizationLocation = await Model.UserOrganizationLocation
+    .find(query)
+    .session(session);
+
+  result.deletedSchedule = await Model.Schedule
+    .find({
+      organizationId: orgId,
+      users: query.userId,
+    })
+    .session(session);
+
+  await Promise.all([
+    Model.UserOrganization.deleteMany(query, { session }),
+    Model.UserOrganizationLocation.deleteMany(query, { session }),
+  ]);
+  const userIdToDelete = employeeIds.map((id) => id.toString());
+  const bulkUpdates = result.deletedSchedule.map(async (schedule) => {
+    const updatedUserIds = schedule.users.filter((id) => !userIdToDelete.includes(id.toString()));
+    const updatedSchedule = await Model.Schedule.updateOne(
+      { _id: schedule._id },
+      { users: updatedUserIds },
+      { session },
+    );
+    return updatedSchedule;
+  });
+  await Promise.all(bulkUpdates.filter((update) => update !== null));
+  return result;
+};
+
+
 module.exports = {
   createOrUpdateExistingUser,
   insertUserOrganization,
@@ -276,4 +323,5 @@ module.exports = {
   generateUniqueUserOrgId,
   updateUserOrganizationAttendanceLocation,
   validateEmployeeIds,
+  removeEmployeesFromOrganization,
 };

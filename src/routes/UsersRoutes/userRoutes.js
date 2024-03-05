@@ -10,6 +10,7 @@ const userRoutes = () => {
   ChildRouter.post('/register', validate.validate(schema.schemaRegister), CONTROLLER.register);
   ChildRouter.post('/register-company', validate.validate(schema.schemaRegisterCompany), CONTROLLER.registerCompany);
   ChildRouter.use(authentication);
+  ChildRouter.post('/superadmin/remove-employee', CONTROLLER.removeEmployeesFromOrganization);
   ChildRouter.get('/admin/employee-list', CONTROLLER.employeeList);
   ChildRouter.get('/organization', CONTROLLER.organizationList);
   return ChildRouter;
