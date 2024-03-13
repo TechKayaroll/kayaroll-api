@@ -72,7 +72,7 @@ exports.register = async (req, res, next) => {
     let registeredUser = null;
     const roleData = await userService.getDataRole(role, session);
     if (!token) {
-      registeredUser = await userService.findUserByCompanyAndRole(email, companyId, role, session);
+      registeredUser = await userService.getUserExists(email, companyId, session);
       if (registeredUser) {
         throw new ResponseError(StatusCodes.BAD_REQUEST, 'Account is already registered!');
       }
@@ -92,10 +92,9 @@ exports.register = async (req, res, next) => {
       );
     } else {
       const googlePayload = await jwt.decodeToken(req.body.token);
-      registeredUser = await userService.findUserByCompanyAndRole(
+      registeredUser = await userService.getUserExists(
         googlePayload.email,
         companyId,
-        role,
         session,
       );
       if (registeredUser) {

@@ -164,7 +164,7 @@ const findUserByCompanyAndRole = async (email, invitationCode, roleName, session
   return null;
 };
 
-const getUserExists = async (email, companyId) => {
+const getUserExists = async (email, companyId, session) => {
   const userOrganization = Model.UserOrganization;
   try {
     const users = await userOrganization.find()
@@ -176,7 +176,7 @@ const getUserExists = async (email, companyId) => {
         },
       })
       .populate({ path: 'organizationId' })
-      .exec();
+      .session(session);
     const userExist = users.find((eachUser) => {
       const { userId, organizationId } = eachUser;
       return userId.email === email && organizationId.invitationCode === companyId;
