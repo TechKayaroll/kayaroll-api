@@ -37,10 +37,12 @@ const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
   return scheduleUserOrgPairs;
 };
 
-const getScheduleByEmployeeId = async ({ organizationId, userId }) => {
+const getScheduleByEmployeeId = async ({ organizationId, userId, date }) => {
   const scheduleQuery = {
     organizationId,
     users: userId,
+    effectiveStartDate: { $lte: date },
+    effectiveEndDate: { $gte: date },
   };
   const schedules = Model.Schedule.findOne(scheduleQuery)
     .populate({
@@ -53,6 +55,7 @@ const getScheduleByEmployeeId = async ({ organizationId, userId }) => {
 
   return schedules;
 };
+
 
 const getScheduleList = async (organizationId, {
   page, limit, sortBy = 'asc', name, isDefault,

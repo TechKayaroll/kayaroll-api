@@ -102,7 +102,6 @@ const UserSchedule = (schedule) => ({
   id: schedule._id,
   name: schedule.name,
   shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
-  users: schedule.users.map(userStruct.UserOrgProfile),
   organizationId: userStruct.Organization(schedule.organizationId),
   isDefault: schedule.isDefault,
   gracePeriod: schedule.gracePeriod,

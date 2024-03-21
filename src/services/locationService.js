@@ -28,8 +28,22 @@ const createLocationProfile = async (organizationId, reqBody, session) => {
   return newLocationProfile;
 };
 
-const getUserLocationProfile = async () => {
-
+const getUserLocationProfile = async ({ organizationId }) => {
+  const userByLocations = await Model.UserOrganizationLocation.find({
+    organizationId,
+  })
+    .populate({
+      path: 'userId',
+      populate: {
+        path: 'roleId',
+      },
+    })
+    .populate({ path: 'locationId' })
+    .populate({ path: 'organizationId' })
+    .populate({
+      path: 'userOrganizationId',
+    });
+  return userByLocations;
 };
 
 const getLocationProfileList = async (orgId, reqQuery) => {

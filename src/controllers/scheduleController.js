@@ -2,7 +2,9 @@ const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const scheduleService = require('../services/scheduleService');
+const locationService = require('../services/locationService');
 const scheduleStruct = require('../struct/scheduleStruct');
+const locationStruct = require('../struct/locationStruct');
 const { ResponseError } = require('../helpers/response');
 const Model = require('../models');
 
@@ -192,12 +194,16 @@ exports.userSchedule = async (req, res, next) => {
   try {
     const { userId, organizationId } = req.user;
     const result = await scheduleService.getScheduleByEmployeeId(
-      { organizationId, userId },
+      { organizationId, userId, date: dayjs().format('DD MMM YYYY HH:mm:ss') },
     );
-
+    const userOrgLocation = await locationService.getUserLocationProfile({ organizationId });
     res.status(StatusCodes.OK).json({
       message: ReasonPhrases.OK,
-      data: scheduleStruct.UserSchedule(result),
+      data: {
+        workLocations: userOrgLocation.map((userOrgLoc) => locationStruct
+          .locationDetail(userOrgLoc.locationId)),
+        schedule: result ? scheduleStruct.UserSchedule(result) : null,
+      },
       code: StatusCodes.OK,
     });
   } catch (error) {

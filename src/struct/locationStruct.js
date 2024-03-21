@@ -55,4 +55,15 @@ exports.locationPrediction = (prediction) => ({
   placeId: prediction.place_id,
 });
 
+exports.locationDetail = (location) => ({
+  id: location._id,
+  name: location.name,
+  placeId: location.placeId,
+  lat: location.lat,
+  long: location.long,
+  address: location.address,
+  radius: location.radius,
+  organizationId: location.organizationId,
+});
+
 exports.LocationPagination = globalStruct.Pagination;
