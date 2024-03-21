@@ -1,5 +1,6 @@
 const dayjs = require('dayjs');
 const shiftStruct = require('./shiftStruct');
+const userStruct = require('./userStruct');
 
 const ScheduleData = ({
   scheduleName, employeeIds, ...otherPayload
@@ -20,8 +21,8 @@ const UpdateScheduleData = ({
 });
 
 const SchedulePagination = (page, limit, totalData) => ({
-  totalPage: Math.ceil(totalData / limit),
-  currentPage: page,
+  totalPage: Math.ceil(totalData / limit) || 0,
+  currentPage: page || 0,
 });
 
 const ScheduleSnapshot = (attendanceSchedule) => ({
@@ -97,6 +98,21 @@ const ScheduleDeletePreview = (schedule) => ({
   formattedEndDate: dayjs(schedule.effectiveEndDate).format('DD MMM YYYY, HH:mm:ss'),
 });
 
+const UserSchedule = (schedule) => ({
+  id: schedule._id,
+  name: schedule.name,
+  shifts: schedule.shifts.map(shiftStruct.ShiftFormatedTime),
+  users: schedule.users.map(userStruct.UserOrgProfile),
+  organizationId: userStruct.Organization(schedule.organizationId),
+  isDefault: schedule.isDefault,
+  gracePeriod: schedule.gracePeriod,
+  overtimeTolerance: schedule.overtimeTolerance,
+  effectiveStartDate: schedule.effectiveStartDate,
+  effectiveEndDate: schedule.effectiveEndDate,
+  formattedStartDate: dayjs(schedule.effectiveStartDate).format('DD MMM YYYY, HH:mm:ss'),
+  formattedEndDate: dayjs(schedule.effectiveEndDate).format('DD MMM YYYY, HH:mm:ss'),
+});
+
 module.exports = {
   ScheduleData,
   SchedulePagination,
@@ -105,4 +121,5 @@ module.exports = {
   SchedulePreview,
   ScheduleDeletePreview,
   EnrichedSchedule,
+  UserSchedule,
 };

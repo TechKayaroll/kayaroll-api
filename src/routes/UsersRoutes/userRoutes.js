@@ -12,7 +12,7 @@ const userRoutes = () => {
   ChildRouter.use(authentication);
   ChildRouter.post('/superadmin/remove-employee', CONTROLLER.removeEmployeesFromOrganization);
   ChildRouter.get('/admin/employee-list', CONTROLLER.employeeList);
-  ChildRouter.get('/organization', CONTROLLER.organizationList);
+  // ChildRouter.get('/organization', CONTROLLER.organizationList);
   return ChildRouter;
 };
 

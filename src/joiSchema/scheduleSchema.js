@@ -151,3 +151,9 @@ exports.schemaGetScheduleListQuery = Joi.object({
   name: Joi.string().optional(),
   isDefault: Joi.boolean().optional(),
 });
+
+exports.schemaEmployeeWorkSchedule = Joi.object({
+  limit: globalSchema.limit(),
+  page: globalSchema.page(),
+  sortBy: globalSchema.sortBy('DESC'),
+});

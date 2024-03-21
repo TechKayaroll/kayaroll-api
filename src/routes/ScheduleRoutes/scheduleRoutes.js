@@ -8,6 +8,13 @@ const { USER_ROLE } = require('../../utils/constants');
 const ScheduleRoutes = () => {
   ChildRouter.use(authentication);
 
+  ChildRouter.get(
+    '/',
+    // validate.validate(schema.schemaEmployeeWorkSchedule),
+    authorizationByRole([USER_ROLE.EMPLOYEE]),
+    CONTROLLER.userSchedule,
+  );
+
   ChildRouter.post(
     '/admin/create',
     validate.validate(schema.schemaCreateSchedule),

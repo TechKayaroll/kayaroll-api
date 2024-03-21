@@ -383,7 +383,7 @@ const attandanceApproval = async (attendanceId, status, reqUser) => {
   const attendances = attendanceModel.Attendance;
   try {
     const updatedAttendance = await attendances.findOneAndUpdate(
-      { $and: [{ _id: attendanceId, status: ATTENDANCE_STATUS.PENDING }] },
+      { $and: [{ _id: attendanceId }] },
       { status },
       { new: true },
     );

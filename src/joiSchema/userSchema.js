@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const { USER_ROLE } = require('../utils/constants');
+const globalSchema = require('.');
 
 exports.schemaRegisterUser = Joi.object({
   companyId: Joi.string().required(),

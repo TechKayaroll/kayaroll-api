@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('../helpers/jwt');
 const struct = require('../struct/userStruct');
 const userService = require('../services/userService');
+const scheduleService = require('../services/scheduleService');
 const { ResponseError } = require('../helpers/response');
 const { hash, compare } = require('../helpers/bcryptjs');
 
@@ -200,14 +201,5 @@ exports.removeEmployeesFromOrganization = async (req, res, next) => {
     next(error);
   } finally {
     await session.endSession();
-  }
-};
-
-exports.organizationList = async (req, res, next) => {
-  try {
-    // const { userId } = req.user;
-    // find organizations by userId
-  } catch (error) {
-    next(error);
   }
 };

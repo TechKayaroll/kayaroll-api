@@ -34,6 +34,13 @@ const UserRegistrationResponse = (userOrg) => ({
   invitationCode: userOrg.organizationId.invitationCode,
 });
 
+const UserOrgProfile = (userOrg) => ({
+  userId: userOrg?._id,
+  fullname: userOrg?.fullname,
+  email: userOrg?.email,
+  uniqueUserId: userOrg?.uniqueUserId,
+});
+
 const UserReportProfile = (userOrg) => ({
   uniqueUserId: userOrg.uniqueUserId,
   fullname: userOrg.userId.fullname || 'unknown',
@@ -98,4 +105,5 @@ module.exports = {
   UserOrganizationLocationPayload,
   UserOrganizationLocationDetail,
   UserByUserOrg,
+  UserOrgProfile,
 };

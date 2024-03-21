@@ -1,5 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
 const { default: mongoose } = require('mongoose');
+const dayjs = require('dayjs');
 const Model = require('../models');
 const scheduleStruct = require('../struct/scheduleStruct');
 const shiftStruct = require('../struct/shiftStruct');
@@ -8,7 +9,6 @@ const { validateShifts } = require('../helpers/scheduleShift');
 
 const userService = require('./userService');
 const { ResponseError } = require('../helpers/response');
-const dayjs = require('dayjs');
 
 const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
   const userOrgPromises = schedules.map(async (schedule) => {
@@ -35,6 +35,23 @@ const enrichedSchedulesUsers = async (schedules, organizationId, session) => {
 
   const scheduleUserOrgPairs = await Promise.all(userOrgPromises);
   return scheduleUserOrgPairs;
+};
+
+const getScheduleByEmployeeId = async ({ organizationId, userId }) => {
+  const scheduleQuery = {
+    organizationId,
+    users: userId,
+  };
+  const schedules = Model.Schedule.findOne(scheduleQuery)
+    .populate({
+      path: 'users',
+    })
+    .populate({
+      path: 'organizationId',
+    })
+    .populate({ path: 'shifts' });
+
+  return schedules;
 };
 
 const getScheduleList = async (organizationId, {
@@ -310,4 +327,5 @@ module.exports = {
   updateScheduleById,
   findScheduleById,
   enrichedSchedulesUsers,
+  getScheduleByEmployeeId,
 };

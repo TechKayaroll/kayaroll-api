@@ -187,3 +187,20 @@ exports.addGraceAndtolerancePeriod = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.userSchedule = async (req, res, next) => {
+  try {
+    const { userId, organizationId } = req.user;
+    const result = await scheduleService.getScheduleByEmployeeId(
+      { organizationId, userId },
+    );
+
+    res.status(StatusCodes.OK).json({
+      message: ReasonPhrases.OK,
+      data: scheduleStruct.UserSchedule(result),
+      code: StatusCodes.OK,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
